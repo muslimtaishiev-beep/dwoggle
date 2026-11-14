@@ -1,175 +1,206 @@
 /*
- * The map fills the stage. Everything else is laid over it: the title and language switch,
- * Dwoggle and his hint, and, after a tap, the annotated figure on the dimmed map.
+ * The map page, as drawn on a 1280 x 720 frame: the brown header, the map, and the brown ground below it,
+ * both meeting the map with a wavy edge. The report panel stands on the map's right; on a phone it becomes a
+ * sheet over the bottom of the map.
  */
-.app {
+.map-page {
   position: relative;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100dvh;
-  background: var(--color-bg);
+  overflow: hidden;
+  background: var(--brand-brown);
+  color: var(--brand-ink);
+  font-family: var(--font-brand-body);
+  font-weight: var(--font-weight-bold);
+  --color-focus: var(--brand-focus);
 }
 
-.app__stage {
+.map-page__stage {
   position: relative;
   min-height: 0;
   overflow: hidden;
 }
 
-.app__surface {
+.map-page__map {
   position: absolute;
   inset: 0;
 }
 
-/*
- * Title, language switch and address search float above the map; the first two stay above the figure too.
- * On a phone the search field takes its own row; on wide screens it sits between the other two.
- */
-.app__hud {
+/* The report or the saved areas, on the map's right, clear of the waves above and below. */
+.map-page__side {
   position: absolute;
-  top: max(var(--space-3), env(safe-area-inset-top));
-  right: var(--space-3);
-  left: var(--space-3);
-  z-index: calc(var(--z-map-overlay) + 2);
-  display: grid;
-  grid-template-areas:
-    "title language"
-    "search search";
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-2) var(--space-3);
-  pointer-events: none;
-}
-
-.app__hud > * {
-  pointer-events: auto;
-}
-
-.app__hud > .app__title {
-  grid-area: title;
-  justify-self: start;
-}
-
-.app__hud > .language-menu {
-  grid-area: language;
-  justify-self: end;
-}
-
-.app__hud > .address-search {
-  grid-area: search;
-}
-
-/* The wordmark keeps the pixel face: it belongs to Dwoggle, the mascot. */
-.app__title {
-  display: flex;
-  align-items: center;
-  min-height: var(--tap-target);
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-control);
-  box-shadow: var(--outline-float);
-  }
-
-.app__home {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* Before the first tap Dwoggle waits in the corner and says what to do. */
-.app__ledge {
-  position: absolute;
-  right: var(--space-3);
-  bottom: var(--space-3);
-  left: var(--space-3);
-  z-index: var(--z-map-overlay);
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-3);
-  pointer-events: none;
-}
-
-.app__bubble {
-  max-width: var(--bubble-width);
-  padding: var(--space-2) var(--space-3);
-  box-shadow: var(--outline-float);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-tight);
-}
-
-.app__ledge .app__bubble {
-  margin-bottom: var(--space-4);
-}
-
-/* While Dwoggle digs: what is happening, and the way to skip it. */
-.app__dig-status {
-  position: absolute;
-  right: var(--space-3);
-  bottom: var(--space-5);
-  left: var(--space-3);
-  z-index: var(--z-map-overlay);
+  z-index: calc(var(--z-map-overlay) + 1);
+  top: 20px;
+  bottom: 22px;
+  inset-inline-end: 32px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
+  width: 330px;
   pointer-events: none;
 }
 
-.app__dig-status > * {
+.map-page__side > * {
   pointer-events: auto;
 }
 
-/* The standing disclaimer and the way to the grading rules. */
-.app__footer {
+/* The map's zoom buttons, as drawn: a white block with brown signs, under the header's wave. */
+.map-page .maplibregl-ctrl-top-left {
+  top: 18px;
+  left: 22px;
+}
+
+.map-page .maplibregl-ctrl-group {
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--brand-paper);
+  box-shadow: 0 3px 0 0 var(--brand-tile-edge);
+}
+
+.map-page .maplibregl-ctrl-group button {
+  width: 32px;
+  height: 32px;
+}
+
+.map-page .maplibregl-ctrl-group button + button {
+  border-top-color: var(--map-ui-line);
+}
+
+/* The map's credits stay folded into their "i" button; they open on hover or when the button is focused. */
+.map-page .maplibregl-ctrl-attrib.maplibregl-compact .maplibregl-ctrl-attrib-inner {
+  display: none;
+}
+
+.map-page .maplibregl-ctrl-attrib.maplibregl-compact:hover .maplibregl-ctrl-attrib-inner,
+.map-page .maplibregl-ctrl-attrib.maplibregl-compact:focus-within .maplibregl-ctrl-attrib-inner {
+  display: block;
+}
+
+.map-page .maplibregl-ctrl-attrib.maplibregl-compact:not(:hover, :focus-within) {
+  padding: 0;
+  background: var(--brand-paper);
+}
+
+/* ---------- The ground below the map ---------- */
+
+.map-page__ground {
   position: relative;
-  z-index: 1;
-  display: flex;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(260px, 368px) auto auto;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-2) var(--space-3);
-  padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
-  background: var(--color-night);
-  color: var(--color-text-on-dark-muted);
-  font-size: var(--font-size-xs);
+  gap: 24px;
+  min-height: 170px;
+  padding: 8px 32px 18px;
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+  background: var(--brand-brown);
+  /* The darker earth along the bottom, as drawn. */
+  box-shadow: inset 0 -16px 0 0 var(--earth-surface-deep);
 }
 
-.app__disclaimer {
-  line-height: var(--line-height-tight);
-  text-wrap: balance;
+.map-page__wave {
+  position: absolute;
+  bottom: calc(100% - 1px);
+  left: 0;
+  width: 100%;
+  height: 18px;
+  pointer-events: none;
 }
 
-.app__footer-actions {
-  display: flex;
-  flex: none;
-  gap: var(--space-2);
+.map-page__wave-fill {
+  fill: var(--brand-brown);
 }
 
-.app__sign-in {
-  text-decoration: none;
+.map-page__wave-line {
+  fill: none;
+  stroke: var(--map-ui-wave);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
 }
 
-@media (min-width: 768px) {
-  .app__hud {
-    right: var(--space-5);
-    left: var(--space-5);
-    grid-template-areas: "title search language";
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: var(--space-4);
+.map-page__ask {
+  align-self: end;
+  /* Dwoggle's helmet reaches up over the wave, as drawn. */
+  margin-top: -30px;
+}
+
+/* ---------- Narrower than the drawing ---------- */
+
+/* Narrower than the drawing: Dwoggle and his bubble on the left, the search over the tiles on the right. */
+@media (max-width: 1180px) {
+  .map-page__ground {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "ask search"
+      "ask actions";
+    row-gap: 12px;
+    column-gap: 20px;
+    padding-inline: 20px;
   }
 
-  .app__hud > .address-search {
-    justify-self: center;
-    max-width: var(--search-width);
+  .map-page__search {
+    grid-area: search;
+    align-self: end;
   }
 
-  .app__ledge {
-    right: var(--space-5);
-    bottom: var(--space-5);
-    left: var(--space-5);
+  .map-page__actions {
+    grid-area: actions;
+    align-self: start;
   }
 
-  .app__footer {
-    justify-content: center;
-    gap: var(--space-5);
+  .map-page__actions .map-actions {
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .map-page__actions .map-actions__tile {
+    min-width: 84px;
+    min-height: 66px;
+    font-size: 12px;
+  }
+
+  .map-page__ask {
+    grid-area: ask;
+  }
+
+  .map-page__ask .ask__bubble {
+    width: 220px;
+  }
+}
+
+@media (max-width: 767px) {
+  .map-page__ground {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "search"
+      "actions";
+    gap: 12px;
+    min-height: 0;
+    padding: 12px 12px 14px;
+  }
+
+  /* No room for Dwoggle's hole on a phone: his questions wait for a wider screen. */
+  .map-page__ask {
+    display: none;
+  }
+
+  .map-page__actions .map-actions {
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .map-page__actions .map-actions__tile {
+    flex: 1;
+    min-width: 0;
+    min-height: 62px;
+  }
+
+  .map-page__side {
+    top: auto;
+    bottom: 12px;
+    inset-inline: 12px;
+    width: auto;
+    max-height: 72%;
   }
 }

@@ -205,6 +205,25 @@
   /* His left arm, which the map hides in the drawing: the fur and outline of the arm beside it. */
   --mascot-arm: #986142;
   --mascot-line: #000000;
+  /* The map page, as drawn: summary cream, row lines, icon tiles, grade blocks with a darker bottom edge. */
+  --map-ui-summary: #f9f0e7;
+  --map-ui-line: #ededed;
+  --map-ui-icon: #cfbda8;
+  --map-ui-fact: #7b7a78;
+  --map-ui-chip: #f2ebe5;
+  --map-ui-chip-line: #dfdad6;
+  --map-ui-wave: #dad6cb;
+  --map-ui-hole: #3a2315;
+  --grade-ui-a: #5a9f4f;
+  --grade-ui-a-edge: #457a3c;
+  --grade-ui-b: #8fb15d;
+  --grade-ui-b-edge: #6f8c44;
+  --grade-ui-c: #e6a23f;
+  --grade-ui-c-edge: #b87d2c;
+  --grade-ui-d: #ce6142;
+  --grade-ui-d-edge: #a3482b;
+  --grade-ui-none: #d9d2c9;
+  --grade-ui-none-edge: #b9b0a6;
   --font-brand-display: "Chewy", "Balsamiq Sans", "Baloo 2", system-ui, sans-serif;
   --font-brand-body: "Baloo 2", "Nunito", system-ui, sans-serif;
   /* The text fields and the Google button are set in a plain sans, as in the design. */

@@ -38,13 +38,20 @@ export interface Profile {
   readonly concerns: readonly Concern[] | null
 }
 
+/**
+ * What the app knows about a signed-in user's profile.
+ * - complete, incomplete: the backend's verdict (country, phone and purpose are saved, or not yet).
+ * - unknown: the backend could not be asked, and this device has no copy that says "complete".
+ * Only "incomplete" opens the dig, so its questions are never asked again just because the backend was out of reach.
+ */
+export type ProfileStatus = 'complete' | 'incomplete' | 'unknown'
+
 export interface User extends Profile {
   /** The Firebase user id. */
   readonly id: string
   readonly name: string | null
   readonly email: string | null
-  /** The backend's verdict: country, phone and purpose are saved. Until then the dig asks for them. */
-  readonly profileComplete: boolean
+  readonly profileStatus: ProfileStatus
 }
 
 /** What the dig sends when the last question is answered. */

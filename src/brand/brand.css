@@ -57,10 +57,8 @@
 }
 
 /* The hat's brim reaches 5 px past the column's edge, as drawn. */
-.brand-header__home {
+.brand-header__logo {
   margin-inline-start: -5px;
-  border-radius: var(--brand-radius);
-  text-decoration: none;
 }
 
 /* ---------- Controls ---------- */

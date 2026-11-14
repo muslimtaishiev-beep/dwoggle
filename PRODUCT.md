@@ -36,7 +36,7 @@ Risk signals for one exact place, built from open Earth-observation data (mostly
 - All colors, fonts, spacing and radii live in src/styles/tokens.css; components hold no hard-coded colors or font names.
 - Base map: a free 3D satellite map: imagery draped over terrain (elevation largely from NASA SRTM) with buildings standing up, drawn by MapLibre; no API key. A flat OpenStreetMap map takes over when the 3D map cannot load. 2GIS was rejected because it is paid. The map sits behind one component so providers can be swapped.
 - Address search over the map (Nominatim, free, no key): it moves the map to a found place; the user still taps the exact spot to check it.
-- Pages: a landing page about the project, sign-in, two welcome questions, and the map. The map and the report work without an account; signing in only adds features.
+- Pages: the sign-up page (the main page), the dig with its questions after the first sign-in, and the map. The map and the report work without an account; signing in only adds features.
 - Accounts (Firebase Auth): Google, or email and password. After the first sign-in, five questions are asked while Dwoggle digs: language, country (the map opens there), why they came, which hazards worry them, and a phone number. The backend keeps the answers; the device only keeps a copy, without the phone number. The account can be deleted, phone number included.
 - Undecided: a privacy notice for the email, language and country it collects; per-check grading thresholds (owned by the science team); final mascot and layer artwork (placeholders ship in fixed-size boxes).
 

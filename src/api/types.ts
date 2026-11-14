@@ -81,10 +81,17 @@ export interface Check {
   readonly trend: Trend | null
   /** Second opinions from other sources. They never change the grade. Not shown yet. */
   readonly verification: readonly Message[]
+  /** The backend's plain numbers and flags behind the grade, e.g. distance_km, change_pct, mudflow_path. */
+  readonly metrics: Metrics
 }
+
+/** Only the scalar metrics; nested ones (a fault's geometry) are left out. */
+export type Metrics = Readonly<Record<string, number | boolean | string>>
 
 /** The place's name from OpenStreetMap, in the language the report was asked for. */
 export interface Place {
+  /** The place itself, e.g. "Microdistrict 10". */
+  readonly name: string
   /** Name, locality and region together, e.g. "Microdistrict 10, Bishkek City". */
   readonly display: string
   /** "© OpenStreetMap contributors": the ODbL asks for it wherever the name is shown. */

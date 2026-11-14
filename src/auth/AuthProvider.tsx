@@ -4,9 +4,9 @@ import type { Lang } from '../i18n/i18n.ts'
 import { deleteAccount, fetchAccount, saveAccount } from './accountApi.ts'
 import { AuthContext, type AuthContextValue, type AuthState } from './context.ts'
 import { AuthError, toAuthError } from './errors.ts'
-import { cacheProfile, forgetProfile, profileFromAccount, profileFromCache, readCachedProfile } from './profile.ts'
+import { cacheProfile, forgetProfile, profileFromAccount, readCachedProfile, resolveProfile } from './profile.ts'
 import type { FirebaseUser } from './firebase.ts'
-import type { Profile, User } from './types.ts'
+import type { Profile, ProfileStatus, User } from './types.ts'
 
 type Firebase = typeof import('./firebase.ts')
 
@@ -20,31 +20,24 @@ function loadFirebase(): Promise<Firebase> {
   return firebaseLoading
 }
 
-function toUser(account: FirebaseUser, profile: Profile, profileComplete: boolean): User {
+function toUser(account: FirebaseUser, profile: Profile, profileStatus: ProfileStatus): User {
   return {
     id: account.uid,
     name: account.displayName,
     email: account.email,
-    profileComplete,
+    profileStatus,
     ...profile,
   }
 }
 
-interface LoadedProfile {
-  readonly profile: Profile
-  readonly complete: boolean
-}
-
 /** The profile from the backend; if the backend is out of reach, the copy this device kept of it. */
-async function loadProfile(firebase: Firebase, account: FirebaseUser, lang: Lang): Promise<LoadedProfile> {
+async function loadProfile(firebase: Firebase, account: FirebaseUser, lang: Lang): Promise<ReturnType<typeof resolveProfile>> {
   try {
     const remote = await fetchAccount(await firebase.idToken(), lang)
-    const profile = profileFromAccount(remote)
-    cacheProfile(account.uid, profile, remote.complete)
-    return { profile, complete: remote.complete }
+    cacheProfile(account.uid, profileFromAccount(remote), remote.complete)
+    return resolveProfile(remote, null)
   } catch {
-    const device = readCachedProfile(account.uid)
-    return { profile: profileFromCache(device), complete: device?.complete ?? false }
+    return resolveProfile(null, readCachedProfile(account.uid))
   }
 }
 
@@ -71,12 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setState({ status: 'signedOut' })
             return
           }
-          void loadProfile(firebase, next, langRef.current).then(({ profile, complete }) => {
+          void loadProfile(firebase, next, langRef.current).then(({ profile, status }) => {
             // Ignore the answer if someone else signed in, or the user signed out, while it was on its way.
             if (!cancelled && account.current?.uid === next.uid) {
               // The language chosen in the dig opens the app in that language again.
               if (profile.language !== null) setLang(profile.language)
-              setState({ status: 'signedIn', user: toUser(next, profile, complete) })
+              setState({ status: 'signedIn', user: toUser(next, profile, status) })
             }
           })
         })
@@ -147,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // The caller decides when the app moves on (the dig first finishes its last layer).
         return () => {
           if (account.current?.uid === current.uid) {
-            setState({ status: 'signedIn', user: toUser(current, profile, remote.complete) })
+            setState({ status: 'signedIn', user: toUser(current, profile, remote.complete ? 'complete' : 'incomplete') })
           }
         }
       },

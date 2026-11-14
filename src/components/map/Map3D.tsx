@@ -81,18 +81,19 @@ export function Map3D({ point, radiusM, digging, target, start, onSelect, onStat
         })
         map = created
         created.addControl(new lib.NavigationControl({ visualizePitch: true }), 'top-left')
-        // On a phone the credits fold into an "i" button so they do not cover the map; on wide screens they stay open.
-        const phone = window.matchMedia('(max-width: 767px)').matches
-        created.addControl(new lib.AttributionControl({ compact: phone }), 'bottom-right')
+        // The credits fold into an "i" button in the corner, so they never run behind Dwoggle or the panel.
+        created.addControl(new lib.AttributionControl({ compact: true }), 'bottom-right')
         const foldCredits = () => {
           const credits = container.querySelector('.maplibregl-ctrl-attrib')
           credits?.classList.remove('maplibregl-compact-show')
           credits?.removeAttribute('open')
         }
+        // MapLibre opens them at first; fold them at once, and again when the map has loaded.
+        window.setTimeout(foldCredits, 0)
         created.on('load', () => {
           loaded = true
           window.clearTimeout(timer)
-          if (phone) foldCredits()
+          foldCredits()
           if (!cancelled) setEngine({ lib, map: created })
         })
         created.on('error', () => {

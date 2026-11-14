@@ -4,6 +4,7 @@ import {
   GRADES,
   MOODS,
   type Check,
+  type Metrics,
   type CheckId,
   type DataSource,
   type Message,
@@ -86,7 +87,9 @@ function parsePlace(value: unknown, listed: ReadonlyMap<string, ListedSource>): 
   if (!isObject(value)) return null
   const display = typeof value.display === 'string' && value.display.trim() !== '' ? value.display : value.name
   if (typeof display !== 'string' || display.trim() === '') return null
+  const name = typeof value.name === 'string' && value.name.trim() !== '' ? value.name : (display.split(',')[0] ?? display)
   return {
+    name: name.trim(),
     display,
     attribution: typeof value.attribution === 'string' && value.attribution !== '' ? value.attribution : OSM.attribution,
     attribution_url: listed.get(OSM.id)?.url ?? OSM.url,
@@ -239,7 +242,19 @@ function parseCheck(value: unknown, at: string, listed: ReadonlyMap<string, List
     is_nasa_data: sources.every((source) => source.nasa),
     trend: hasValues ? first.trend : null,
     verification: optionalArray(raw.verification, parseMessage, `${at}.verification`),
+    metrics: parseMetrics(raw.metrics),
   }
+}
+
+/** The check's scalar metrics, as sent; anything else (objects, lists, null, NaN) is left out. */
+function parseMetrics(value: unknown): Metrics {
+  if (!isObject(value)) return {}
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, number | boolean | string] =>
+        isFiniteNumber(entry[1]) || typeof entry[1] === 'boolean' || typeof entry[1] === 'string',
+    ),
+  )
 }
 
 /**

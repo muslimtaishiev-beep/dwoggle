@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { searchPlaces, type Place } from '../api/geocode.ts'
 import type { LatLon } from '../api/types.ts'
+import { LineIcon } from '../brand/LineIcon.tsx'
+import { useVoiceInput } from '../hooks/useVoiceInput.ts'
 import { useI18n } from '../i18n/context.ts'
 import { PixelIcon } from './PixelIcon.tsx'
 import './AddressSearch.css'
@@ -8,6 +10,11 @@ import './AddressSearch.css'
 interface AddressSearchProps {
   /** A found place was chosen: the map should move there. Nothing is checked until the map is tapped. */
   onPick: (place: LatLon) => void
+  /**
+   * plate: the field floating over the map. pill: the map page's white field on the brown ground, with a
+   * microphone; its results open upwards.
+   */
+  variant?: 'plate' | 'pill'
 }
 
 type SearchState =
@@ -17,7 +24,7 @@ type SearchState =
   | { readonly kind: 'done'; readonly places: readonly Place[] }
 
 /** A search field over the map: type an address, submit, pick one of the places found. */
-export function AddressSearch({ onPick }: AddressSearchProps) {
+export function AddressSearch({ onPick, variant = 'plate' }: AddressSearchProps) {
   const { lang, t } = useI18n()
   const [query, setQuery] = useState('')
   const [state, setState] = useState<SearchState>({ kind: 'idle' })
@@ -31,26 +38,43 @@ export function AddressSearch({ onPick }: AddressSearchProps) {
     setState({ kind: 'idle' })
   }
 
+  const search = useCallback(
+    (raw: string) => {
+      const text = raw.trim()
+      request.current?.abort()
+      if (text === '') {
+        setState({ kind: 'idle' })
+        return
+      }
+      const controller = new AbortController()
+      request.current = controller
+      setState({ kind: 'loading' })
+      searchPlaces(text, lang, controller.signal).then(
+        (places) => {
+          if (!controller.signal.aborted) setState({ kind: 'done', places })
+        },
+        () => {
+          if (!controller.signal.aborted) setState({ kind: 'error' })
+        },
+      )
+    },
+    [lang],
+  )
+
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    const text = query.trim()
-    request.current?.abort()
-    if (text === '') {
-      setState({ kind: 'idle' })
-      return
-    }
-    const controller = new AbortController()
-    request.current = controller
-    setState({ kind: 'loading' })
-    searchPlaces(text, lang, controller.signal).then(
-      (places) => {
-        if (!controller.signal.aborted) setState({ kind: 'done', places })
-      },
-      () => {
-        if (!controller.signal.aborted) setState({ kind: 'error' })
-      },
-    )
+    search(query)
   }
+
+  // Spoken words become the query and are looked up at once.
+  const heard = useCallback(
+    (text: string) => {
+      setQuery(text)
+      search(text)
+    },
+    [search],
+  )
+  const voice = useVoiceInput(lang, heard)
 
   const pick = (place: Place) => {
     setQuery(place.title)
@@ -67,7 +91,7 @@ export function AddressSearch({ onPick }: AddressSearchProps) {
 
   return (
     <form
-      className="address-search"
+      className={`address-search address-search--${variant}`}
       role="search"
       aria-label={t('search.label')}
       onSubmit={submit}
@@ -78,7 +102,12 @@ export function AddressSearch({ onPick }: AddressSearchProps) {
         }
       }}
     >
-      <div className="address-search__field plate">
+      <div className={`address-search__field${variant === 'plate' ? ' plate' : ''}`}>
+        {variant === 'pill' && (
+          <button type="submit" className="address-search__lead" aria-label={t('search.submit')}>
+            <LineIcon name="search" size={22} />
+          </button>
+        )}
         <input
           ref={inputRef}
           className="address-search__input"
@@ -87,7 +116,7 @@ export function AddressSearch({ onPick }: AddressSearchProps) {
           autoComplete="off"
           enterKeyHint="search"
           aria-label={t('search.label')}
-          placeholder={t('search.placeholder')}
+          placeholder={t(variant === 'pill' ? 'search.village_placeholder' : 'search.placeholder')}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -96,13 +125,26 @@ export function AddressSearch({ onPick }: AddressSearchProps) {
             <PixelIcon name="close" size={14} />
           </button>
         )}
-        <button type="submit" className="address-search__icon-button address-search__submit" aria-label={t('search.submit')}>
-          <PixelIcon name="search" size={14} />
-        </button>
+        {variant === 'plate' && (
+          <button type="submit" className="address-search__icon-button address-search__submit" aria-label={t('search.submit')}>
+            <PixelIcon name="search" size={14} />
+          </button>
+        )}
+        {variant === 'pill' && voice.supported && (
+          <button
+            type="button"
+            className="address-search__mic"
+            aria-label={t(voice.listening ? 'search.listening' : 'search.voice')}
+            aria-pressed={voice.listening}
+            onClick={voice.listen}
+          >
+            <LineIcon name="mic" size={20} />
+          </button>
+        )}
       </div>
 
       {state.kind !== 'idle' && (
-        <div className="address-search__panel plate">
+        <div className={`address-search__panel${variant === 'plate' ? ' plate' : ''}`}>
           {state.kind === 'loading' && (
             <p className="address-search__message" role="status">
               {t('search.loading')}

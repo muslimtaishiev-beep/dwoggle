@@ -1,0 +1,222 @@
+/* The report beside the map, as drawn: a white card with a cream edge, rows with a fact and a grade block. */
+.report-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 100%;
+  padding: 18px 18px 12px;
+  overflow-y: auto;
+  border-radius: var(--brand-radius-card);
+  background: var(--brand-paper);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge), 0 10px 30px rgb(59 37 25 / 0.18);
+  color: var(--brand-ink);
+  font-family: var(--font-brand-body);
+  overscroll-behavior: contain;
+}
+
+.report-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.report-panel__title {
+  font-size: 26px;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+/* A long place name takes a smaller size, so the panel still fits beside the map. */
+.report-panel__title--long {
+  font-size: 22px;
+}
+
+.report-panel__where {
+  margin-top: 4px;
+  color: var(--brand-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.report-panel__close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand-cream);
+  color: var(--brand-text);
+  cursor: pointer;
+}
+
+.report-panel__summary {
+  padding: 10px 12px;
+  border-radius: var(--brand-radius);
+  background: var(--map-ui-summary);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.report-panel__checks {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report-panel__check {
+  display: grid;
+  grid-template-columns: 28px auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--map-ui-line);
+}
+
+.report-panel__check:last-child {
+  border-bottom: 0;
+}
+
+.report-panel__icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--map-ui-icon);
+  color: var(--brand-paper);
+}
+
+.report-panel__name {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* A short fact; a long one wraps to a second line rather than being cut. */
+.report-panel__fact {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--map-ui-fact);
+  font-family: var(--font-brand-plain);
+  font-size: 12.5px;
+  line-height: 1.2;
+  text-align: end;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* A grade block with a darker bottom edge, the letter in the display face. */
+.panel-grade {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  border-radius: 7px;
+  color: var(--brand-paper);
+  font-family: var(--font-brand-display);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.panel-grade--a { background: var(--grade-ui-a); box-shadow: 0 3px 0 0 var(--grade-ui-a-edge); }
+.panel-grade--b { background: var(--grade-ui-b); box-shadow: 0 3px 0 0 var(--grade-ui-b-edge); }
+.panel-grade--c { background: var(--grade-ui-c); box-shadow: 0 3px 0 0 var(--grade-ui-c-edge); }
+.panel-grade--d { background: var(--grade-ui-d); box-shadow: 0 3px 0 0 var(--grade-ui-d-edge); }
+.panel-grade--none { background: var(--grade-ui-none); box-shadow: 0 3px 0 0 var(--grade-ui-none-edge); }
+
+.report-panel__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+  padding-bottom: var(--brand-edge);
+}
+
+.report-panel__save {
+  flex: 1;
+  min-height: 48px;
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.report-panel__save[aria-pressed="true"] {
+  background: var(--brand-brown-hover);
+}
+
+.report-panel__share {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  border: 2px solid var(--brand-line);
+  border-radius: var(--brand-radius);
+  background: var(--brand-cream);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge);
+  color: var(--brand-brown);
+  cursor: pointer;
+}
+
+.report-panel__share:active,
+.report-panel__save:active {
+  box-shadow: none;
+  transform: translateY(var(--brand-edge));
+}
+
+.report-panel__note:empty {
+  display: none;
+}
+
+.report-panel__note {
+  color: var(--brand-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.report-panel__footer {
+  color: var(--brand-muted);
+  font-family: var(--font-brand-plain);
+  font-size: 11.5px;
+}
+
+.report-panel__footer a {
+  color: inherit;
+}
+
+.report-panel__retry {
+  min-height: 44px;
+}
+
+/* Saved areas: the whole row opens the area again; the cross removes it. */
+.report-panel__saved {
+  grid-template-columns: 28px 1fr auto;
+}
+
+.report-panel__saved-open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.report-panel__saved-open .report-panel__fact {
+  text-align: start;
+}
+
+.report-panel__saved .report-panel__close {
+  width: 30px;
+  height: 30px;
+}

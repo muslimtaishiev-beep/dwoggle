@@ -1,42 +1,48 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { LatLon } from '../api/types.ts'
+import type { LatLon, Report } from '../api/types.ts'
 import { useReport } from '../api/useReport.ts'
 import { AddressSearch } from '../components/AddressSearch.tsx'
-import { Mascot } from '../components/Mascot.tsx'
+import { AskDwoggle } from '../components/AskDwoggle.tsx'
 import { GradingPanel } from '../components/GradingPanel.tsx'
-import { LanguageMenu } from '../components/LanguageMenu.tsx'
+import { MapActions } from '../components/MapActions.tsx'
+import { MapHeader } from '../components/MapHeader.tsx'
 import { MapView } from '../components/MapView.tsx'
+import { ReportPanel } from '../components/ReportPanel.tsx'
+import { SavedPanel } from '../components/SavedPanel.tsx'
 import { Underground, type UndergroundView } from '../components/Underground.tsx'
 import type { MapStart } from '../components/map/shared.ts'
 import { DEFAULT_RADIUS_M, DIG_MIN_MS, MAP_DEFAULT_CENTER } from '../config.ts'
 import { countryView, DEFAULT_COUNTRY, findCountry } from '../data/countries.ts'
 import { useReducedMotion } from '../hooks/useReducedMotion.ts'
+import { useSavedAreas } from '../hooks/useSavedAreas.ts'
 import { useI18n } from '../i18n/context.ts'
-import { useAuth } from '../auth/context.ts'
-import { BrandMark } from '../brand/BrandMark.tsx'
-import { Link } from '../components/Link.tsx'
 import { ROUTES } from '../router.ts'
+import '../brand/brand.css'
 import './MapPage.css'
 
 /**
  * idle: the map, nothing tapped yet.
- * digging: Dwoggle sinks into the ground at the tapped point while the report loads.
- * open: the core has risen out of that point and the annotated figure lies over the dimmed map
- *       (or the summary, or a loading / error / no-data message).
- * closing: the figure fades and the map comes back.
+ * digging: Dwoggle digs at the tapped point while the report loads; the panel already says so.
+ * open: the report panel beside the map.
+ * layers: the annotated core with its five layers over the dimmed map ("Layers").
+ * closing: the core fades and the panel is back.
  */
-type Phase = 'idle' | 'digging' | 'open' | 'closing'
+type Phase = 'idle' | 'digging' | 'open' | 'layers' | 'closing'
 
 const CITY_VIEW: MapStart = { center: MAP_DEFAULT_CENTER, span: 'city' }
 
-/**
- * Where the map opens. The visitor's country decides it, so they see their own region first.
- * The home country opens on its capital at street level, where the 3D buildings show.
- */
+/** Where the map opens: the visitor's country, or the capital at street level where the 3D buildings show. */
 function startFor(countryCode: string | null): MapStart {
   const country = findCountry(countryCode)
   if (!country || country.code === DEFAULT_COUNTRY) return CITY_VIEW
   return countryView(country)
+}
+
+/** A shared link names its place: /map?at=42.82400,74.60400. */
+function pointFromLink(): LatLon | null {
+  const [lat, lon] = (new URLSearchParams(window.location.search).get('at') ?? '').split(',').map(Number)
+  if (lat === undefined || lon === undefined || !Number.isFinite(lat) || !Number.isFinite(lon)) return null
+  return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lat, lon } : null
 }
 
 interface MapPageProps {
@@ -44,21 +50,30 @@ interface MapPageProps {
   country: string | null
 }
 
+/**
+ * The map, as the designer drew it: a brown header, the 3D satellite map, the report panel beside it, and the
+ * brown ground below with the search, Dwoggle in his hole answering questions, and "Where am I", "Saved", "Layers".
+ */
 export default function MapPage({ country }: MapPageProps) {
   const { lang, t } = useI18n()
-  const { state: account } = useAuth()
   const reducedMotion = useReducedMotion()
-  const [point, setPoint] = useState<LatLon | null>(null)
-  const [phase, setPhase] = useState<Phase>('idle')
+  // A shared link opens straight on its place.
+  const [linked] = useState(pointFromLink)
+  const [point, setPoint] = useState<LatLon | null>(linked)
+  const [phase, setPhase] = useState<Phase>(() => (linked === null ? 'idle' : reducedMotion ? 'open' : 'digging'))
   const [view, setView] = useState<UndergroundView>('layers')
   const [layerIndex, setLayerIndex] = useState(0)
   const [digDone, setDigDone] = useState(false)
   // The core rises out of the ground once per tapped place.
   const [risen, setRisen] = useState(false)
   const [gradingOpen, setGradingOpen] = useState(false)
-  // A place found by the address search. The map moves there; the user still taps the exact spot.
-  const [place, setPlace] = useState<LatLon | null>(null)
+  const [savedOpen, setSavedOpen] = useState(false)
+  // A place to fly to: found by the search, the visitor's position, or a shared link.
+  const [place, setPlace] = useState<LatLon | null>(linked)
+  const [note, setNote] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const { state, retry } = useReport(point, lang)
+  const saved = useSavedAreas()
 
   const select = useCallback(
     (next: LatLon) => {
@@ -67,7 +82,9 @@ export default function MapPage({ country }: MapPageProps) {
       setLayerIndex(0)
       setDigDone(false)
       setRisen(false)
-      // With reduced motion there is no dig: the layers open straight away.
+      setSavedOpen(false)
+      setNote(null)
+      // With reduced motion there is no dig: the panel opens straight away.
       setPhase(reducedMotion ? 'open' : 'digging')
     },
     [reducedMotion],
@@ -79,41 +96,63 @@ export default function MapPage({ country }: MapPageProps) {
     return () => window.clearTimeout(timer)
   }, [point])
 
-  // The dig ends once the report has arrived and Dwoggle has gone under. Then the core rises.
+  useEffect(() => {
+    if (notice === null) return
+    const timer = window.setTimeout(() => setNotice(null), 4000)
+    return () => window.clearTimeout(timer)
+  }, [notice])
+
+  // The dig ends once the report has arrived and Dwoggle has gone under.
   if (phase === 'digging' && digDone && state.status !== 'loading') {
     setPhase('open')
   }
 
   const report = state.status === 'ready' ? state.report : null
-  const figureShown = phase === 'open' || phase === 'closing'
+  const layersShown = phase === 'layers' || phase === 'closing'
 
-  const skipToReport = () => {
-    setView('summary')
-    setPhase('open')
-  }
-
-  const backToMap = useCallback(() => {
+  const close = useCallback(() => {
     setPoint(null)
     setPhase('idle')
   }, [])
 
-  // With motion, the figure fades first and the map is restored when that has finished.
-  const close = () => (reducedMotion ? backToMap() : setPhase('closing'))
+  const save = () => {
+    if (point === null) return
+    saved.toggle(point, report?.location.place?.name ?? null)
+  }
+
+  const share = (shown: Report) => {
+    const url = `${window.location.origin}${ROUTES.map}?at=${shown.location.lat.toFixed(5)},${shown.location.lon.toFixed(5)}`
+    const title = shown.location.place ? t('panel.near', { place: shown.location.place.name }) : t('report.title')
+    if (typeof navigator.share === 'function') {
+      navigator.share({ title, url }).catch(() => undefined)
+      return
+    }
+    navigator.clipboard?.writeText(url).then(
+      () => setNote(t('panel.copied')),
+      () => setNote(url),
+    )
+  }
+
+  const whereAmI = () => {
+    if (!('geolocation' in navigator)) {
+      setNotice(t('actions.where_failed'))
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => setPlace({ lat: position.coords.latitude, lon: position.coords.longitude }),
+      () => setNotice(t('actions.where_failed')),
+      { enableHighAccuracy: true, timeout: 10000 },
+    )
+  }
+
+  const panelShown = point !== null && state.status !== 'idle' && phase !== 'idle'
 
   return (
-    <div className={`app app--${phase}`}>
-      <header className="app__hud">
-        <h1 className="app__title plate">
-          <Link to={ROUTES.landing} className="app__home" aria-label={t('site.home')}>
-            <BrandMark />
-          </Link>
-        </h1>
-        <LanguageMenu />
-        {phase === 'idle' && <AddressSearch onPick={setPlace} />}
-      </header>
+    <div className={`map-page map-page--${phase}`}>
+      <MapHeader onGrading={() => setGradingOpen(true)} />
 
-      <main className="app__stage">
-        <div className="app__surface" inert={phase === 'open'}>
+      <main className="map-page__stage">
+        <div className="map-page__map" inert={layersShown}>
           <MapView
             point={point}
             radiusM={report?.location.radius_m ?? DEFAULT_RADIUS_M}
@@ -122,27 +161,38 @@ export default function MapPage({ country }: MapPageProps) {
             start={startFor(country)}
             onSelect={select}
           />
-
-          {phase === 'idle' && (
-            <div className="app__ledge">
-              <Mascot pose="idle" size="md" label={t('bekem.waiting')} />
-              <p className="app__bubble plate">{t('map.hint')}</p>
-            </div>
-          )}
-
-          {phase === 'digging' && (
-            <div className="app__dig-status">
-              <p className="app__bubble plate" role="status">
-                {t('bekem.loading')}
-              </p>
-              <button type="button" className="button" onClick={skipToReport}>
-                {t('dig.skip')}
-              </button>
-            </div>
-          )}
         </div>
 
-        {point && figureShown && state.status !== 'idle' && (
+        {(savedOpen || panelShown) && !layersShown && (
+          <aside className="map-page__side">
+            {savedOpen ? (
+              <SavedPanel
+                areas={saved.areas}
+                onOpen={(area) => {
+                  setPlace(area)
+                  select(area)
+                }}
+                onRemove={saved.remove}
+                onClose={() => setSavedOpen(false)}
+              />
+            ) : (
+              point &&
+              state.status !== 'idle' && (
+                <ReportPanel
+                  state={state}
+                  saved={saved.isSaved(point)}
+                  note={note}
+                  onSave={save}
+                  onShare={share}
+                  onRetry={retry}
+                  onClose={close}
+                />
+              )
+            )}
+          </aside>
+        )}
+
+        {point && layersShown && state.status !== 'idle' && (
           <Underground
             key={`${point.lat},${point.lon}`}
             point={point}
@@ -155,23 +205,40 @@ export default function MapPage({ country }: MapPageProps) {
             onViewChange={setView}
             onLayerChange={setLayerIndex}
             onRetry={retry}
-            onClose={close}
-            onLeft={backToMap}
+            onClose={() => (reducedMotion ? setPhase('open') : setPhase('closing'))}
+            onLeft={() => setPhase('open')}
           />
         )}
       </main>
 
-      <footer className="app__footer on-dark">
-        <p className="app__disclaimer">{t('app.disclaimer')}</p>
-        <div className="app__footer-actions">
-          <button type="button" className="button button--small" onClick={() => setGradingOpen(true)}>
-            {t('header.how_we_grade')}
-          </button>
-          {account.status === 'signedOut' && (
-            <Link to={ROUTES.signIn} className="button button--small app__sign-in">
-              {t('site.sign_in')}
-            </Link>
-          )}
+      <footer className="map-page__ground">
+        <svg className="map-page__wave" viewBox="0 0 1280 18" preserveAspectRatio="none" aria-hidden="true">
+          <path className="map-page__wave-fill" d="M0 18H1280V8C1130 2 1010 14 840 9S520 3 360 10 120 14 0 6Z" />
+          <path className="map-page__wave-line" d="M0 6C120 14 220 4 360 10S660 3 840 9 1130 2 1280 8" />
+        </svg>
+        <div className="map-page__search">
+          <AddressSearch variant="pill" onPick={setPlace} />
+        </div>
+        <div className="map-page__ask">
+          <AskDwoggle report={report} checking={phase === 'digging'} notice={notice} />
+        </div>
+        <div className="map-page__actions">
+          <MapActions
+            actions={[
+              { icon: 'navigate', label: 'actions.where', onClick: whereAmI },
+              { icon: 'bookmark', label: 'actions.saved', onClick: () => setSavedOpen((open) => !open), pressed: savedOpen },
+              {
+                icon: 'layers',
+                label: 'actions.layers',
+                onClick: () => {
+                  setSavedOpen(false)
+                  setPhase('layers')
+                },
+                disabled: report === null,
+                pressed: layersShown,
+              },
+            ]}
+          />
         </div>
       </footer>
 

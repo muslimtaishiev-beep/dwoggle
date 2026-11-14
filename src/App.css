@@ -1,0 +1,10 @@
+/* Shown while the app finds out who is signed in, and while the map's code loads. */
+.app-loading {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--space-4);
+  background: var(--brand-paper);
+  color: var(--brand-ink);
+  font-family: var(--font-brand-body);
+}

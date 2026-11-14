@@ -136,3 +136,77 @@
   font-size: var(--font-size-xs);
   overflow-wrap: anywhere;
 }
+
+/* The map page's field, as drawn: a white pill on the brown ground, a search glass, a brown microphone. */
+.address-search--pill {
+  position: relative;
+  width: 100%;
+}
+
+.address-search--pill .address-search__field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 50px;
+  padding: 4px 6px 4px 12px;
+  border-radius: 999px;
+  background: var(--brand-paper);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge);
+}
+
+.address-search--pill .address-search__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand-ink);
+  font-family: var(--font-brand-plain);
+  font-size: 16px;
+  text-overflow: ellipsis;
+  outline: none;
+}
+
+.address-search--pill .address-search__input::placeholder {
+  color: var(--brand-placeholder);
+}
+
+.address-search__lead,
+.address-search__mic {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--brand-brown);
+  cursor: pointer;
+}
+
+.address-search__mic {
+  background: var(--brand-brown);
+  color: var(--brand-paper);
+}
+
+.address-search__mic[aria-pressed="true"] {
+  background: var(--grade-ui-d);
+}
+
+.address-search--pill .address-search__panel {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 0;
+  right: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+  border-radius: var(--brand-radius-card);
+  background: var(--brand-paper);
+  box-shadow: 0 12px 32px rgb(59 37 25 / 0.22);
+  color: var(--brand-ink);
+  font-family: var(--font-brand-body);
+}
+
+.address-search--pill:focus-within .address-search__field {
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge), 0 0 0 3px var(--brand-yellow);
+}

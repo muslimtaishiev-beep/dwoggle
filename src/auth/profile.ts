@@ -1,6 +1,6 @@
 import { isLang } from '../i18n/i18n.ts'
 import type { AccountProfile } from './accountApi.ts'
-import { EMPTY_PROFILE, isConcern, isPurpose, type Concern, type Profile } from './types.ts'
+import { EMPTY_PROFILE, isConcern, isPurpose, type Concern, type Profile, type ProfileStatus } from './types.ts'
 
 /**
  * What this browser keeps about the signed-in user: a copy of the profile the backend holds, without the phone
@@ -49,6 +49,25 @@ export function profileFromCache(cached: CachedProfile | null): Profile {
   if (cached === null) return EMPTY_PROFILE
   const { language, country, purpose, purposeNote, concerns } = cached
   return { language, country, phone: null, purpose, purposeNote, concerns }
+}
+
+/**
+ * The profile after a sign-in: what the backend answered or, when it could not be asked (null), what this device
+ * remembers. Without an answer the profile is never called incomplete: that would send a returning user through
+ * the dig again, and its answers could not be saved anyway.
+ */
+export function resolveProfile(remote: AccountProfile | null, device: CachedProfile | null): { profile: Profile; status: ProfileStatus } {
+  if (remote !== null) return { profile: profileFromAccount(remote), status: remote.complete ? 'complete' : 'incomplete' }
+  return { profile: profileFromCache(device), status: device?.complete ? 'complete' : 'unknown' }
+}
+
+/** Someone was signed in on this device when it was last used (their profile copy is still here). */
+export function hasCachedProfile(): boolean {
+  try {
+    return window.localStorage.getItem(CACHE_KEY) !== null
+  } catch {
+    return false
+  }
 }
 
 export function readCachedProfile(userId: string): CachedProfile | null {

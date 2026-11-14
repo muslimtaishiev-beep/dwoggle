@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 
-/** The pages of the app. Anything else shows the landing page. */
-export const ROUTES = { landing: '/', signIn: '/sign-in', welcome: '/welcome', map: '/map' } as const
+/** The pages of the app. The main page is the sign-up page; any other address leads to it. */
+export const ROUTES = { signIn: '/', welcome: '/welcome', map: '/map' } as const
 export type Route = (typeof ROUTES)[keyof typeof ROUTES]
 
 const listeners = new Set<() => void>()

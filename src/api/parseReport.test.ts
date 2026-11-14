@@ -28,6 +28,7 @@ describe('parseReport', () => {
       lon: 74.604,
       radius_m: 300,
       place: {
+        name: 'Microdistrict 10',
         display: 'Microdistrict 10, Bishkek City',
         attribution: '© OpenStreetMap contributors',
         attribution_url: 'https://www.openstreetmap.org/copyright',
