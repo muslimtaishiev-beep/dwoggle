@@ -1,0 +1,58 @@
+[
+ {
+  "id": "KG000036911",
+  "lat": 42.833,
+  "lon": 75.283,
+  "elev_m": 817.0,
+  "name": "Tokmak",
+  "summers": 26
+ },
+ {
+  "id": "KG000036974",
+  "lat": 41.4331,
+  "lon": 76.0,
+  "elev_m": 2041.0,
+  "name": "Naryn",
+  "summers": 26
+ },
+ {
+  "id": "KG000036982",
+  "lat": 41.883,
+  "lon": 78.233,
+  "elev_m": 3639.0,
+  "name": "Tian-Shan",
+  "summers": 25
+ },
+ {
+  "id": "KG000038345",
+  "lat": 42.517,
+  "lon": 72.217,
+  "elev_m": 1218.0,
+  "name": "Talas",
+  "summers": 27
+ },
+ {
+  "id": "KG000038353",
+  "lat": 42.83,
+  "lon": 74.58,
+  "elev_m": 756.0,
+  "name": "Bishkek",
+  "summers": 24
+ },
+ {
+  "id": "KG000038613",
+  "lat": 40.917,
+  "lon": 72.95,
+  "elev_m": 765.0,
+  "name": "Dzhalal-Abad",
+  "summers": 27
+ },
+ {
+  "id": "KG000038616",
+  "lat": 40.6,
+  "lon": 72.9,
+  "elev_m": 866.0,
+  "name": "Kara-Suu",
+  "summers": 27
+ }
+]

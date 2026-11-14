@@ -1,0 +1,3 @@
+-r requirements.txt
+pytest>=8
+cryptography>=42  # test-signed Firebase tokens

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "kara-suu-flood",
+    "lat": 40.705,
+    "lon": 72.873,
+    "name": {"en": "Kara-Suu, flooded street (May 2026)", "ru": "Кара-Суу, затопленная улица (май 2026)", "ky": "Кара-Суу, суу каптаган көчө (май 2026)"},
+    "expect": {"flood": "D", "mood": "whistling"},
+    "note": "Town-centre placeholder. Replace with the exact flooded street before the demo, then run scripts/prewarm.py and check the grade."
+  },
+  {
+    "id": "bishkek-issyk-ata",
+    "lat": 42.815,
+    "lon": 74.62,
+    "name": {"en": "New district on the Issyk-Ata fault, Bishkek", "ru": "Новый район на Иссык-Атинском разломе, Бишкек", "ky": "Ысык-Ата жаракасындагы жаңы конуш, Бишкек"},
+    "expect": {"earthquake": "D", "mood": "alert"},
+    "note": "0.66 km from the Issyk Atta Fault in the GEM database."
+  },
+  {
+    "id": "kant-safe",
+    "lat": 42.89,
+    "lon": 74.85,
+    "name": {"en": "Kant, flat Chuy valley", "ru": "Кант, равнина Чуйской долины", "ky": "Кант, Чүй өрөөнүнүн түздүгү"},
+    "expect": {"mood": "relaxed"},
+    "note": "13.6 km from the nearest mapped fault. Verify the satellite checks come out A/B with real data; swap the point if not."
+  }
+]

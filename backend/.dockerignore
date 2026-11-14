@@ -1,0 +1,12 @@
+# Secrets never go into the image: the container gets them as env vars from Cloudflare.
+.env
+*-key.json
+service-account*.json
+
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+data/*.sqlite3*
+data/appeears/
