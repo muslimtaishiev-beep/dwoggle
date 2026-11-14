@@ -41,6 +41,18 @@ describe('answerTo', () => {
     expect(answer).toContain('Issyk Atta Fault')
   })
 
+  it('ends a check\'s answer with what to do about it, where the app has a line for that grade', () => {
+    expect(answerTo('flood', report, i18n('en')).endsWith(translate('en', 'advice.flood.D'))).toBe(true)
+    expect(answerTo('heat', report, i18n('ru')).endsWith(translate('ru', 'advice.heat.D'))).toBe(true)
+    // Greenery has grade A here: nothing to do, so nothing is added.
+    expect(answerTo('green', report, i18n('en'))).not.toContain(translate('en', 'advice.green.B'))
+  })
+
+  it('gives all the advice with the answer about building', () => {
+    const answer = answerTo('build', report, i18n('en'))
+    for (const key of ['advice.flood.D', 'advice.heat.D'] as const) expect(answer).toContain(translate('en', key))
+  })
+
   it('says so when a check has no data, instead of inventing a grade', () => {
     expect(answerTo('landslide', report, i18n('en'))).toBe('Landslide: no data. Not enough satellite data here.')
   })

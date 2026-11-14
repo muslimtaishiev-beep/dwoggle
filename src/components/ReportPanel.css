@@ -61,6 +61,13 @@
   line-height: 1.35;
 }
 
+.report-panel__hint {
+  margin-top: -2px;
+  color: var(--brand-muted);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
 .report-panel__checks {
   display: flex;
   flex-direction: column;
@@ -69,18 +76,32 @@
   list-style: none;
 }
 
+/* One check: the whole line is a button that asks Dwoggle about it. */
 .report-panel__check {
   display: grid;
   grid-template-columns: 28px auto 1fr auto;
   align-items: center;
   gap: 12px;
+  width: 100%;
   min-height: 34px;
   padding: 2px 0;
+  border: 0;
   border-bottom: 1px solid var(--map-ui-line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
 }
 
-.report-panel__check:last-child {
+.report-panel__checks li:last-child .report-panel__check {
   border-bottom: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .report-panel__checks .report-panel__check:hover {
+    background: var(--map-ui-summary);
+  }
 }
 
 .report-panel__icon {
@@ -192,9 +213,10 @@
   min-height: 44px;
 }
 
-/* Saved areas: the whole row opens the area again; the cross removes it. */
+/* Saved areas: the row opens the area again; the cross removes it. The row itself is not a button here. */
 .report-panel__saved {
   grid-template-columns: 28px 1fr auto;
+  cursor: default;
 }
 
 .report-panel__saved-open {

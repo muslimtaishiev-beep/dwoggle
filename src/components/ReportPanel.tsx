@@ -1,4 +1,4 @@
-import type { Grade, Report } from '../api/types.ts'
+import type { CheckId, Grade, Report } from '../api/types.ts'
 import type { ReportState } from '../api/useReport.ts'
 import { LineIcon } from '../brand/LineIcon.tsx'
 import { useI18n } from '../i18n/context.ts'
@@ -12,6 +12,8 @@ interface ReportPanelProps {
   saved: boolean
   /** A short note after sharing ("Link copied"), or null. */
   note: string | null
+  /** A check's line was pressed: Dwoggle explains it. */
+  onAsk: (check: CheckId) => void
   onSave: () => void
   onShare: (report: Report) => void
   onRetry: () => void
@@ -33,7 +35,7 @@ function PanelGrade({ grade }: { grade: Grade | null }) {
  * The tapped area at a glance, beside the map: where it is, what the checks found, one short fact and the grade
  * for each, and saving or sharing it. The layered figure behind "Layers" tells the longer story.
  */
-export function ReportPanel({ state, saved, note, onSave, onShare, onRetry, onClose }: ReportPanelProps) {
+export function ReportPanel({ state, saved, note, onAsk, onSave, onShare, onRetry, onClose }: ReportPanelProps) {
   const i18n = useI18n()
   const { t, formatNumber } = i18n
   const report = state.status === 'ready' ? state.report : null
@@ -79,19 +81,23 @@ export function ReportPanel({ state, saved, note, onSave, onShare, onRetry, onCl
       {report && (
         <>
           <p className="report-panel__summary">{reportSummary(report, i18n)}</p>
+          <p className="report-panel__hint">{t('panel.tap_hint')}</p>
           <ul className="report-panel__checks">
             {PANEL_ORDER.map((id) => {
               const check = report.checks.find((item) => item.id === id)
               if (!check) return null
               const fact = checkFact(check, i18n)
               return (
-                <li key={id} className="report-panel__check">
-                  <span className="report-panel__icon">
-                    <LineIcon name={id} size={18} />
-                  </span>
-                  <span className="report-panel__name">{t(`check.${id}`)}</span>
-                  <span className="report-panel__fact">{fact ?? (check.grade === null ? t('grade.none') : '')}</span>
-                  <PanelGrade grade={check.grade} />
+                <li key={id}>
+                  {/* The whole line is a button: pressing it asks Dwoggle about this check. */}
+                  <button type="button" className="report-panel__check" aria-label={t('panel.ask_about', { check: t(`check.${id}`) })} onClick={() => onAsk(id)}>
+                    <span className="report-panel__icon">
+                      <LineIcon name={id} size={18} />
+                    </span>
+                    <span className="report-panel__name">{t(`check.${id}`)}</span>
+                    <span className="report-panel__fact">{fact ?? (check.grade === null ? t('grade.none') : '')}</span>
+                    <PanelGrade grade={check.grade} />
+                  </button>
                 </li>
               )
             })}

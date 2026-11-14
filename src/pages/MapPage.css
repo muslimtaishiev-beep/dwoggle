@@ -38,8 +38,8 @@
 .map-page__side {
   position: absolute;
   z-index: calc(var(--z-map-overlay) + 1);
-  top: 20px;
-  bottom: 22px;
+  top: 16px;
+  bottom: 18px;
   inset-inline-end: 32px;
   display: flex;
   flex-direction: column;

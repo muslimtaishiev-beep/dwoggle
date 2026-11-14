@@ -24,6 +24,11 @@ const PATHS = {
   navigate: 'M20 4 4 11l7 2 2 7 7-16Z',
   bookmark: 'M7 4h10v16l-5-4-5 4V4Z',
   layers: 'M12 4 3 9l9 5 9-5-9-5ZM3 13.5l9 5 9-5',
+  // A map pin.
+  pin: 'M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11ZM12 12.3a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6Z',
+  // A clock: a place looked up before.
+  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7.5V12l3 2',
+  back: 'M19 12H5M11 6l-6 6 6 6',
   // A paper plane.
   send: 'M21 3 3 10.5l7 2.5 2.5 7L21 3ZM10 13l4.5-4.5',
   // A loudspeaker with a sound wave.

@@ -1,5 +1,6 @@
 import { GRADES, type Check, type CheckId, type Grade, type Report } from '../api/types.ts'
 import type { I18nContextValue } from '../i18n/context.ts'
+import { lookupMessage } from '../i18n/i18n.ts'
 import { buildMessage, buildSummary } from '../i18n/summary.ts'
 
 /**
@@ -86,13 +87,25 @@ function checkList(checks: readonly Check[], { lang, t }: I18n): string {
   return names.length === 0 ? (last ?? '') : `${names.join(', ')} ${t('list.and')} ${last}`
 }
 
-/** The advice the backend gives with a grade (e.g. how to build near a fault), for the checks with warning signs. */
-function advice(report: Report, { lang }: I18n): string[] {
-  return warningChecks(report)
-    .flatMap((check) => check.messages.filter((message) => message.key.includes('advice')))
-    .map((message) => buildMessage(message, lang))
-    .filter((sentence) => sentence.translated)
-    .map((sentence) => sentence.text)
+/**
+ * What to do about a check's grade, in one line: the app's own advice for that check and grade
+ * (`advice.<check>.<grade>` in the translations file), where it has one. The backend's advice (how to build near
+ * a fault) is already among the check's own sentences.
+ */
+export function adviceFor(check: Check, { lang }: Pick<I18n, 'lang'>): string | null {
+  return check.grade === null ? null : (lookupMessage(lang, `advice.${check.id}.${check.grade}`) ?? null)
+}
+
+/** All the advice that goes with the warning signs: the backend's sentences and the app's lines. */
+function advice(report: Report, i18n: I18n): string[] {
+  return warningChecks(report).flatMap((check) => [
+    ...check.messages
+      .filter((message) => message.key.includes('advice'))
+      .map((message) => buildMessage(message, i18n.lang))
+      .filter((sentence) => sentence.translated)
+      .map((sentence) => sentence.text),
+    ...[adviceFor(check, i18n)].filter((line): line is string => line !== null),
+  ])
 }
 
 /** The panel's lead: which checks show warning signs. The advice that comes with them is Dwoggle's to tell. */

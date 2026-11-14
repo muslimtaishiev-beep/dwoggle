@@ -90,6 +90,18 @@ export const DIG_MIN_MS = 1700
  * per second, and no search-as-you-type, so the app only searches when the form is submitted.
  * To use another geocoder, change the URL here and the response parsing in src/api/geocode.ts.
  */
+/** Cities offered in the search before anything is typed; their names are `place.<id>` in the translations file. */
+export const CITIES = [
+  { id: 'bishkek', lat: 42.8746, lon: 74.5698 },
+  { id: 'osh', lat: 40.5283, lon: 72.7985 },
+  { id: 'jalal_abad', lat: 40.9333, lon: 73.0 },
+  { id: 'karakol', lat: 42.4907, lon: 78.3936 },
+  { id: 'tokmok', lat: 42.8419, lon: 75.3015 },
+  { id: 'naryn', lat: 41.4287, lon: 75.9911 },
+  { id: 'talas', lat: 42.5228, lon: 72.2427 },
+  { id: 'batken', lat: 40.0626, lon: 70.8194 },
+] as const
+
 export const GEOCODER = {
   url: 'https://nominatim.openstreetmap.org/search',
   /** Only places in Kyrgyzstan are found (ISO country code, as Nominatim's countrycodes). */

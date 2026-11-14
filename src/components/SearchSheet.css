@@ -1,0 +1,257 @@
+/*
+ * The search, opened: a sheet over most of the screen, as map apps here do it. It slides up from the bottom edge
+ * (the drawer curve) while the map dims behind it, and slides away the same way.
+ */
+.search-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  color: var(--brand-ink);
+  font-family: var(--font-brand-body);
+  font-weight: var(--font-weight-bold);
+  --color-focus: var(--brand-focus);
+}
+
+.search-sheet__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgb(59 37 25 / 0.4);
+  cursor: default;
+  transition: opacity 200ms ease;
+}
+
+.search-sheet__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 100%);
+  height: min(74dvh, 640px);
+  border-radius: 24px 24px 0 0;
+  background: var(--brand-paper);
+  box-shadow: 0 -8px 40px rgb(59 37 25 / 0.25);
+  transition: transform 320ms var(--ease-drawer);
+}
+
+@starting-style {
+  .search-sheet__scrim {
+    opacity: 0;
+  }
+
+  .search-sheet__panel {
+    transform: translateY(100%);
+  }
+}
+
+.search-sheet--leaving .search-sheet__scrim {
+  opacity: 0;
+}
+
+.search-sheet--leaving .search-sheet__panel {
+  transform: translateY(100%);
+  transition-duration: 220ms;
+}
+
+/* ---------- The field ---------- */
+
+.search-sheet__field {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin: 18px 18px 6px;
+  padding: 5px 6px;
+  border: 2.5px solid var(--brand-brown);
+  border-radius: 999px;
+  background: var(--brand-paper);
+}
+
+.search-sheet__input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--brand-ink);
+  font-family: var(--font-brand-plain);
+  font-size: 18px;
+  outline: none;
+}
+
+.search-sheet__input::placeholder {
+  color: var(--brand-placeholder);
+}
+
+.search-sheet__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--brand-brown);
+  cursor: pointer;
+}
+
+.search-sheet__icon[aria-pressed="true"] {
+  background: var(--grade-ui-d);
+  color: var(--brand-paper);
+}
+
+.search-sheet__submit {
+  flex: none;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand-brown);
+  color: var(--brand-paper);
+  font-family: var(--font-brand-display);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* ---------- What is offered and what is found ---------- */
+
+.search-sheet__body {
+  flex: 1;
+  min-height: 0;
+  padding: 6px 18px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.search-sheet__message {
+  padding: 10px 6px;
+  color: var(--brand-text);
+  font-size: 16px;
+}
+
+.search-sheet__message--error {
+  color: var(--color-error-text);
+}
+
+.search-sheet__heading {
+  margin: 14px 6px 6px;
+  color: var(--brand-muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.search-sheet__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-sheet__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 6px;
+  border: 0;
+  border-bottom: 1px solid var(--map-ui-line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.search-sheet__row-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--brand-cream);
+  color: var(--brand-brown);
+}
+
+.search-sheet__row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.search-sheet__row-title {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.search-sheet__row-detail {
+  overflow: hidden;
+  color: var(--brand-text);
+  font-family: var(--font-brand-plain);
+  font-size: 14px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-sheet__cities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.search-sheet__city {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand-cream);
+  color: var(--brand-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .search-sheet__row:hover {
+    background: var(--map-ui-summary);
+  }
+
+  .search-sheet__city:hover {
+    background: var(--brand-cream-deep);
+  }
+}
+
+/* A phone: the sheet takes nearly the whole screen, so the keyboard leaves room for what is found. */
+@media (max-width: 767px) {
+  .search-sheet__panel {
+    height: calc(100dvh - 44px);
+    border-radius: 20px 20px 0 0;
+  }
+
+  .search-sheet__field {
+    margin: 12px 10px 4px;
+  }
+
+  .search-sheet__submit {
+    padding: 0 14px;
+    font-size: 18px;
+  }
+
+  .search-sheet__body {
+    padding-inline: 10px;
+  }
+}
+
+/* Reduced motion: the sheet and the dimming simply appear and go. */
+@media (prefers-reduced-motion: reduce) {
+  .search-sheet__scrim,
+  .search-sheet__panel {
+    transition: none;
+  }
+}

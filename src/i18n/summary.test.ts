@@ -16,9 +16,9 @@ describe('buildSummary', () => {
   it('builds every sentence of the check from its message keys, in order', () => {
     expect(buildSummary(check('flood'), 'en')).toEqual({
       text:
-        'Satellites saw water within 300 m in 11 of 26 years observed (2000–2025). ' +
+        'Satellites saw water within 300 m of here in 11 of 26 years (2000–2025). ' +
         'This area is 7 m lower than the land around it. ' +
-        'Steep slopes rise above this area: a possible mudflow path.',
+        'Steep slopes rise above this area. A mudflow could come down this way.',
       translated: true,
     })
   })
@@ -55,7 +55,7 @@ describe('buildSummary', () => {
 
   it('translates params that are message keys themselves ("@susc.3")', () => {
     expect(buildMessage({ key: 'landslide.susc', params: { cls: '@susc.3' } }, 'en').text).toBe(
-      'NASA landslide map: moderate susceptibility.',
+      "NASA's landslide map rates the risk here as moderate.",
     )
     expect(buildMessage({ key: 'landslide.susc', params: { cls: '@susc.9' } }, 'en')).toEqual({
       text: 'cls: @susc.9',

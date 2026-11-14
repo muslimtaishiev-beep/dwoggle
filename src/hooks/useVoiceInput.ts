@@ -20,6 +20,11 @@ function recognitionClass(): RecognitionConstructor | null {
   return scope.SpeechRecognition ?? scope.webkitSpeechRecognition ?? null
 }
 
+/** Whether this browser can listen to speech at all. */
+export function canListen(): boolean {
+  return recognitionClass() !== null
+}
+
 /** Speaking instead of typing, in the given language. `supported` is false where the browser cannot listen. */
 export function useVoiceInput(lang: string, onText: (text: string) => void) {
   const [listening, setListening] = useState(false)

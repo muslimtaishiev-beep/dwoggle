@@ -90,7 +90,11 @@ All user-facing text is in [src/i18n/translations.json](src/i18n/translations.js
 
 ## Address search
 
-The field over the map looks up an address when the form is submitted, lists the places found, and moves the map to the one you pick. Nothing is checked until you tap the map. It uses Nominatim, the free OpenStreetMap geocoder: no API key, at most one request per second, and no search-as-you-type, which is why the app does not search on every keystroke. Places in Kyrgyzstan are listed first. The geocoder is set in `GEOCODER` in [src/config.ts](src/config.ts) and read by [src/api/geocode.ts](src/api/geocode.ts). The typed address is sent to that service.
+The white pill under the map opens the search as a sheet over most of the screen ([src/components/SearchSheet.tsx](src/components/SearchSheet.tsx)): a large field, the places looked up lately (kept on the device), the country's cities, and then what was found. A question can be typed or spoken. The place that is picked is checked at once: the map goes there and Dwoggle digs. It uses Nominatim, the free OpenStreetMap geocoder: no API key, at most one request per second, and no search-as-you-type, which is why a place is looked up when the form is sent and not on every keystroke. Only places in Kyrgyzstan are found. The geocoder is set in `GEOCODER` in [src/config.ts](src/config.ts) and read by [src/api/geocode.ts](src/api/geocode.ts). The typed address is sent to that service.
+
+## Plain words
+
+The report is written for people who are new to such apps, grandparents among them. Every sentence the backend sends as a key (`api.*` in [src/i18n/translations.json](src/i18n/translations.json)) is short, in everyday words, with the numbers kept. For flood, landslide, heat and greenery at grades B to D the app adds one line on what to do (`advice.<check>.<grade>`); for earthquakes the backend sends its own. Pressing a line of the report opens the chat, where Dwoggle says what was found and then what to do. The advice never promises an outcome and never gives permission to build; a native speaker should check the Kyrgyz before launch.
 
 ## Stepping through the layers
 
@@ -100,7 +104,7 @@ Next/back buttons, a horizontal swipe, the arrow keys, or a tap on a layer of th
 
 The sign-in page and the dig follow the designer's screens. Art lives in [public/brand/](public/brand/):
 
-- `dwoggle-head.png`: the logo's head, traced from the design and made from the designer's file `Dwoggle mascot v3 helmet.png`.
+- `dwoggle-head.png`: the logo's head, drawn by `python3 scripts/logo-head.py "Dwoggle mascot v3 helmet.png"`: the mascot's own helmet, placed as in the designer's logo, over a face drawn fresh and symmetric, every line of one heavy weight so it reads at logo size.
 - `dwoggle-standing.webp`: Dwoggle standing with his map, on the sign-up page and the map. It is the designer's file `Dwoggle mascot v3 helmet.png` cropped to its own bounds and scaled to 669 x 1000. His lids and his mouth are drawn over it ([src/brand/StandingDwoggle.tsx](src/brand/StandingDwoggle.tsx)): he blinks, and his mouth moves when he speaks.
 - `dwoggle-dig-*.webp` (body, both front paws, tail, head and chest, earth): Dwoggle digging in the dig, cut into layers so his paws really scrape, his tail wags and he rocks ([src/brand/DiggingDwoggle.tsx](src/brand/DiggingDwoggle.tsx)). Made with `python3 scripts/mascot-dig.py scripts/art/dwoggle-digging.webp`. That source is still a cut-out from a screenshot of the design: when the designer's own file arrives (same drawing, transparent background), run the script on it for sharper layers.
 - In development, `/dev/dig` shows the dig without signing in (saving at the end fails on purpose).

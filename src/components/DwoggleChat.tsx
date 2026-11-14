@@ -92,12 +92,19 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
 
   const voice = useVoiceInput(lang, (text) => respond(text, topicOf(text), true))
 
-  // His words appear one after another while he speaks.
+  // His words appear one after another while he speaks: by the clock, so a busy screen does not slow his speech.
   useEffect(() => {
-    if (thinking || reducedMotion || shown >= words.length) return
-    const timer = window.setTimeout(() => setShown((count) => count + 1), WORD_MS)
-    return () => window.clearTimeout(timer)
-  }, [thinking, shown, words.length, reducedMotion])
+    if (thinking || reducedMotion) return
+    const total = words.length
+    const started = performance.now()
+    const timer = window.setInterval(() => {
+      const count = Math.min(total, Math.floor((performance.now() - started) / WORD_MS) + 1)
+      setShown(count)
+      if (count >= total) window.clearInterval(timer)
+    }, WORD_MS)
+    return () => window.clearInterval(timer)
+    // A new answer starts again from its first word.
+  }, [thinking, reducedMotion, turn.answer, words.length])
 
   // As the chat opens: his first thought ends, and on a computer the field is ready to type in
   // (on a phone the keyboard would cover half the screen before anything is read).

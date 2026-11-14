@@ -6,7 +6,7 @@ export function BrandMark() {
   const { t } = useI18n()
   return (
     <span className="brand-mark">
-      <img className="brand-mark__head" src="/brand/dwoggle-head.png" alt="" width={198} height={177} />
+      <img className="brand-mark__head" src="/brand/dwoggle-head.png" alt="" width={198} height={174} />
       <span className="brand-mark__name">{t('app.title')}</span>
     </span>
   )

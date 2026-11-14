@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { LatLon, Report } from '../api/types.ts'
 import { useReport } from '../api/useReport.ts'
-import { AddressSearch } from '../components/AddressSearch.tsx'
 import { AskDwoggle } from '../components/AskDwoggle.tsx'
 import { DwoggleChat } from '../components/DwoggleChat.tsx'
 import { GradingPanel } from '../components/GradingPanel.tsx'
@@ -10,6 +9,8 @@ import { MapHeader } from '../components/MapHeader.tsx'
 import { MapView } from '../components/MapView.tsx'
 import { ReportPanel } from '../components/ReportPanel.tsx'
 import { SavedPanel } from '../components/SavedPanel.tsx'
+import { SearchField } from '../components/SearchField.tsx'
+import { SearchSheet } from '../components/SearchSheet.tsx'
 import { Underground, type UndergroundView } from '../components/Underground.tsx'
 import { DEFAULT_RADIUS_M, DIG_MIN_MS } from '../config.ts'
 import { isInKyrgyzstan } from '../data/coverage.ts'
@@ -61,6 +62,8 @@ export default function MapPage() {
   const [note, setNote] = useState<string | null>(null)
   // The chat with Dwoggle, over the map; `ask` is a ready question to open it with.
   const [chat, setChat] = useState<{ ask: Topic | null } | null>(null)
+  // The search sheet, over the map; `listen` when it was opened with the microphone.
+  const [search, setSearch] = useState<{ listen: boolean } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const { state, retry } = useReport(point, lang)
   const saved = useSavedAreas()
@@ -153,7 +156,7 @@ export default function MapPage() {
   return (
     <div className={`map-page map-page--${phase}`}>
       {/* The map's own screen; out of reach while the chat is open over it. */}
-      <div className="map-page__screen" inert={chat !== null}>
+      <div className="map-page__screen" inert={chat !== null || search !== null}>
         <MapHeader onGrading={() => setGradingOpen(true)} />
 
         <main className="map-page__stage">
@@ -186,6 +189,7 @@ export default function MapPage() {
                     state={state}
                     saved={saved.isSaved(point)}
                     note={note}
+                    onAsk={openChat}
                     onSave={save}
                     onShare={share}
                     onRetry={retry}
@@ -198,7 +202,7 @@ export default function MapPage() {
 
           {!layersShown && (
             <button type="button" className="map-page__talk" aria-label={t('chat.open')} data-reveal-origin="" onClick={() => openChat(null)}>
-              <img src="/brand/dwoggle-head.png" alt="" width={198} height={170} />
+              <img src="/brand/dwoggle-head.png" alt="" width={198} height={174} />
             </button>
           )}
 
@@ -227,7 +231,7 @@ export default function MapPage() {
             <path className="map-page__wave-line" d="M0 6C120 14 220 4 360 10S660 3 840 9 1130 2 1280 8" />
           </svg>
           <div className="map-page__search">
-            <AddressSearch variant="pill" onPick={setPlace} />
+            <SearchField onOpen={(listen) => setSearch({ listen })} />
           </div>
           <div className="map-page__ask">
             <AskDwoggle report={report} checking={phase === 'digging'} notice={notice} onChat={openChat} />
@@ -254,6 +258,17 @@ export default function MapPage() {
       </div>
 
       {chat && <DwoggleChat report={report} ask={chat.ask} onClose={closeChat} />}
+      {search && (
+        <SearchSheet
+          listenAtOnce={search.listen}
+          // A place that was looked up is checked at once: the map goes there and Dwoggle digs.
+          onPick={(found) => {
+            setPlace(found)
+            select(found)
+          }}
+          onClose={() => setSearch(null)}
+        />
+      )}
       <GradingPanel open={gradingOpen} onClose={() => setGradingOpen(false)} />
     </div>
   )

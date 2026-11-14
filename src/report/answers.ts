@@ -1,6 +1,6 @@
 import { CHECK_IDS, GRADES, type CheckId, type Report } from '../api/types.ts'
 import type { I18nContextValue } from '../i18n/context.ts'
-import { buildAnswer, checkFact, PANEL_ORDER, reportSummary, whyAnswer } from './facts.ts'
+import { adviceFor, buildAnswer, checkFact, PANEL_ORDER, reportSummary, whyAnswer } from './facts.ts'
 
 /**
  * Dwoggle's answers in the chat. They are put together from the open report and the app's own texts: nothing is
@@ -39,12 +39,13 @@ function isCheck(topic: Topic): topic is CheckId {
   return (CHECK_IDS as readonly string[]).includes(topic)
 }
 
-/** "Earthquake: D. Strong warning signs found." and then the check's own sentences. */
+/** "Earthquake: D. Strong warning signs found.", then what was found (the check's own sentences), then what to do. */
 function checkAnswer(id: CheckId, report: Report, i18n: I18n): string {
   const { t } = i18n
   const check = report.checks.find((item) => item.id === id)
   if (!check || check.grade === null) return `${t(`check.${id}`)}: ${t('grade.none')}. ${t('api.nodata')}`
-  return `${t(`check.${id}`)}: ${check.grade}. ${t(`grade.${check.grade}`)}. ${whyAnswer(check, i18n)}`
+  const parts = [`${t(`check.${id}`)}: ${check.grade}. ${t(`grade.${check.grade}`)}.`, whyAnswer(check, i18n), adviceFor(check, i18n)]
+  return parts.filter((part): part is string => part !== null && part !== '').join(' ')
 }
 
 /** The warning signs found, then one line for every check that has a grade. */
