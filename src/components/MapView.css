@@ -1,0 +1,273 @@
+.map-view {
+  position: absolute;
+  inset: 0;
+}
+
+.map-view__map {
+  width: 100%;
+  height: 100%;
+  background: var(--color-surface-muted);
+  font-family: var(--font-body);
+}
+
+/* Overlays never block taps on the map. */
+.map-view__overlay {
+  position: absolute;
+  left: 50%;
+  z-index: var(--z-map-overlay);
+  width: max-content;
+  max-width: calc(100% - 2 * var(--space-4));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.map-view__overlay--center {
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Below the title row and the search field. */
+.map-view__overlay--top {
+  top: calc(var(--tap-target) * 2 + var(--space-6));
+}
+
+/*
+ * The map libraries' own controls, restyled to match the app's labels.
+ * MapLibre draws the 3D map, Leaflet the flat fallback; both get the same treatment.
+ */
+.map-view .maplibregl-map {
+  font-family: var(--font-body);
+}
+
+.map-view .maplibregl-ctrl-top-left,
+.map-view .leaflet-top.leaflet-left {
+  top: calc(var(--tap-target) + var(--space-5));
+}
+
+.map-view .maplibregl-ctrl.maplibregl-ctrl-group,
+.map-view .leaflet-bar {
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  box-shadow: var(--outline-float);
+}
+
+.map-view .maplibregl-ctrl-group button,
+.map-view .leaflet-bar a {
+  width: calc(var(--tap-target) - var(--space-2));
+  height: calc(var(--tap-target) - var(--space-2));
+  border-radius: var(--radius-control);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.map-view .maplibregl-ctrl.maplibregl-ctrl-group,
+.map-view .leaflet-bar {
+  overflow: hidden;
+}
+
+.map-view .maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-divider);
+}
+
+.map-view .leaflet-bar a {
+  border-bottom: 1px solid var(--color-divider);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-bold);
+  line-height: calc(var(--tap-target) - var(--space-2));
+}
+
+.map-view .leaflet-bar a:last-child {
+  border-bottom: 0;
+}
+
+.map-view .maplibregl-ctrl-group button:not(:disabled):hover,
+.map-view .leaflet-bar a:hover {
+  background-color: var(--color-surface-muted);
+}
+
+.map-view .leaflet-control-attribution {
+  font-family: var(--font-body);
+}
+
+.map-view .maplibregl-ctrl-attrib {
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+}
+
+/* Phones zoom, turn and tilt with two fingers; the buttons would only cover the map. */
+@media (pointer: coarse) {
+  .map-view .maplibregl-ctrl-top-left,
+  .map-view .leaflet-control-zoom {
+    display: none;
+  }
+}
+
+/* Leaflet sets SVG presentation attributes; CSS rules take precedence over them. */
+.map-area {
+  stroke: var(--map-area-stroke);
+  stroke-width: var(--map-area-stroke-width);
+  stroke-dasharray: var(--map-area-dash);
+  stroke-linecap: butt;
+  fill: var(--map-area-fill);
+  fill-opacity: var(--map-area-fill-opacity);
+}
+
+.map-pin,
+.map-digger {
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+
+.map-pin__dot {
+  position: absolute;
+  width: var(--map-pin-size);
+  height: var(--map-pin-size);
+  border: 2px solid var(--map-pin-ring);
+  border-radius: 50%;
+  background: var(--map-pin-fill);
+  box-shadow: 0 1px 4px 0 var(--color-drop-shadow);
+  transform: translate(-50%, -50%);
+}
+
+/*
+ * Dwoggle on the map. He runs in to the tapped point, sinks into the ground there,
+ * and soil keeps flying out of the hole until the report arrives.
+ * run.svg holds two frames side by side (see scripts/placeholder-art.mjs).
+ */
+.map-digger__run,
+.map-digger__dig {
+  position: absolute;
+  top: calc(var(--sprite-md) * -0.9);
+  left: calc(var(--sprite-md) * -0.5);
+  width: var(--sprite-md);
+  height: var(--sprite-md);
+}
+
+.map-digger__run {
+  background: url("/bekem/run.svg") no-repeat 0 0 / 200% 100%;
+  animation:
+    digger-approach var(--duration-run) linear both,
+    sprite-frames var(--duration-frame-pair) steps(2, jump-none) infinite,
+    digger-hide 0s linear var(--duration-run) forwards;
+}
+
+.map-digger__dig {
+  visibility: hidden;
+  animation: digger-show 0s linear var(--duration-run) forwards;
+}
+
+/* The hole he digs: a dark opening with a rim of loose soil. */
+.map-digger__hole {
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  width: 80%;
+  height: 22%;
+  border-radius: 50%;
+  background: var(--color-night);
+  box-shadow: 0 0 0 calc(var(--px) * 3) var(--color-soil);
+}
+
+/* Everything below the middle of the hole is underground and cannot be seen. */
+.map-digger__shaft {
+  position: absolute;
+  inset: 0 0 11%;
+  overflow: hidden;
+}
+
+.map-digger__body {
+  position: absolute;
+  inset: 0;
+  background: url("/bekem/run.svg") no-repeat 0 0 / 200% 100%;
+  animation:
+    digger-sink var(--duration-burrow) steps(10, jump-none) var(--duration-run) both,
+    sprite-frames calc(var(--duration-frame-pair) / 2) steps(2, jump-none) infinite;
+}
+
+/* Clods of soil fly out to both sides for as long as he digs. */
+.map-digger__dig::before,
+.map-digger__dig::after {
+  content: "";
+  position: absolute;
+  bottom: 12%;
+  width: calc(var(--px) * 4);
+  height: calc(var(--px) * 4);
+  background: var(--color-soil-dark);
+  box-shadow: calc(var(--px) * 6) calc(var(--px) * -4) 0 0 var(--color-soil);
+  animation: digger-dirt-left calc(var(--duration-frame-pair) * 2) steps(6, jump-none) var(--duration-run) infinite;
+}
+
+.map-digger__dig::before {
+  left: 24%;
+}
+
+.map-digger__dig::after {
+  right: 24%;
+  animation-name: digger-dirt-right;
+  animation-delay: calc(var(--duration-run) + var(--duration-frame-pair));
+}
+
+@keyframes digger-sink {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes digger-dirt-left {
+  from {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(calc(var(--sprite-md) * -0.4), calc(var(--sprite-md) * -0.7));
+  }
+
+  to {
+    transform: translate(calc(var(--sprite-md) * -0.8), 0);
+  }
+}
+
+@keyframes digger-dirt-right {
+  from {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(calc(var(--sprite-md) * 0.4), calc(var(--sprite-md) * -0.7));
+  }
+
+  to {
+    transform: translate(calc(var(--sprite-md) * 0.8), 0);
+  }
+}
+
+@keyframes digger-approach {
+  from {
+    transform: translate(calc(var(--sprite-md) * -2.2), calc(var(--sprite-md) * 1.4));
+  }
+}
+
+@keyframes sprite-frames {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 100% 0;
+  }
+}
+
+@keyframes digger-hide {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes digger-show {
+  to {
+    visibility: visible;
+  }
+}

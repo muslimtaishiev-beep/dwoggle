@@ -1,0 +1,68 @@
+.check-row {
+  list-style: none;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.check-row:last-child {
+  border-bottom: 0;
+}
+
+.check-row__main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.check-row__main--toggle {
+  cursor: pointer;
+}
+
+.check-row__main--toggle:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .check-row__main--toggle:hover {
+    background: var(--color-surface-muted);
+  }
+}
+
+.check-row__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.check-row__name {
+  font-size: var(--display-sm);
+  overflow-wrap: anywhere;
+}
+
+.check-row__summary {
+  font-size: var(--font-size-sm);
+}
+
+/* Shown when the translations file has no sentence for this summary_key. */
+.check-row__summary--raw {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+}
+
+.check-row__chevron {
+  display: flex;
+  flex: none;
+  align-self: center;
+}
+
+.check-row__chart {
+  padding: 0 var(--space-4) var(--space-4);
+}

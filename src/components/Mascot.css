@@ -1,0 +1,35 @@
+/* Fixed-size boxes: final art of any aspect ratio fits without moving the layout. */
+.mascot {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.mascot--sm {
+  width: var(--sprite-sm);
+  height: var(--sprite-sm);
+}
+
+.mascot--md {
+  width: var(--sprite-md);
+  height: var(--sprite-md);
+}
+
+.mascot--portrait {
+  width: var(--portrait-size);
+  height: var(--portrait-size);
+}
+
+.mascot__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.mascot--missing {
+  border-radius: var(--radius-control);
+  background: var(--color-surface-pressed);
+}

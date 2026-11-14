@@ -1,0 +1,1371 @@
+{
+  "location": {
+    "lat": 42.824,
+    "lon": 74.604,
+    "radius_m": 300,
+    "place": {
+      "name": "Microdistrict 10",
+      "locality": "Bishkek City",
+      "region": null,
+      "country": "Kyrgyzstan",
+      "country_code": "kg",
+      "display": "Microdistrict 10, Bishkek City",
+      "attribution": "© OpenStreetMap contributors"
+    }
+  },
+  "lang": "en",
+  "text_lang": "en",
+  "mood": {
+    "id": "whistling",
+    "title": "Bekem is whistling!",
+    "line": "High flood or landslide risk in this area."
+  },
+  "checks": [
+    {
+      "id": "flood",
+      "title": "Flood/mudflow",
+      "grade": "D",
+      "summary": "Satellites saw water within 300 m in 11 of 26 years observed (2000–2025). This area is 7 m lower than the land around it. Steep slopes rise above this area: a possible mudflow path.",
+      "messages": [
+        {
+          "key": "flood.water_years",
+          "params": {
+            "n": 11,
+            "total": 26,
+            "first": 2000,
+            "last": 2025,
+            "radius": 300
+          },
+          "text": "Satellites saw water within 300 m in 11 of 26 years observed (2000–2025)."
+        },
+        {
+          "key": "flood.low",
+          "params": {
+            "drop": 7
+          },
+          "text": "This area is 7 m lower than the land around it."
+        },
+        {
+          "key": "flood.mudflow",
+          "params": {},
+          "text": "Steep slopes rise above this area: a possible mudflow path."
+        }
+      ],
+      "metrics": {
+        "years_with_water": 11,
+        "years_observed": 26,
+        "first_year": 2000,
+        "last_year": 2025,
+        "relative_elevation_m": -6.8,
+        "low_lying": true,
+        "mudflow_path": true,
+        "upslope_p95_slope_deg": 25.2
+      },
+      "source_ids": [
+        "landsat_water",
+        "nasadem"
+      ],
+      "series": [
+        {
+          "id": "water",
+          "label": "Water seen within 300 m (% of area)",
+          "unit": "%",
+          "resolution_m": 30,
+          "source_id": "landsat_water",
+          "points": [
+            {
+              "year": 2000,
+              "value": 7.5,
+              "source": "jrc"
+            },
+            {
+              "year": 2001,
+              "value": 3.8,
+              "source": "jrc"
+            },
+            {
+              "year": 2002,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2003,
+              "value": 7.06,
+              "source": "jrc"
+            },
+            {
+              "year": 2004,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2005,
+              "value": 3.72,
+              "source": "jrc"
+            },
+            {
+              "year": 2006,
+              "value": 8.52,
+              "source": "jrc"
+            },
+            {
+              "year": 2007,
+              "value": 1.2,
+              "source": "jrc"
+            },
+            {
+              "year": 2008,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2009,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2010,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2011,
+              "value": 1.78,
+              "source": "jrc"
+            },
+            {
+              "year": 2012,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2013,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2014,
+              "value": 3.52,
+              "source": "jrc"
+            },
+            {
+              "year": 2015,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2016,
+              "value": 10.55,
+              "source": "jrc"
+            },
+            {
+              "year": 2017,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2018,
+              "value": 5.9,
+              "source": "jrc"
+            },
+            {
+              "year": 2019,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2020,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2021,
+              "value": 0.0,
+              "source": "jrc"
+            },
+            {
+              "year": 2022,
+              "value": 0.0,
+              "source": "landsat_own"
+            },
+            {
+              "year": 2023,
+              "value": 0.0,
+              "source": "landsat_own"
+            },
+            {
+              "year": 2024,
+              "value": 0.0,
+              "source": "landsat_own"
+            },
+            {
+              "year": 2025,
+              "value": 11.96,
+              "source": "landsat_own"
+            }
+          ],
+          "trend": null
+        },
+        {
+          "id": "rain",
+          "label": "Spring-summer rainfall (Mar-Sep, mm)",
+          "unit": "mm",
+          "resolution_m": 11000,
+          "source_id": "giovanni_imerg",
+          "points": [
+            {
+              "year": 2001,
+              "value": 373.8
+            },
+            {
+              "year": 2002,
+              "value": 344.3
+            },
+            {
+              "year": 2003,
+              "value": 357.7
+            },
+            {
+              "year": 2004,
+              "value": 174.8
+            },
+            {
+              "year": 2005,
+              "value": 270.5
+            },
+            {
+              "year": 2006,
+              "value": 411.3
+            },
+            {
+              "year": 2007,
+              "value": 246.1
+            },
+            {
+              "year": 2008,
+              "value": 417.9
+            },
+            {
+              "year": 2009,
+              "value": 157.5
+            },
+            {
+              "year": 2010,
+              "value": 192.0
+            },
+            {
+              "year": 2011,
+              "value": 216.6
+            },
+            {
+              "year": 2012,
+              "value": 423.7
+            },
+            {
+              "year": 2013,
+              "value": 368.5
+            },
+            {
+              "year": 2014,
+              "value": 181.0
+            },
+            {
+              "year": 2015,
+              "value": 264.7
+            },
+            {
+              "year": 2016,
+              "value": 218.4
+            },
+            {
+              "year": 2017,
+              "value": 431.5
+            },
+            {
+              "year": 2018,
+              "value": 419.3
+            },
+            {
+              "year": 2019,
+              "value": 372.9
+            },
+            {
+              "year": 2020,
+              "value": 171.2
+            },
+            {
+              "year": 2021,
+              "value": 325.8
+            },
+            {
+              "year": 2022,
+              "value": 175.1
+            },
+            {
+              "year": 2023,
+              "value": 342.0
+            },
+            {
+              "year": 2024,
+              "value": 245.1
+            },
+            {
+              "year": 2025,
+              "value": 391.0
+            }
+          ],
+          "trend": {
+            "n": 25,
+            "slope_per_year": -0.08417,
+            "intercept": 495.2416,
+            "change": -2.0202,
+            "tau": -0.0133,
+            "z": -0.0701,
+            "p_value": 0.94414,
+            "significant": false,
+            "direction": "none",
+            "line": [
+              {
+                "year": 2001,
+                "value": 326.8101
+              },
+              {
+                "year": 2025,
+                "value": 324.7899
+              }
+            ],
+            "label": "not significant"
+          }
+        },
+        {
+          "id": "rain_max",
+          "label": "Wettest day of the season (Mar-Sep, mm)",
+          "unit": "mm",
+          "resolution_m": 11000,
+          "source_id": "giovanni_imerg",
+          "points": [
+            {
+              "year": 2001,
+              "value": 28.6
+            },
+            {
+              "year": 2002,
+              "value": 35.7
+            },
+            {
+              "year": 2003,
+              "value": 16.2
+            },
+            {
+              "year": 2004,
+              "value": 22.1
+            },
+            {
+              "year": 2005,
+              "value": 20.6
+            },
+            {
+              "year": 2006,
+              "value": 17.4
+            },
+            {
+              "year": 2007,
+              "value": 41.9
+            },
+            {
+              "year": 2008,
+              "value": 21.4
+            },
+            {
+              "year": 2009,
+              "value": 14.2
+            },
+            {
+              "year": 2010,
+              "value": 25.3
+            },
+            {
+              "year": 2011,
+              "value": 22.1
+            },
+            {
+              "year": 2012,
+              "value": 27.4
+            },
+            {
+              "year": 2013,
+              "value": 41.2
+            },
+            {
+              "year": 2014,
+              "value": 41.7
+            },
+            {
+              "year": 2015,
+              "value": 26.0
+            },
+            {
+              "year": 2016,
+              "value": 10.4
+            },
+            {
+              "year": 2017,
+              "value": 21.3
+            },
+            {
+              "year": 2018,
+              "value": 14.9
+            },
+            {
+              "year": 2019,
+              "value": 44.5
+            },
+            {
+              "year": 2020,
+              "value": 39.4
+            },
+            {
+              "year": 2021,
+              "value": 26.8
+            },
+            {
+              "year": 2022,
+              "value": 15.6
+            },
+            {
+              "year": 2023,
+              "value": 20.1
+            },
+            {
+              "year": 2024,
+              "value": 41.7
+            },
+            {
+              "year": 2025,
+              "value": 18.0
+            }
+          ],
+          "trend": {
+            "n": 25,
+            "slope_per_year": 0.01579,
+            "intercept": -9.68421,
+            "change": 0.3789,
+            "tau": 0.0067,
+            "z": 0.0234,
+            "p_value": 0.98136,
+            "significant": false,
+            "direction": "none",
+            "line": [
+              {
+                "year": 2001,
+                "value": 21.9105
+              },
+              {
+                "year": 2025,
+                "value": 22.2895
+              }
+            ],
+            "label": "not significant"
+          }
+        },
+        {
+          "id": "runoff",
+          "label": "Storm runoff, wettest month (mm, regional ~28 km)",
+          "unit": "mm",
+          "resolution_m": 28000,
+          "source_id": "giovanni_gldas",
+          "points": [
+            {
+              "year": 2000,
+              "value": 0.78
+            },
+            {
+              "year": 2001,
+              "value": 3.66
+            },
+            {
+              "year": 2002,
+              "value": 1.79
+            },
+            {
+              "year": 2003,
+              "value": 2.74
+            },
+            {
+              "year": 2004,
+              "value": 3.85
+            },
+            {
+              "year": 2005,
+              "value": 3.79
+            },
+            {
+              "year": 2006,
+              "value": 2.01
+            },
+            {
+              "year": 2007,
+              "value": 3.22
+            },
+            {
+              "year": 2008,
+              "value": 0.88
+            },
+            {
+              "year": 2009,
+              "value": 4.54
+            },
+            {
+              "year": 2010,
+              "value": 5.87
+            },
+            {
+              "year": 2011,
+              "value": 5.42
+            },
+            {
+              "year": 2012,
+              "value": 4.72
+            },
+            {
+              "year": 2013,
+              "value": 2.67
+            },
+            {
+              "year": 2014,
+              "value": 0.42
+            },
+            {
+              "year": 2015,
+              "value": 5.59
+            },
+            {
+              "year": 2016,
+              "value": 4.8
+            },
+            {
+              "year": 2017,
+              "value": 1.69
+            },
+            {
+              "year": 2018,
+              "value": 4.98
+            },
+            {
+              "year": 2019,
+              "value": 2.18
+            },
+            {
+              "year": 2020,
+              "value": 5.7
+            },
+            {
+              "year": 2021,
+              "value": 2.08
+            },
+            {
+              "year": 2022,
+              "value": 5.43
+            },
+            {
+              "year": 2023,
+              "value": 5.41
+            },
+            {
+              "year": 2024,
+              "value": 3.05
+            },
+            {
+              "year": 2025,
+              "value": 4.84
+            }
+          ],
+          "trend": {
+            "n": 26,
+            "slope_per_year": 0.08211,
+            "intercept": -161.51184,
+            "change": 2.0526,
+            "tau": 0.2492,
+            "z": 1.7633,
+            "p_value": 0.07785,
+            "significant": false,
+            "direction": "none",
+            "line": [
+              {
+                "year": 2000,
+                "value": 2.6987
+              },
+              {
+                "year": 2025,
+                "value": 4.7513
+              }
+            ],
+            "label": "not significant"
+          }
+        },
+        {
+          "id": "soil",
+          "label": "Topsoil moisture, May-Sep (mm in top 10 cm, regional ~28 km)",
+          "unit": "mm",
+          "resolution_m": 28000,
+          "source_id": "giovanni_gldas",
+          "points": [
+            {
+              "year": 2000,
+              "value": 19.45
+            },
+            {
+              "year": 2001,
+              "value": 27.25
+            },
+            {
+              "year": 2002,
+              "value": 19.24
+            },
+            {
+              "year": 2003,
+              "value": 15.64
+            },
+            {
+              "year": 2004,
+              "value": 17.69
+            },
+            {
+              "year": 2005,
+              "value": 25.94
+            },
+            {
+              "year": 2006,
+              "value": 15.38
+            },
+            {
+              "year": 2007,
+              "value": 27.5
+            },
+            {
+              "year": 2008,
+              "value": 29.03
+            },
+            {
+              "year": 2009,
+              "value": 21.22
+            },
+            {
+              "year": 2010,
+              "value": 28.83
+            },
+            {
+              "year": 2011,
+              "value": 27.59
+            },
+            {
+              "year": 2012,
+              "value": 27.81
+            },
+            {
+              "year": 2013,
+              "value": 26.52
+            },
+            {
+              "year": 2014,
+              "value": 18.27
+            },
+            {
+              "year": 2015,
+              "value": 18.67
+            },
+            {
+              "year": 2016,
+              "value": 23.98
+            },
+            {
+              "year": 2017,
+              "value": 24.32
+            },
+            {
+              "year": 2018,
+              "value": 23.0
+            },
+            {
+              "year": 2019,
+              "value": 29.97
+            },
+            {
+              "year": 2020,
+              "value": 19.29
+            },
+            {
+              "year": 2021,
+              "value": 15.49
+            },
+            {
+              "year": 2022,
+              "value": 17.02
+            },
+            {
+              "year": 2023,
+              "value": 19.11
+            },
+            {
+              "year": 2024,
+              "value": 25.69
+            },
+            {
+              "year": 2025,
+              "value": 17.04
+            }
+          ],
+          "trend": {
+            "n": 26,
+            "slope_per_year": -0.08429,
+            "intercept": 191.735,
+            "change": -2.1071,
+            "tau": -0.0892,
+            "z": -0.6172,
+            "p_value": 0.53713,
+            "significant": false,
+            "direction": "none",
+            "line": [
+              {
+                "year": 2000,
+                "value": 23.1636
+              },
+              {
+                "year": 2025,
+                "value": 21.0564
+              }
+            ],
+            "label": "not significant"
+          }
+        }
+      ],
+      "verification": []
+    },
+    {
+      "id": "landslide",
+      "title": "Landslide",
+      "grade": null,
+      "summary": "Not enough satellite data here.",
+      "messages": [
+        {
+          "key": "nodata",
+          "params": {},
+          "text": "Not enough satellite data here."
+        }
+      ],
+      "metrics": {},
+      "source_ids": [
+        "nasadem"
+      ],
+      "series": [],
+      "verification": []
+    },
+    {
+      "id": "earthquake",
+      "title": "Earthquake",
+      "grade": "D",
+      "summary": "1.3 km from an active fault (Issyk Atta Fault). Build only with an engineered earthquake-resistant design.",
+      "messages": [
+        {
+          "key": "eq.near",
+          "params": {
+            "km": 1.3,
+            "name": "Issyk Atta Fault"
+          },
+          "text": "1.3 km from an active fault (Issyk Atta Fault)."
+        },
+        {
+          "key": "eq.advice.D",
+          "params": {},
+          "text": "Build only with an engineered earthquake-resistant design."
+        }
+      ],
+      "metrics": {
+        "distance_km": 1.29,
+        "fault_name": "Issyk Atta Fault",
+        "slip_type": "Reverse",
+        "catalog_id": "GAF_684",
+        "nearest_point": {
+          "lon": 74.59995,
+          "lat": 42.81278
+        },
+        "fault_geometry": {
+          "type": "MultiLineString",
+          "coordinates": [
+            [
+              [
+                75.73574,
+                42.77168
+              ],
+              [
+                75.41671,
+                42.69724
+              ],
+              [
+                75.25188,
+                42.69724
+              ],
+              [
+                75.06046,
+                42.71319
+              ]
+            ]
+          ]
+        }
+      },
+      "source_ids": [
+        "gem_faults"
+      ],
+      "series": [],
+      "verification": []
+    },
+    {
+      "id": "heat",
+      "title": "Heat",
+      "grade": "D",
+      "summary": "4.1°C hotter in summer than in 2000. This trend is statistically real.",
+      "messages": [
+        {
+          "key": "heat.up_sig",
+          "params": {
+            "change": 4.1,
+            "start": 2000
+          },
+          "text": "4.1°C hotter in summer than in 2000. This trend is statistically real."
+        }
+      ],
+      "metrics": {
+        "change_c": 4.12,
+        "p_value": 0.0
+      },
+      "source_ids": [
+        "modis_lst"
+      ],
+      "series": [
+        {
+          "id": "lst",
+          "label": "Summer ground temperature (Jun-Aug, °C)",
+          "unit": "°C",
+          "resolution_m": 1000,
+          "source_id": "modis_lst",
+          "points": [
+            {
+              "year": 2000,
+              "value": 32.24
+            },
+            {
+              "year": 2001,
+              "value": 32.64
+            },
+            {
+              "year": 2002,
+              "value": 34.23
+            },
+            {
+              "year": 2003,
+              "value": 32.96
+            },
+            {
+              "year": 2004,
+              "value": 33.71
+            },
+            {
+              "year": 2005,
+              "value": 34.57
+            },
+            {
+              "year": 2006,
+              "value": 32.22
+            },
+            {
+              "year": 2007,
+              "value": 33.23
+            },
+            {
+              "year": 2008,
+              "value": 32.89
+            },
+            {
+              "year": 2009,
+              "value": 33.63
+            },
+            {
+              "year": 2010,
+              "value": 33.46
+            },
+            {
+              "year": 2011,
+              "value": 34.55
+            },
+            {
+              "year": 2012,
+              "value": 34.01
+            },
+            {
+              "year": 2013,
+              "value": 35.58
+            },
+            {
+              "year": 2014,
+              "value": 33.95
+            },
+            {
+              "year": 2015,
+              "value": 33.92
+            },
+            {
+              "year": 2016,
+              "value": 36.61
+            },
+            {
+              "year": 2017,
+              "value": 35.23
+            },
+            {
+              "year": 2018,
+              "value": 35.21
+            },
+            {
+              "year": 2019,
+              "value": 35.19
+            },
+            {
+              "year": 2020,
+              "value": 35.25
+            },
+            {
+              "year": 2021,
+              "value": 33.97
+            },
+            {
+              "year": 2022,
+              "value": 36.51
+            },
+            {
+              "year": 2023,
+              "value": 36.74
+            },
+            {
+              "year": 2024,
+              "value": 36.91
+            },
+            {
+              "year": 2025,
+              "value": 37.35
+            }
+          ],
+          "trend": {
+            "n": 26,
+            "slope_per_year": 0.165,
+            "intercept": -297.9425,
+            "change": 4.125,
+            "tau": 0.6308,
+            "z": 4.4965,
+            "p_value": 1e-05,
+            "significant": true,
+            "direction": "increasing",
+            "line": [
+              {
+                "year": 2000,
+                "value": 32.0575
+              },
+              {
+                "year": 2025,
+                "value": 36.1825
+              }
+            ],
+            "label": "significant ✓"
+          }
+        }
+      ],
+      "verification": [
+        {
+          "source": "noaa_station",
+          "source_id": "noaa_ghcn",
+          "independent": true,
+          "status": "differs",
+          "key": "verify.station.differs",
+          "params": {
+            "name": "Bishkek",
+            "km": 2.1,
+            "dir": "@trend.none"
+          },
+          "station": {
+            "id": "KG000038353",
+            "name": "Bishkek",
+            "distance_km": 2.1,
+            "elev_m": 756.0
+          },
+          "series": {
+            "id": "station_tmax",
+            "unit": "°C",
+            "resolution_m": 0,
+            "source_id": "noaa_ghcn",
+            "points": [
+              {
+                "year": 2004,
+                "value": 30.75
+              },
+              {
+                "year": 2005,
+                "value": 31.63
+              },
+              {
+                "year": 2006,
+                "value": 31.36
+              },
+              {
+                "year": 2007,
+                "value": 32.14
+              },
+              {
+                "year": 2008,
+                "value": 32.99
+              },
+              {
+                "year": 2009,
+                "value": 30.51
+              },
+              {
+                "year": 2010,
+                "value": 31.23
+              },
+              {
+                "year": 2011,
+                "value": 31.42
+              },
+              {
+                "year": 2012,
+                "value": 33.08
+              },
+              {
+                "year": 2013,
+                "value": 31.15
+              },
+              {
+                "year": 2014,
+                "value": 31.84
+              },
+              {
+                "year": 2015,
+                "value": 32.15
+              },
+              {
+                "year": 2016,
+                "value": 30.79
+              },
+              {
+                "year": 2017,
+                "value": 32.08
+              },
+              {
+                "year": 2018,
+                "value": 31.78
+              },
+              {
+                "year": 2019,
+                "value": 33.09
+              },
+              {
+                "year": 2020,
+                "value": 31.51
+              },
+              {
+                "year": 2021,
+                "value": 32.8
+              },
+              {
+                "year": 2022,
+                "value": 31.83
+              },
+              {
+                "year": 2023,
+                "value": 32.91
+              },
+              {
+                "year": 2024,
+                "value": 32.57
+              },
+              {
+                "year": 2025,
+                "value": 31.68
+              },
+              {
+                "year": 2026,
+                "value": 31.9
+              }
+            ],
+            "trend": {
+              "n": 23,
+              "slope_per_year": 0.04429,
+              "intercept": -57.40571,
+              "change": 0.9743,
+              "tau": 0.2569,
+              "z": 1.6903,
+              "p_value": 0.09098,
+              "significant": false,
+              "direction": "none"
+            }
+          },
+          "text": "Weather station Bishkek (2.1 km): the air temperature trend points another way (no clear trend). Only the direction is compared: the station measures air, the satellite measures the ground surface."
+        }
+      ]
+    },
+    {
+      "id": "green",
+      "title": "Green",
+      "grade": "A",
+      "summary": "Greener than in 2000. This trend is statistically real.",
+      "messages": [
+        {
+          "key": "green.up",
+          "params": {
+            "start": 2000
+          },
+          "text": "Greener than in 2000. This trend is statistically real."
+        }
+      ],
+      "metrics": {
+        "change_ndvi": 0.0325,
+        "change_pct": 11.1,
+        "mean_ndvi": 0.31,
+        "p_value": 0.0106
+      },
+      "source_ids": [
+        "modis_ndvi"
+      ],
+      "series": [
+        {
+          "id": "ndvi",
+          "label": "Vegetation index NDVI (May-Sep)",
+          "unit": "NDVI",
+          "resolution_m": 250,
+          "source_id": "modis_ndvi",
+          "points": [
+            {
+              "year": 2000,
+              "value": 0.2943
+            },
+            {
+              "year": 2001,
+              "value": 0.2888
+            },
+            {
+              "year": 2002,
+              "value": 0.3013
+            },
+            {
+              "year": 2003,
+              "value": 0.3043
+            },
+            {
+              "year": 2004,
+              "value": 0.2821
+            },
+            {
+              "year": 2005,
+              "value": 0.301
+            },
+            {
+              "year": 2006,
+              "value": 0.3209
+            },
+            {
+              "year": 2007,
+              "value": 0.2924
+            },
+            {
+              "year": 2008,
+              "value": 0.3221
+            },
+            {
+              "year": 2009,
+              "value": 0.2751
+            },
+            {
+              "year": 2010,
+              "value": 0.3182
+            },
+            {
+              "year": 2011,
+              "value": 0.2986
+            },
+            {
+              "year": 2012,
+              "value": 0.3334
+            },
+            {
+              "year": 2013,
+              "value": 0.324
+            },
+            {
+              "year": 2014,
+              "value": 0.3025
+            },
+            {
+              "year": 2015,
+              "value": 0.3086
+            },
+            {
+              "year": 2016,
+              "value": 0.2787
+            },
+            {
+              "year": 2017,
+              "value": 0.3323
+            },
+            {
+              "year": 2018,
+              "value": 0.3232
+            },
+            {
+              "year": 2019,
+              "value": 0.342
+            },
+            {
+              "year": 2020,
+              "value": 0.3088
+            },
+            {
+              "year": 2021,
+              "value": 0.3005
+            },
+            {
+              "year": 2022,
+              "value": 0.3158
+            },
+            {
+              "year": 2023,
+              "value": 0.3457
+            },
+            {
+              "year": 2024,
+              "value": 0.328
+            },
+            {
+              "year": 2025,
+              "value": 0.317
+            }
+          ],
+          "trend": {
+            "n": 26,
+            "slope_per_year": 0.0013,
+            "intercept": -2.30755,
+            "change": 0.0325,
+            "tau": 0.36,
+            "z": 2.5568,
+            "p_value": 0.01056,
+            "significant": true,
+            "direction": "increasing",
+            "line": [
+              {
+                "year": 2000,
+                "value": 0.2925
+              },
+              {
+                "year": 2025,
+                "value": 0.325
+              }
+            ],
+            "label": "significant ✓"
+          }
+        }
+      ],
+      "verification": []
+    }
+  ],
+  "disclaimer": "These are risk signals from satellite data, not official permission. MChS zoning still decides. Satellite pixels are 30 m to 1 km, so the grades describe the surrounding area, not exact property lines.",
+  "sources": [
+    {
+      "id": "landsat_water",
+      "name": "Landsat water history: NASA/USGS Landsat, processed by JRC Global Surface Water v1.4 (2000-2021, Pekel et al. 2016) and by Bekem from Landsat 8-9 Collection 2 (2022+)",
+      "url": "https://global-surface-water.appspot.com/",
+      "resolution": "30 m",
+      "nasa": true
+    },
+    {
+      "id": "nasadem",
+      "name": "NASADEM elevation (NASA JPL)",
+      "url": "https://lpdaac.usgs.gov/products/nasadem_hgtv001/",
+      "resolution": "30 m",
+      "nasa": true
+    },
+    {
+      "id": "modis_lst",
+      "name": "NASA MODIS MOD11A2 v061 land surface temperature",
+      "url": "https://lpdaac.usgs.gov/products/mod11a2v061/",
+      "resolution": "1 km",
+      "nasa": true
+    },
+    {
+      "id": "modis_ndvi",
+      "name": "NASA MODIS MOD13Q1 v061 vegetation index",
+      "url": "https://lpdaac.usgs.gov/products/mod13q1v061/",
+      "resolution": "250 m",
+      "nasa": true
+    },
+    {
+      "id": "giovanni_imerg",
+      "name": "NASA GPM IMERG Final Daily V07, via the NASA Giovanni Time Series API",
+      "url": "https://giovanni.gsfc.nasa.gov/",
+      "resolution": "~11 km",
+      "nasa": true
+    },
+    {
+      "id": "giovanni_gldas",
+      "name": "NASA GLDAS Noah 2.1 monthly runoff and soil moisture, via NASA Giovanni (Hydrology Time Series)",
+      "url": "https://disc.gsfc.nasa.gov/information/tools?title=Hydrology%20Time%20Series",
+      "resolution": "~28 km",
+      "nasa": true
+    },
+    {
+      "id": "appeears",
+      "name": "NASA AppEEARS (LP DAAC): MODIS MOD11A2 and MOD13Q1 recalculated through NASA's own tool",
+      "url": "https://appeears.earthdatacloud.nasa.gov/",
+      "resolution": "1 km / 250 m",
+      "nasa": true
+    },
+    {
+      "id": "mod44w",
+      "name": "NASA MODIS MOD44W v061 yearly land/water mask, via AppEEARS",
+      "url": "https://lpdaac.usgs.gov/products/mod44wv061/",
+      "resolution": "250 m",
+      "nasa": true
+    },
+    {
+      "id": "landslide",
+      "name": "NASA Global Landslide Susceptibility Map (Stanley & Kirschbaum 2017), used only if configured",
+      "url": "https://gpm.nasa.gov/landslides/data.html",
+      "resolution": "1 km",
+      "nasa": true
+    },
+    {
+      "id": "gem_faults",
+      "name": "GEM Global Active Faults Database (Styron & Pagani 2020), CC BY-SA 4.0",
+      "url": "https://github.com/GEMScienceTools/gem-global-active-faults",
+      "resolution": "regional map, about ±1 km",
+      "nasa": false
+    },
+    {
+      "id": "noaa_ghcn",
+      "name": "NOAA NCEI GHCN weather stations, Global Summary of the Month (the Climate Data Online archive)",
+      "url": "https://www.ncei.noaa.gov/cdo-web/",
+      "resolution": "station point",
+      "nasa": false
+    },
+    {
+      "id": "osm",
+      "name": "Place names and address search: © OpenStreetMap contributors (ODbL), via Nominatim",
+      "url": "https://www.openstreetmap.org/copyright",
+      "resolution": "-",
+      "nasa": false
+    }
+  ],
+  "provider": "mock",
+  "extras": {
+    "giovanni": "mock",
+    "noaa": "ok"
+  },
+  "cached": false,
+  "computed_at": "2026-11-14T18:17:52+00:00"
+}

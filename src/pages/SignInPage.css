@@ -1,0 +1,307 @@
+/*
+ * Sign-in, as drawn on a 1280 x 728 frame: the form in a column at the start of the line, Dwoggle with his map
+ * standing on the ground past the centre, his greeting in a bubble beside his helmet. The form keeps real
+ * pixels, a size up from the drawing; Dwoggle and the bubble are placed in design units (--u) from the centre.
+ * Positions are logical (start/end), so for right-to-left languages the whole page mirrors.
+ */
+/* The column is not a positioning box, so Dwoggle below is placed against the whole page. */
+.sign-in__layout {
+  width: 100%;
+  max-width: var(--brand-max-width);
+  margin-inline: auto;
+  /* The earth's top edge is 76 to 98 design units from the bottom: keep the form clear of it. */
+  padding: 18px var(--space-4) calc(100 * var(--u));
+}
+
+.sign-in__panel {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 410px;
+  margin-inline-start: 10px;
+}
+
+.sign-in__title {
+  font-size: 48px;
+  text-wrap: balance;
+}
+
+.sign-in__lead {
+  margin: 2px 0 22px;
+  color: var(--brand-text);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+/* Google's button follows Google's own look: white, grey border, the four-colour G. */
+.sign-in__google {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 0 var(--space-6);
+  border: 1px solid var(--google-border);
+  border-radius: 999px;
+  background: var(--brand-paper);
+  color: var(--google-text);
+  font-family: var(--font-brand-plain);
+  font-size: 17px;
+  font-weight: var(--font-weight-regular);
+  cursor: pointer;
+}
+
+.sign-in__google img {
+  position: absolute;
+  inset-inline-start: var(--space-4);
+}
+
+.sign-in__google:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.sign-in__or {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin: 12px 0 8px;
+  color: var(--brand-muted);
+  font-size: 14px;
+}
+
+.sign-in__or::before,
+.sign-in__or::after {
+  content: "";
+  flex: 1;
+  border-top: 2px solid var(--brand-divider);
+}
+
+.sign-in__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sign-in__form .brand-field {
+  gap: 6px;
+}
+
+.sign-in__form .brand-field__note:empty {
+  display: none;
+}
+
+.sign-in__form .brand-field__label {
+  font-size: 16px;
+}
+
+.sign-in__form .brand-input {
+  height: 50px;
+  font-size: 17px;
+}
+
+.sign-in__form .brand-field__note {
+  font-size: 13px;
+}
+
+.sign-in__form .brand-button {
+  min-height: 56px;
+  font-size: 27px;
+}
+
+.sign-in__submit {
+  margin-top: 2px;
+}
+
+.sign-in__error,
+.sign-in__notice {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--brand-radius);
+  font-size: 14px;
+}
+
+.sign-in__error {
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+}
+
+.sign-in__notice {
+  background: var(--brand-cream);
+  color: var(--brand-ink);
+}
+
+.sign-in__switch {
+  margin-top: 10px;
+  color: var(--brand-text);
+  font-size: 16px;
+  text-align: center;
+}
+
+.sign-in__link {
+  min-height: 32px;
+  padding: 0 var(--space-1);
+  border: 0;
+  background: transparent;
+  color: var(--brand-brown);
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.sign-in__link:disabled {
+  color: var(--brand-muted);
+  cursor: default;
+}
+
+/*
+ * ---------- Dwoggle and his greeting (design frame: 759..1077 x 203..677) ----------
+ * Both stand 55 units right of the drawing: the form is 55 px wider than drawn, and this keeps the drawn gap.
+ */
+
+.sign-in__mascot {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  pointer-events: none;
+}
+
+.sign-in__dwoggle {
+  position: absolute;
+  bottom: calc(51 * var(--u));
+  inset-inline-start: calc(50% + 174 * var(--u));
+  height: calc(474 * var(--u));
+  transform-origin: 50% 100%;
+  animation: mascot-breathe 3.2s ease-in-out infinite;
+}
+
+/* Frame 665..855 x 211..261; anchored by its right edge so a longer greeting grows to the left. */
+.sign-in__bubble {
+  position: absolute;
+  inset-inline-end: calc(50% - 215 * var(--u));
+  bottom: calc(467 * var(--u));
+  padding: calc(10 * var(--u)) calc(22 * var(--u));
+  border: calc(2.5 * var(--u)) solid var(--brand-brown);
+  border-radius: calc(14 * var(--u));
+  background: var(--brand-paper);
+  color: var(--brand-ink);
+  font-size: calc(23 * var(--u));
+  /* Longer greetings in other languages wrap and grow upwards, never sideways into the form. */
+  max-width: calc(220 * var(--u));
+  text-align: center;
+  text-wrap: balance;
+}
+
+.sign-in__bubble-tail {
+  top: calc(100% - 4 * var(--u));
+  inset-inline-end: calc(-2.5 * var(--u));
+  width: calc(70 * var(--u));
+  height: calc(30 * var(--u));
+}
+
+/* Right to left: the tail points the other way too. */
+[dir="rtl"] .sign-in__bubble-tail {
+  transform: scaleX(-1);
+}
+
+@keyframes mascot-breathe {
+  50% {
+    transform: scaleY(1.012) translateY(-2px);
+  }
+}
+
+/* Narrower than the drawing: Dwoggle peeks in above the form, smaller, with his greeting beside him. */
+@media (max-width: 1023px) {
+  .sign-in__layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 420px;
+    padding-bottom: calc(100 * var(--u) + var(--space-4));
+  }
+
+  .sign-in__panel {
+    max-width: none;
+    margin-inline-start: 0;
+  }
+
+  .sign-in__title {
+    font-size: 40px;
+  }
+
+  .sign-in__mascot {
+    position: relative;
+    inset: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    order: -1;
+  }
+
+  .sign-in__dwoggle {
+    position: relative;
+    bottom: auto;
+    inset-inline-start: auto;
+    flex: none;
+    height: 120px;
+  }
+
+  .sign-in__bubble {
+    position: relative;
+    inset-inline-end: auto;
+    bottom: auto;
+    max-width: 220px;
+    padding: 8px 14px;
+    border-width: 2.5px;
+    border-radius: 14px;
+    font-size: 20px;
+  }
+
+  /* Beside him rather than above: a short tail pointing left, at Dwoggle. */
+  .sign-in__bubble-tail {
+    display: none;
+  }
+
+  .sign-in__bubble::before,
+  .sign-in__bubble::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+    transform: translateY(-50%);
+  }
+
+  [dir="rtl"] .sign-in__bubble::before,
+  [dir="rtl"] .sign-in__bubble::after {
+    transform: translateY(-50%) scaleX(-1);
+  }
+
+  .sign-in__bubble::before {
+    inset-inline-start: -15px;
+    width: 15px;
+    height: 18px;
+    background: var(--brand-brown);
+  }
+
+  .sign-in__bubble::after {
+    inset-inline-start: -10px;
+    width: 12px;
+    height: 13px;
+    background: var(--brand-paper);
+  }
+
+  .surface-scene__mountains {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-in__dwoggle {
+    animation: none;
+  }
+}

@@ -1,0 +1,138 @@
+.address-search {
+  position: relative;
+  width: 100%;
+}
+
+.address-search__field {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-target);
+  border-radius: var(--radius-control);
+  box-shadow: var(--outline-float);
+}
+
+.address-search__field:focus-within {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.address-search__input {
+  flex: 1;
+  min-width: 0;
+  height: var(--tap-target);
+  padding: 0 var(--space-1) 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  /* 16px keeps phones from zooming in when the field takes focus. */
+  font-size: var(--font-size-md);
+  caret-color: var(--color-accent);
+}
+
+.address-search__input:focus {
+  outline: none;
+}
+
+.address-search__input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+/* The browser's own clear button is replaced by ours, which can be translated. */
+.address-search__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.address-search__icon-button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-target);
+  height: var(--tap-target);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.address-search__submit {
+  color: var(--color-accent);
+}
+
+.address-search__icon-button:focus-visible {
+  outline-offset: -4px;
+}
+
+@media (hover: hover) {
+  .address-search__icon-button:hover {
+    background: var(--color-surface-muted);
+  }
+}
+
+/* What the search found, hanging under the field. */
+.address-search__panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  left: 0;
+  max-height: min(50dvh, 360px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow: var(--outline-float);
+}
+
+.address-search__message {
+  padding: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.address-search__message--error {
+  color: var(--color-error-text);
+}
+
+.address-search__results {
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+}
+
+.address-search__result {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) / 2);
+  width: 100%;
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.address-search__result:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .address-search__result:hover {
+    background: var(--color-surface-muted);
+  }
+}
+
+.address-search__title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.address-search__detail {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+}

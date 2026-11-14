@@ -1,0 +1,250 @@
+/*
+ * The landing page. It opens on the thing itself: the annotated core, on night ground like the dimmed map.
+ * Below it the explanation is set on paper, like the notes under a figure.
+ */
+.landing__hero {
+  display: grid;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: var(--site-max-width);
+  margin-inline: auto;
+  padding: var(--space-5) var(--space-3) var(--space-6);
+}
+
+.landing__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.landing__title {
+  max-width: 18ch;
+  font-size: var(--display-xl);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.landing__lead {
+  max-width: 46ch;
+  color: var(--color-text-on-dark-muted);
+  font-size: var(--font-size-lg);
+  text-wrap: pretty;
+}
+
+.landing__cta {
+  min-height: var(--field-height);
+  padding-inline: var(--space-5);
+  font-size: var(--font-size-md);
+}
+
+.landing__figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 460px;
+  --leader-y: 28px;
+}
+
+.landing__caption {
+  color: var(--color-text-on-dark-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* ---------- The notes, on paper ---------- */
+
+.landing__paper {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.landing__section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: var(--site-max-width);
+  margin-inline: auto;
+  padding: var(--space-6) var(--space-3);
+}
+
+.landing__section + .landing__section {
+  border-top: 1px solid var(--color-divider);
+}
+
+.landing__heading {
+  font-size: var(--display-lg);
+}
+
+/* Three steps in order; the numbers are the order. */
+.landing__steps {
+  display: grid;
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.landing__step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 38ch;
+  counter-increment: step;
+}
+
+.landing__step::before {
+  content: counter(step);
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: var(--display-xl);
+  font-weight: var(--display-weight);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.landing__step-title {
+  font-size: var(--display-md);
+}
+
+/* The five checks as a plain list, each marked with its layer color. */
+.landing__checks {
+  display: grid;
+  width: 100%;
+  margin: 0;
+}
+
+.landing__check {
+  display: grid;
+  grid-template-columns: var(--space-4) minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  align-items: baseline;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-divider);
+}
+
+.landing__check:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.landing__check::before {
+  content: "";
+  grid-row: 1 / span 2;
+  align-self: start;
+  width: var(--space-4);
+  height: var(--space-4);
+  margin-top: 0.2em;
+  border-radius: 50%;
+  background: var(--layer-color);
+}
+
+.landing__check--green { --layer-color: var(--layer-green); }
+.landing__check--heat { --layer-color: var(--layer-heat); }
+.landing__check--flood { --layer-color: var(--layer-flood); }
+.landing__check--landslide { --layer-color: var(--layer-landslide); }
+.landing__check--earthquake { --layer-color: var(--layer-earthquake); }
+
+.landing__check-name {
+  font-size: var(--display-md);
+}
+
+.landing__check dd {
+  grid-column: 2;
+  max-width: 60ch;
+  color: var(--color-text-muted);
+}
+
+.landing__trust {
+  display: grid;
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.landing__trust-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 62ch;
+}
+
+.landing__trust-text p:first-child {
+  font-size: var(--font-size-lg);
+}
+
+.landing__grades {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.landing__grade {
+  display: grid;
+  grid-template-columns: calc(var(--grade-size-sm) * 3) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.landing__grade dt {
+  display: flex;
+}
+
+.landing__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: var(--site-max-width);
+  margin-inline: auto;
+  padding: var(--space-5) var(--space-3);
+  padding-bottom: max(var(--space-5), env(safe-area-inset-bottom));
+  color: var(--color-text-on-dark-muted);
+  font-size: var(--font-size-xs);
+}
+
+@media (min-width: 768px) {
+  .landing__hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-6) var(--space-5) calc(var(--space-6) * 2);
+  }
+
+  .landing__section {
+    padding: calc(var(--space-6) * 1.5) var(--space-5);
+  }
+
+  .landing__steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+    width: 100%;
+  }
+
+  .landing__checks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-6);
+  }
+
+  .landing__check:nth-child(2) {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .landing__trust {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+
+  .landing__footer {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding-inline: var(--space-5);
+  }
+}

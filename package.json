@@ -1,0 +1,43 @@
+{
+  "name": "bekem",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:mock": "vite --mode mock",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "oxlint",
+    "art": "node scripts/placeholder-art.mjs",
+    "countries": "node scripts/countries.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource-variable/golos-text": "^5.3.0",
+    "@fontsource/baloo-2": "^5.3.0",
+    "@fontsource/balsamiq-sans": "^5.3.0",
+    "@fontsource/chewy": "^5.3.0",
+    "@fontsource/nunito": "^5.3.0",
+    "@fontsource/press-start-2p": "^5.3.0",
+    "firebase": "^13.3.0",
+    "leaflet": "^1.9.4",
+    "maplibre-gl": "^6.18.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-leaflet": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "oxlint": "^1.93.0",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0",
+    "world-countries": "^5.1.0"
+  }
+}

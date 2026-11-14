@@ -1,0 +1,156 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-body);
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: var(--color-border) transparent;
+  scrollbar-width: thin;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--color-selection);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* On the dimmed map and other dark ground the focus ring switches to a light color. */
+.on-dark {
+  --color-focus: var(--color-focus-on-dark);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Headings and labels. */
+.display {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  line-height: var(--display-line-height);
+  letter-spacing: var(--display-tracking);
+}
+
+/* A paper label. */
+.plate {
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--outline);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  box-shadow: var(--outline-raised);
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--display-sm);
+  font-weight: var(--control-weight);
+  line-height: var(--display-line-height);
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    transform var(--duration-press),
+    background-color var(--duration-fast);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button--primary {
+  background: var(--color-accent);
+  box-shadow: 0 1px 2px 0 var(--color-drop-shadow);
+  color: var(--color-accent-contrast);
+}
+
+.button--icon {
+  flex: none;
+  width: var(--tap-target);
+  padding: 0;
+}
+
+.button--small {
+  min-height: calc(var(--tap-target) - var(--space-2));
+  padding: 0 var(--space-3);
+  font-size: var(--display-xs);
+}
+
+/* A rarely needed action beside a main one: no plate, muted text. */
+.button--quiet {
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-text-muted);
+}
+
+.button:disabled {
+  background: var(--color-surface-pressed);
+  box-shadow: none;
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+/* Touch screens keep :hover after a tap, so hover styles are for real pointers only. */
+@media (hover: hover) {
+  .button:hover:not(:disabled) {
+    background: var(--color-surface-muted);
+  }
+
+  .button--primary:hover:not(:disabled) {
+    background: var(--color-accent-hover);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

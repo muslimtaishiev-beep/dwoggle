@@ -24,8 +24,23 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: pytest -q
 
+  # The frontend (repo root): types, lint, tests and a build, before anything is published.
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx oxlint
+      - run: npx vitest run
+      - run: npm run build
+
   deploy:
-    needs: test
+    needs: [test, test-frontend]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -76,6 +91,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
+
+      # Vite builds the frontend into dist/, which firebase.json publishes.
+      - name: Frontend build
+        run: |
+          npm ci
+          npm run build
 
       - name: Frontend → Firebase Hosting
         run: npx --yes firebase-tools@latest deploy --only hosting --project "$PROJECT" --non-interactive

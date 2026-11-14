@@ -50,11 +50,11 @@ Open https://bekem-514710.web.app/api/health. You want `"status": "ok"`, `"provi
 
 ## Frontend
 
-Firebase Hosting serves `deploy/firebase/public/` (a placeholder page for now). When the frontend is built,
-point `"public"` in [firebase.json](../../firebase.json) at its build folder (e.g. `"frontend/dist"`), and add its
-build step to the workflow before "Frontend → Firebase Hosting".
-The frontend calls the API on the same address: `fetch("/api/report?lat=..&lon=..")`.
-`bekem-514710.web.app` is already an authorized domain for Firebase sign-in, so Google sign-in works there.
+The frontend lives at the root of the repo (Vite, React, TypeScript; see the main [README](../../README.md)).
+The workflow checks it (types, lint, tests), builds it with `npm ci && npm run build` into `dist/`, and Firebase
+Hosting publishes `dist/` ([firebase.json](../../firebase.json)); every path that is not a file gets `index.html`,
+so the app's own routes work. The frontend calls the API on the same address: `fetch("/api/report?lat=..&lon=..")`.
+
 
 ## Before the demo
 

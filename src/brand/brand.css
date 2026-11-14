@@ -1,0 +1,320 @@
+/*
+ * The Dwoggle brand pages: sign-in and the dig. Warm paper, chunky brown buttons, the mascot.
+ * Chewy and Baloo 2 set English; Russian and Kyrgyz fall back to Balsamiq Sans and Nunito.
+ */
+.brand-page {
+  position: relative;
+  min-height: 100dvh;
+  overflow-x: clip;
+  background: var(--brand-paper);
+  color: var(--brand-ink);
+  font-family: var(--font-brand-body);
+  font-weight: var(--font-weight-bold);
+  --color-focus: var(--brand-focus);
+}
+
+.brand-display {
+  font-family: var(--font-brand-display);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+/* ---------- Logo and header ---------- */
+
+/* Traced from the design: the head 49.5 x 44 px, the name 12 px after it and sitting low, level with the chin. */
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--brand-ink);
+}
+
+.brand-mark__head {
+  width: 49.5px;
+  height: auto;
+}
+
+.brand-mark__name {
+  margin-top: 0.22em;
+  font-family: var(--font-brand-display);
+  font-size: 29px;
+  line-height: 1;
+}
+
+.brand-header {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: var(--brand-max-width);
+  margin-inline: auto;
+  padding: 28px var(--space-4) var(--space-3);
+  padding-top: max(28px, env(safe-area-inset-top));
+}
+
+/* The hat's brim reaches 5 px past the column's edge, as drawn. */
+.brand-header__home {
+  margin-inline-start: -5px;
+  border-radius: var(--brand-radius);
+  text-decoration: none;
+}
+
+/* ---------- Controls ---------- */
+
+/* The chunky brown button: it has a darker bottom edge and sinks into it when pressed. */
+.brand-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: var(--brand-radius);
+  background: var(--brand-brown);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-brown-edge);
+  color: var(--brand-paper);
+  font-family: var(--font-brand-display);
+  font-size: 24px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) ease-out,
+    box-shadow var(--duration-press) ease-out,
+    background-color var(--duration-fast);
+}
+
+.brand-button:active:not(:disabled) {
+  box-shadow: 0 0 0 0 var(--brand-brown-edge);
+  transform: translateY(var(--brand-edge));
+}
+
+.brand-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* A white answer tile with a cream bottom edge. */
+.brand-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--brand-line);
+  border-radius: var(--brand-radius);
+  background: var(--brand-paper);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge);
+  color: var(--brand-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) ease-out,
+    box-shadow var(--duration-press) ease-out,
+    border-color var(--duration-fast),
+    background-color var(--duration-fast);
+}
+
+.brand-tile__label {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.brand-tile:active:not(:disabled) {
+  box-shadow: 0 0 0 0 var(--brand-tile-edge);
+  transform: translateY(var(--brand-edge));
+}
+
+.brand-tile[aria-pressed="true"],
+.brand-tile[aria-checked="true"] {
+  border-color: var(--brand-brown);
+  background: var(--brand-cream);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-brown);
+}
+
+.brand-tile__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: var(--brand-chip);
+  color: var(--brand-chip-ink);
+}
+
+.brand-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.brand-field__label {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.brand-field__box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.brand-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 var(--space-3);
+  border: 2px solid var(--brand-line);
+  border-radius: var(--brand-radius);
+  background: var(--brand-paper);
+  color: var(--brand-ink);
+  font: inherit;
+  font-family: var(--font-brand-plain);
+  /* 16px keeps phones from zooming in when the field takes focus. */
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  caret-color: var(--brand-brown);
+  transition: border-color var(--duration-fast);
+}
+
+.brand-input::placeholder {
+  color: var(--brand-placeholder);
+  opacity: 1;
+}
+
+.brand-input:focus {
+  border-color: var(--brand-brown);
+  outline: none;
+}
+
+.brand-input[aria-invalid="true"] {
+  border-color: var(--color-error-text);
+}
+
+.brand-field__box .brand-input {
+  padding-inline-end: 48px;
+}
+
+.brand-field__reveal {
+  position: absolute;
+  inset-inline-end: 4px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--brand-radius);
+  background: transparent;
+  color: var(--brand-muted);
+  cursor: pointer;
+}
+
+.brand-field__note {
+  min-height: 1.2em;
+  color: var(--brand-text);
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+}
+
+.brand-field__note--error {
+  color: var(--color-error-text);
+}
+
+@media (hover: hover) {
+  .brand-button:hover:not(:disabled) {
+    background: var(--brand-brown-hover);
+  }
+
+  .brand-tile:hover:not(:disabled):not([aria-pressed="true"]):not([aria-checked="true"]) {
+    border-color: var(--brand-cream-deep);
+    background: var(--brand-cream);
+  }
+}
+
+/* ---------- The surface: mountains and earth, in design units ---------- */
+
+.surface-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Frame x 440..1440, y 380..680, placed so frame x 640 is the centre of the page. */
+.surface-scene__mountains {
+  position: absolute;
+  bottom: calc(48 * var(--u));
+  inset-inline-start: calc(50% - 200 * var(--u));
+  width: calc(1000 * var(--u));
+  height: calc(300 * var(--u));
+}
+
+[dir="rtl"] .surface-scene__mountains,
+[dir="rtl"] .surface-scene__ground {
+  transform: scaleX(-1);
+}
+
+.surface-scene__ground {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100 * var(--u));
+}
+
+.surface-scene__far {
+  fill: var(--sand-far);
+}
+
+.surface-scene__near {
+  fill: var(--sand);
+}
+
+.surface-scene__snow {
+  fill: var(--sand-snow);
+}
+
+.surface-scene__earth {
+  fill: var(--earth-surface);
+}
+
+.surface-scene__earth-deep {
+  fill: var(--earth-surface-deep);
+}
+
+/* ---------- Speech bubbles ---------- */
+
+.bubble-tail {
+  position: absolute;
+  overflow: visible;
+}
+
+.bubble-tail__fill {
+  fill: var(--brand-paper);
+}
+
+.bubble-tail__line {
+  fill: none;
+  stroke: var(--brand-brown);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-button,
+  .brand-tile {
+    transition: none;
+  }
+}

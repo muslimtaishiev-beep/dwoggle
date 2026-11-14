@@ -1,0 +1,177 @@
+.standing-dwoggle {
+  display: block;
+  aspect-ratio: 669 / 1000;
+}
+
+.standing-dwoggle img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The body is the first layer; every other layer lies exactly over it, in the same 669 x 1000 frame. */
+.standing-dwoggle__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.standing-dwoggle__fur {
+  fill: var(--mascot-fur);
+}
+
+.standing-dwoggle__cheek {
+  fill: var(--mascot-cheek);
+}
+
+.standing-dwoggle__closed {
+  fill: none;
+  stroke: var(--mascot-ink);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+/*
+ * A blink is 160 ms: the lid drops from the top of the eye and lifts again. Two in every seven seconds,
+ * the second one a quick double, so it never looks like a metronome.
+ */
+.standing-dwoggle__lid {
+  transform: scaleY(0);
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: dwoggle-blink 7s ease-in-out infinite 1.2s;
+}
+
+@keyframes dwoggle-blink {
+  0%,
+  44%,
+  48.6%,
+  86%,
+  88.4%,
+  90%,
+  92.4%,
+  100% {
+    transform: scaleY(0);
+  }
+
+  46.3%,
+  87.2%,
+  91.2% {
+    transform: scaleY(1);
+  }
+}
+
+/*
+ * The map closes like a book, along its own crease, and opens again (keyframes in StandingDwoggleFold.css, made by
+ * scripts/mascot-layers.py). The crease slants, so each side turns about it inside that slant: skew into it, turn,
+ * skew back. The printed side turns away as the paper side turns in; each hides when it faces backwards. The left
+ * arm's joints follow so the paw stays on the paper's edge. Once every nine seconds: 0.9 s to close, a moment
+ * closed, 0.9 s to open.
+ */
+.standing-dwoggle__map-left,
+.standing-dwoggle__map-back {
+  transform-origin: var(--fold-axis);
+  backface-visibility: hidden;
+}
+
+/* Until it lands, the paper side is turned away (also with reduced motion). */
+.standing-dwoggle__map-back {
+  transform: skewX(11.618deg) rotateY(-180deg) skewX(-11.618deg);
+}
+
+.standing-dwoggle__map-left,
+.standing-dwoggle__map-back,
+.standing-dwoggle__shadow,
+.standing-dwoggle__upper,
+.standing-dwoggle__fore,
+.standing-dwoggle__paw {
+  animation: 9s linear 2.5s infinite both;
+}
+
+.standing-dwoggle__map-left {
+  animation-name: dwoggle-map-left;
+}
+
+.standing-dwoggle__map-back {
+  animation-name: dwoggle-map-back;
+}
+
+.standing-dwoggle__upper,
+.standing-dwoggle__fore,
+.standing-dwoggle__paw {
+  transform-box: view-box;
+}
+
+.standing-dwoggle__upper {
+  animation-name: dwoggle-arm-upper;
+}
+
+.standing-dwoggle__fore {
+  animation-name: dwoggle-arm-fore;
+}
+
+.standing-dwoggle__paw {
+  animation-name: dwoggle-arm-paw;
+}
+
+.standing-dwoggle__segment {
+  fill: var(--mascot-arm);
+  stroke: var(--mascot-line);
+}
+
+/*
+ * While the map is open the arm is not drawn at all: it lies behind the paper, and the paper's soft edges would
+ * let its outline show through. It appears as the fold starts, while the paper still covers it.
+ */
+.standing-dwoggle__arm {
+  opacity: 0;
+  animation: dwoggle-arm-show 9s linear 2.5s infinite both;
+}
+
+@keyframes dwoggle-arm-show {
+  0%,
+  30.4%,
+  67.6%,
+  100% {
+    opacity: 0;
+  }
+
+  30.5%,
+  67.5% {
+    opacity: 1;
+  }
+}
+
+/* The map's shadow on his belly goes with the half that cast it. */
+.standing-dwoggle__shadow {
+  animation-name: dwoggle-map-shadow;
+}
+
+@keyframes dwoggle-map-shadow {
+  0%,
+  30%,
+  68%,
+  100% {
+    opacity: 1;
+  }
+
+  34%,
+  64% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .standing-dwoggle__arm,
+  .standing-dwoggle__lid,
+  .standing-dwoggle__map-left,
+  .standing-dwoggle__map-back,
+  .standing-dwoggle__shadow,
+  .standing-dwoggle__upper,
+  .standing-dwoggle__fore,
+  .standing-dwoggle__paw {
+    animation: none;
+  }
+}

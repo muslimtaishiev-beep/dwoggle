@@ -1,0 +1,457 @@
+/*
+ * The annotated figure. Three columns: the core, the leader arrows, the explanations.
+ * Every layer of the core sits in the same row as its explanation, so each arrow runs straight across.
+ */
+.core {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: var(--figure-max-width);
+  margin-inline: auto;
+  padding: var(--space-2) var(--space-3) var(--space-5);
+  /* How far below the top of a row its arrow sits: level with the heading of the explanation. */
+  --leader-y: 28px;
+}
+
+/* Before the rise is measured the figure takes its place but is not shown yet. */
+.core--measuring {
+  visibility: hidden;
+}
+
+.core__grid {
+  display: grid;
+  grid-template-columns: var(--core-width) var(--leader-width) minmax(0, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform-origin: calc(var(--core-width) / 2) 0;
+}
+
+.core__row {
+  display: contents;
+}
+
+/* ---------- The core ---------- */
+
+/* The top face: the surface of this area, with Dwoggle standing on it. */
+.core__cap {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: calc(var(--core-ellipse) / -2);
+  padding-top: var(--space-2);
+}
+
+.core__cap .mascot {
+  position: relative;
+  z-index: 1;
+  margin-bottom: calc(var(--core-ellipse) / -2 - var(--space-1));
+}
+
+.core__cap-face {
+  width: 100%;
+  height: var(--core-ellipse);
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--core-light), transparent 45%, var(--core-mark)), var(--core-cap);
+}
+
+/* One layer: a slice of the cylinder. Its rounded lower edge overlaps the layer below. */
+.core__band {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: calc(var(--tap-target) + var(--space-3));
+  padding: var(--leader-y) 0 0;
+  border: 0;
+  border-radius: 0;
+  /* Light from the left, shade on the right, and the fine bedding lines of a real core. */
+  background:
+    linear-gradient(90deg, var(--core-light), transparent 38%, transparent 58%, var(--core-shade)),
+    repeating-linear-gradient(0deg, var(--core-mark) 0 1px, transparent 1px var(--space-3)),
+    var(--layer-color);
+  cursor: pointer;
+  filter: saturate(0.75) brightness(0.8);
+  transition: filter var(--duration-fast);
+}
+
+.core-rise__band {
+  background:
+    linear-gradient(90deg, var(--core-light), transparent 38%, transparent 58%, var(--core-shade)),
+    repeating-linear-gradient(0deg, var(--core-mark) 0 1px, transparent 1px var(--space-3)),
+    var(--layer-color);
+}
+
+.core__band::after,
+.core-rise__band::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--core-ellipse) / -2);
+  left: 0;
+  height: var(--core-ellipse);
+  border-radius: 50%;
+  background: inherit;
+}
+
+.core__row--active .core__band {
+  filter: none;
+}
+
+.core__row--green { --layer-color: var(--layer-green); }
+.core__row--heat { --layer-color: var(--layer-heat); }
+.core__row--flood { --layer-color: var(--layer-flood); }
+.core__row--landslide { --layer-color: var(--layer-landslide); }
+.core__row--earthquake { --layer-color: var(--layer-earthquake); }
+
+.core__band-number {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  height: var(--space-5);
+  margin-top: calc(var(--space-5) / -2);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- The leader arrows ---------- */
+
+.core__leader {
+  position: relative;
+  color: var(--leader);
+}
+
+/* The line, from the explanation to the layer. */
+.core__leader::before {
+  content: "";
+  position: absolute;
+  top: var(--leader-y);
+  right: 0;
+  left: var(--space-2);
+  border-top: var(--px) solid currentColor;
+}
+
+/* The arrowhead, on the layer. */
+.core__leader::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--leader-y) - var(--space-1) + var(--px) / 2);
+  left: var(--space-1);
+  border: var(--space-1) solid transparent;
+  border-right: var(--space-2) solid currentColor;
+  border-left: 0;
+}
+
+.core__row--active .core__leader {
+  color: var(--leader-active);
+}
+
+.core__row--active .core__leader::before {
+  border-top-width: calc(var(--px) * 1.6);
+}
+
+/* The surface arrow points at the middle of the top face, which sits on the row's lower edge. */
+.core__row--surface .core__leader::before {
+  top: auto;
+  bottom: calc(var(--px) / -2);
+}
+
+.core__row--surface .core__leader::after {
+  top: auto;
+  bottom: calc(var(--space-1) * -1);
+}
+
+/* The first layer starts a little lower, clear of the surface label. */
+.core__row--first {
+  --leader-y: 46px;
+}
+
+/* ---------- The explanations ---------- */
+
+.core__note {
+  position: relative;
+  top: 0.7em;
+  align-self: end;
+  padding-left: var(--space-2);
+  color: var(--color-text-on-dark);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+}
+
+.core__callout {
+  min-width: 0;
+  margin: var(--space-1) 0 var(--space-1) var(--space-1);
+  box-shadow: none;
+  color: var(--color-text);
+}
+
+.core__row--first .core__callout {
+  margin-top: calc(var(--space-5) - var(--space-1) / 2);
+}
+
+.core__row--active .core__callout {
+  box-shadow: 0 0 0 calc(var(--px) * 1.6) var(--leader-active), var(--outline-float);
+}
+
+.core__heading {
+  font-size: inherit;
+}
+
+.core__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: calc(var(--tap-target) + var(--space-1));
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-card);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.core__head[aria-expanded="true"] {
+  cursor: default;
+}
+
+.core__head:focus-visible {
+  outline-offset: -2px;
+}
+
+.core__index {
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.core__name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--display-sm);
+  overflow-wrap: anywhere;
+}
+
+.core__row--active .core__name {
+  font-size: var(--display-md);
+}
+
+.core__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-3) var(--space-3);
+  animation: core-detail-in var(--duration-fast) var(--ease-out) both;
+}
+
+@keyframes core-detail-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.core__verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.core__meaning {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.core__summary {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-body);
+}
+
+/* Shown when the translations file has no sentence for this summary_key. */
+.core__summary--raw {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+}
+
+.core__stat {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-divider);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.core__chart-button {
+  align-self: flex-start;
+}
+
+.core__no-trend {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.core__chart {
+  padding: var(--space-4);
+  color: var(--color-text);
+}
+
+.core__caption {
+  max-width: 62ch;
+  color: var(--color-text-on-dark-muted);
+  font-size: var(--font-size-xs);
+  text-wrap: pretty;
+}
+
+/* ---------- The rise ---------- */
+
+/*
+ * Part one: the core slides up out of the hole Dwoggle dug, at the tapped point on the map, layer after layer.
+ * Part two: it travels to its place in the figure, where the arrows and explanations are drawn.
+ * The element below is a stand-in used only for this; it is anchored on the hole and hands over to the figure.
+ */
+.core-rise {
+  position: fixed;
+  z-index: 30;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* The hole: a dark opening with a rim of soil. The front of the rim is drawn again over the core. */
+.core-rise__hole,
+.core-rise__lip {
+  position: absolute;
+  top: calc(var(--core-ellipse) * -0.65);
+  left: calc(var(--core-width) * -0.62);
+  width: calc(var(--core-width) * 1.24);
+  height: calc(var(--core-ellipse) * 1.3);
+  border-radius: 50%;
+  animation: core-rise-fade var(--duration-fast) linear var(--duration-emerge) both;
+}
+
+.core-rise__hole {
+  background: var(--color-night);
+  box-shadow: 0 0 0 calc(var(--px) * 3) var(--color-soil);
+}
+
+.core-rise__lip {
+  border: calc(var(--px) * 3) solid transparent;
+  border-bottom-color: var(--color-soil);
+}
+
+/* Nothing below the ground line can be seen: the bottom edge of this box is the ground. */
+.core-rise__shaft {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--core-width) / -2);
+  width: var(--core-width);
+  overflow: hidden;
+  animation: core-dock var(--duration-dock) var(--ease-in-out) calc(var(--duration-emerge) + var(--duration-fast)) both;
+}
+
+.core-rise__plug {
+  display: flex;
+  flex-direction: column;
+  /* Room for the rounded underside of the last layer. */
+  padding-bottom: calc(var(--core-ellipse) / 2);
+  animation: core-emerge var(--duration-emerge) var(--ease-emerge) both;
+}
+
+.core-rise__band {
+  position: relative;
+  height: var(--rise-band-height);
+}
+
+@keyframes core-emerge {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes core-dock {
+  60% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(var(--dock-x), var(--dock-y));
+  }
+}
+
+@keyframes core-rise-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+/* The figure itself waits until the core arrives, then takes over from the stand-in. */
+.core--rising .core__grid {
+  animation: core-figure-in var(--duration-step) ease-out calc(var(--duration-emerge) + var(--duration-dock) * 0.75) both;
+}
+
+@keyframes core-figure-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.core--rising .core__leader,
+.core--rising .core__callout,
+.core--rising .core__note,
+.core--rising .core__caption {
+  animation: core-annotate var(--duration-step) var(--ease-out) both;
+  animation-delay: calc(var(--duration-emerge) + var(--duration-dock) * 0.9 + var(--i, 0) * 50ms);
+}
+
+@keyframes core-annotate {
+  from {
+    opacity: 0;
+    transform: translateX(var(--space-3));
+  }
+}
+
+@media (min-width: 768px) {
+  .core {
+    padding-inline: var(--space-5);
+  }
+
+  .core__summary {
+    font-size: var(--font-size-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .core-rise,
+  .core--rising .core__grid,
+  .core--rising .core__leader,
+  .core--rising .core__callout,
+  .core--rising .core__note,
+  .core--rising .core__caption,
+  .core__detail {
+    animation: none;
+  }
+
+  .core-rise {
+    display: none;
+  }
+
+  .core__band {
+    transition: none;
+  }
+}

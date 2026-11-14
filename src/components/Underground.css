@@ -1,0 +1,155 @@
+/* Laid over the map: the map stays where it is, dimmed, and the figure is drawn on top of it. */
+.underground {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--z-map-overlay) + 1);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-scrim);
+  color: var(--color-text-on-dark);
+  animation: underground-in var(--duration-step) ease-out both;
+}
+
+/* When the core rises, the map stays bright while it comes out of the ground and dims as it settles. */
+.underground--rising {
+  animation: underground-in var(--duration-emerge) ease-in calc(var(--duration-emerge) * 0.5) both;
+}
+
+/* The place name is white text; it waits for the dimmed map behind it. */
+.underground--rising .underground__heading {
+  animation: underground-heading-in var(--duration-step) ease-out var(--duration-emerge) both;
+}
+
+@keyframes underground-heading-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.underground--leaving {
+  animation: underground-out var(--duration-leave) ease-in both;
+}
+
+@keyframes underground-in {
+  from {
+    background-color: transparent;
+  }
+}
+
+@keyframes underground-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Content keeps a readable width on wide screens. */
+.underground__inner {
+  width: 100%;
+  max-width: var(--figure-max-width);
+  margin-inline: auto;
+}
+
+/* Which place this is. It leaves room for the floating title and language switch. */
+.underground__header {
+  flex: none;
+  padding: var(--hud-clearance) var(--space-3) var(--space-2);
+}
+
+.underground__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.underground__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.underground__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+
+.underground__title {
+  font-size: var(--display-md);
+}
+
+.underground__place {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.underground__coords {
+  color: var(--color-text-on-dark-muted);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.underground__credit {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+
+.underground__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--color-text-on-dark-muted) transparent;
+}
+
+.underground__body:focus {
+  outline: none;
+}
+
+/* The summary report and the loading, error and no-data messages sit on a sheet of paper. */
+.underground__sheet {
+  padding: var(--space-2) var(--space-3) var(--space-5);
+  color: var(--color-text);
+}
+
+/* The control deck: back, skip, next. Always in reach of the thumb. */
+.underground__deck {
+  flex: none;
+  padding: var(--space-3);
+}
+
+.underground__deck-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.underground__wide {
+  flex: 1;
+}
+
+@media (min-width: 768px) {
+  .underground__header,
+  .underground__deck {
+    padding-inline: var(--space-5);
+  }
+
+  /* Leaves the map's credit line at the bottom edge uncovered. */
+  .underground__deck {
+    padding-bottom: var(--space-6);
+  }
+
+  .underground__sheet {
+    padding-inline: var(--space-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .underground,
+  .underground--rising,
+  .underground--rising .underground__heading,
+  .underground--leaving {
+    animation: none;
+  }
+}

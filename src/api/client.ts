@@ -1,0 +1,48 @@
+import { API_BASE_URL } from '../config.ts'
+import type { Lang } from '../i18n/i18n.ts'
+import { parseReport } from './parseReport.ts'
+import type { LatLon, Report } from './types.ts'
+
+export type ReportErrorKind = 'network' | 'server' | 'format'
+
+export class ReportRequestError extends Error {
+  readonly kind: ReportErrorKind
+
+  constructor(kind: ReportErrorKind, message: string) {
+    super(message)
+    this.name = 'ReportRequestError'
+    this.kind = kind
+  }
+}
+
+/** GET /api/report. In development, vite.config.ts sends /api to the backend or to the mock. */
+export async function fetchReport(point: LatLon, lang: Lang, signal: AbortSignal): Promise<Report> {
+  const url = new URL(`${API_BASE_URL}/report`, window.location.href)
+  url.searchParams.set('lat', point.lat.toFixed(6))
+  url.searchParams.set('lon', point.lon.toFixed(6))
+  // The place name comes back in this language. The backend's own sentences are not shown: every sentence is
+  // built here from its message keys.
+  url.searchParams.set('lang', lang)
+
+  let response: Response
+  try {
+    response = await fetch(url, { signal, headers: { Accept: 'application/json' } })
+  } catch (error) {
+    if (signal.aborted) throw error
+    throw new ReportRequestError('network', String(error))
+  }
+  if (!response.ok) throw new ReportRequestError('server', `HTTP ${response.status}`)
+
+  let body: unknown
+  try {
+    body = await response.json()
+  } catch (error) {
+    if (signal.aborted) throw error
+    throw new ReportRequestError('format', 'Response is not JSON')
+  }
+  try {
+    return parseReport(body)
+  } catch (error) {
+    throw new ReportRequestError('format', error instanceof Error ? error.message : String(error))
+  }
+}

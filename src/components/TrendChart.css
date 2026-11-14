@@ -1,0 +1,128 @@
+.trend-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.trend-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  background: var(--chart-bg);
+}
+
+.trend-chart__years {
+  display: flex;
+  justify-content: space-between;
+  margin-top: calc(-1 * var(--space-1));
+  color: var(--chart-label);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-chart__grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.trend-chart__label {
+  fill: var(--chart-label);
+  font-family: var(--font-body);
+  font-size: var(--chart-label-size);
+}
+
+.trend-chart__series {
+  fill: none;
+  stroke: var(--chart-series);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.trend-chart__point {
+  fill: var(--chart-point);
+}
+
+.trend-chart__trend {
+  stroke: var(--chart-trend);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+
+.trend-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.trend-chart__key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.trend-chart__key::before {
+  content: "";
+  display: inline-block;
+}
+
+.trend-chart__key--values::before {
+  width: var(--space-2);
+  height: var(--space-2);
+  background: var(--chart-point);
+}
+
+.trend-chart__key--line::before {
+  width: var(--space-4);
+  border-top: 2px dashed var(--chart-trend);
+}
+
+/* A series without a computed trend (too few years, or water seen, which is counted rather than fitted). */
+.trend-chart__no-trend {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.trend-chart__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.trend-chart__stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.trend-chart__stat dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.trend-chart__stat dd {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-chart__sig {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+}
+
+.trend-chart__sig--yes {
+  background: var(--chart-sig-yes-bg);
+}
+
+.trend-chart__sig--no {
+  background: var(--chart-sig-no-bg);
+}

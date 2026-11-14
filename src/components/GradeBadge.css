@@ -1,0 +1,42 @@
+.grade-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--grade-size);
+  min-height: var(--grade-size);
+  padding: var(--space-1);
+  border-radius: var(--radius-control);
+  color: var(--grade-text);
+  font-family: var(--font-display);
+  font-size: var(--display-lg);
+  font-weight: var(--display-weight);
+  line-height: 1;
+  text-align: center;
+}
+
+.grade-badge--sm {
+  min-width: var(--grade-size-sm);
+  min-height: var(--grade-size-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--display-sm);
+}
+
+.grade-badge--a { background: var(--grade-a-bg); }
+.grade-badge--b { background: var(--grade-b-bg); }
+.grade-badge--c { background: var(--grade-c-bg); }
+.grade-badge--d { background: var(--grade-d-bg); }
+
+/* "no data" is two short words, not a letter: smaller type, and it may wrap inside the block. */
+.grade-badge--none {
+  max-width: calc(var(--grade-size) * 1.6);
+  background: var(--grade-none-bg);
+  font-size: var(--display-xs);
+  line-height: var(--display-line-height);
+}
+
+.grade-badge--sm.grade-badge--none {
+  max-width: none;
+  padding: var(--space-1) var(--space-2);
+  white-space: nowrap;
+}

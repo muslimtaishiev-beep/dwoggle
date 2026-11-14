@@ -1,0 +1,78 @@
+.state-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--outline);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.state-message--error {
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+}
+
+.state-message--floating {
+  flex-direction: row;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  box-shadow: var(--outline-float);
+  font-size: var(--font-size-sm);
+}
+
+/* Three pixels that light up in turn. */
+.state-message__spinner,
+.state-message__spinner::before,
+.state-message__spinner::after {
+  flex: none;
+  width: var(--space-1);
+  height: var(--space-1);
+  border-radius: 50%;
+  background: var(--color-ink);
+  animation: state-message-blink var(--duration-blink) steps(1) infinite;
+}
+
+.state-message__spinner {
+  position: relative;
+  margin: 0 var(--space-3);
+}
+
+.state-message__spinner::before,
+.state-message__spinner::after {
+  content: "";
+  position: absolute;
+  top: 0;
+}
+
+.state-message__spinner::before {
+  right: var(--space-2);
+  animation-delay: calc(var(--duration-blink) / -3);
+}
+
+.state-message__spinner::after {
+  left: var(--space-2);
+  animation-delay: calc(var(--duration-blink) / 3);
+}
+
+@keyframes state-message-blink {
+  0%,
+  66% {
+    background-color: var(--color-surface-pressed);
+  }
+
+  33% {
+    background-color: var(--color-ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .state-message__spinner,
+  .state-message__spinner::before,
+  .state-message__spinner::after {
+    animation: none;
+  }
+}

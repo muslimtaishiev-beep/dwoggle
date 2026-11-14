@@ -1,0 +1,27 @@
+.check-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+}
+
+.check-meta__badge {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--badge-bg);
+  box-shadow: var(--outline);
+  color: var(--badge-text);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.check-meta__badge--warn {
+  background: var(--badge-warn-bg);
+  color: var(--badge-warn-text);
+}
+
+.check-meta__source {
+  color: var(--color-text-muted);
+}

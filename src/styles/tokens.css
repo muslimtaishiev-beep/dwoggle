@@ -1,0 +1,256 @@
+/*
+ * Design tokens: the only place for colors, fonts, spacing, radii and sizes.
+ * Restyling the app means editing this file. Components only reference var(--…).
+ * Media queries cannot read variables; the one breakpoint is 768px (search "min-width: 768px").
+ */
+:root {
+  /* Palette: a scientific figure laid over satellite imagery. Ink on paper, one blue for actions. */
+  --color-ink: #111722;
+  --color-paper: #fbfaf7;
+  --color-paper-shade: #f0eee8;
+  --color-paper-deep: #d9d6cc;
+  --color-night: #0b101c;
+  --color-blue: #1f5fd0;
+  --color-blue-light: #2f70e4;
+  --color-blue-deep: #174aa8;
+  --color-sun: #ffd24a;
+  --color-coral: #e5533d;
+  --color-soil: #8a5a3c;
+  --color-soil-dark: #6b4329;
+
+  /* Surfaces and text */
+  --color-bg: var(--color-night);
+  --color-surface: var(--color-paper);
+  --color-surface-muted: var(--color-paper-shade);
+  --color-surface-pressed: var(--color-paper-deep);
+  --color-text: var(--color-ink);
+  --color-text-muted: #5b6270;
+  --color-text-on-dark: #f4f6fb;
+  --color-text-on-dark-muted: #b9c2d3;
+  --color-border: #bdb9ad;
+  --color-divider: var(--color-paper-deep);
+  --color-accent: var(--color-blue);
+  --color-accent-hover: var(--color-blue-light);
+  --color-accent-shade: var(--color-blue-deep);
+  --color-accent-contrast: #ffffff;
+  --color-focus: var(--color-blue);
+  --color-focus-on-dark: var(--color-sun);
+  --color-selection: #cfe0ff;
+  /* The dimmed map behind the figure and behind dialogs. */
+  --color-scrim: rgb(9 13 24 / 0.74);
+  --color-backdrop: var(--color-scrim);
+  --color-drop-shadow: rgb(9 13 24 / 0.32);
+
+  /* States */
+  --color-error-bg: #fde3de;
+  --color-error-text: #8a1c10;
+
+  /* Grades */
+  --grade-a-bg: #55c26d;
+  --grade-b-bg: #bcd44c;
+  --grade-c-bg: #f0a23a;
+  --grade-d-bg: var(--color-coral);
+  --grade-none-bg: #cfd3da;
+  --grade-text: var(--color-ink);
+
+  /* Badges */
+  --badge-bg: var(--color-paper-shade);
+  --badge-text: var(--color-ink);
+  --badge-warn-bg: var(--color-sun);
+  --badge-warn-text: var(--color-ink);
+
+  /* The core: one color per check, surface to deepest, plus the light and shade that make it round */
+  --layer-green: #4c9a46;
+  --layer-heat: #d87a3a;
+  --layer-flood: #3d7fb3;
+  --layer-landslide: #8d7d68;
+  --layer-earthquake: #5c4d6b;
+  --core-cap: #7cc46a;
+  --core-light: rgb(255 255 255 / 0.3);
+  --core-shade: rgb(9 13 24 / 0.38);
+  --core-mark: rgb(9 13 24 / 0.28);
+  --core-active-ring: #ffffff;
+  --leader: rgb(244 246 251 / 0.65);
+  --leader-active: #ffffff;
+
+  /* Trend chart */
+  --chart-bg: var(--color-paper-shade);
+  --chart-grid: #b3afa3;
+  --chart-label: var(--color-text-muted);
+  --chart-series: #6b7280;
+  --chart-point: var(--color-ink);
+  --chart-trend: #c2331f;
+  --chart-sig-yes-bg: var(--grade-c-bg);
+  --chart-sig-no-bg: var(--grade-none-bg);
+
+  /* Map overlays and the few map layers the app draws itself */
+  --map-area-stroke: #ffffff;
+  --map-area-fill: var(--color-sun);
+  --map-area-fill-opacity: 0.24;
+  --map-area-stroke-width: 2.5;
+  --map-area-dash: 8 5;
+  --map-pin-fill: var(--color-coral);
+  --map-pin-ring: #ffffff;
+  --map-pin-size: 14px;
+  --map-building: #e9e6df;
+  --map-label: #ffffff;
+  --map-label-halo: rgb(9 13 24 / 0.85);
+
+  /* Typography: one sober face for everything; the pixel face is kept for the Dwoggle wordmark only */
+  --font-display: "Golos Text Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Golos Text Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-wordmark: "Press Start 2P", "Golos Text Variable", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --display-xs: 12px;
+  --display-sm: 14px;
+  --display-md: 18px;
+  --display-lg: 24px;
+  /* The landing headline: grows with the screen, never past 46px. */
+  --display-xl: clamp(30px, 5.4vw, 46px);
+  --display-weight: 700;
+  --display-line-height: 1.25;
+  --display-tracking: -0.01em;
+  --control-weight: 600;
+  --wordmark-size: 14px;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.25;
+  --line-height-body: 1.45;
+  --chart-label-size: 11px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Lines, corners and elevation */
+  --px: 1.5px;
+  --radius-sm: 4px;
+  --radius-control: 8px;
+  --radius-card: 10px;
+  --outline: 0 0 0 var(--px) var(--color-border);
+  --outline-raised: var(--outline), 0 1px 2px 0 var(--color-drop-shadow);
+  /* Floating over the map: a hairline and a soft shadow. */
+  --outline-float: 0 0 0 1px rgb(17 23 34 / 0.12), 0 8px 22px -8px var(--color-drop-shadow);
+
+  /* Motion: everything under one second except the digging loop */
+  --duration-press: 80ms;
+  --duration-fast: 160ms;
+  --duration-step: 320ms;
+  --duration-run: 640ms;
+  --duration-burrow: 700ms;
+  --duration-frame-pair: 320ms;
+  --duration-blink: 900ms;
+  /* The core sliding up out of the hole, then travelling to its place in the figure; the figure leaving again. */
+  --duration-emerge: 950ms;
+  --duration-dock: 650ms;
+  --duration-leave: 280ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* A steady pull with a soft stop, so every layer is seen coming out. */
+  --ease-emerge: cubic-bezier(0.3, 0.1, 0.25, 1);
+
+  /*
+   * Dwoggle brand: the sign-in page and the dig (onboarding), as drawn by the designer.
+   * Warm paper, chunky brown buttons, sand mountains, and earth that darkens as Dwoggle digs deeper.
+   * Colours are sampled from the design; lines and fills where they are solid, not their blurred edges.
+   */
+  --brand-ink: #3b2519;
+  --brand-text: #5c4f46;
+  --brand-muted: #918982;
+  --brand-placeholder: #a29b95;
+  --brand-paper: #ffffff;
+  --brand-cream: #f2e6da;
+  --brand-cream-deep: #e6d6c6;
+  --brand-line: #ddd9d6;
+  --brand-divider: #e6e2df;
+  --brand-tile-edge: #e1d5c7;
+  --brand-brown: #86573b;
+  --brand-brown-hover: #93633f;
+  --brand-brown-edge: #6c4228;
+  --brand-chip: #c7ae99;
+  --brand-chip-ink: #ffffff;
+  --brand-yellow: #ffb612;
+  --brand-yellow-light: #ffd45c;
+  --brand-tube: #f4ebe2;
+  --brand-tube-edge: #e8dccf;
+  --brand-focus: #2f6fd6;
+  /* Google's button follows Google's own colours. */
+  --google-border: #747775;
+  --google-text: #1f1f1f;
+  --sand-far: #f4ece1;
+  --sand: #ecdbc9;
+  --sand-snow: #fffdfa;
+  --earth-surface: #86573b;
+  --earth-surface-deep: #7a4d30;
+  /* Strata below the surface, one per question, each darker than the last. */
+  --earth-1: #7c4f33;
+  --earth-2: #6b432b;
+  --earth-3: #5b3823;
+  --earth-4: #4a2d1c;
+  --earth-tunnel: #3e2617;
+  --earth-clod: #6b432b;
+  /* Dwoggle's own colours, sampled from the artwork: for the lids he blinks with. */
+  --mascot-fur: #9f684d;
+  --mascot-cheek: #ffebcd;
+  --mascot-ink: #1a1412;
+  /* His left arm, which the map hides in the drawing: the fur and outline of the arm beside it. */
+  --mascot-arm: #986142;
+  --mascot-line: #000000;
+  --font-brand-display: "Chewy", "Balsamiq Sans", "Baloo 2", system-ui, sans-serif;
+  --font-brand-body: "Baloo 2", "Nunito", system-ui, sans-serif;
+  /* The text fields and the Google button are set in a plain sans, as in the design. */
+  --font-brand-plain: Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif;
+  /*
+   * The designer drew the brand pages on a 1280 x 728 frame. One --u is one pixel of that frame, scaled to the
+   * window, so the scene (mountains, earth, Dwoggle, his speech bubble) keeps the drawing's proportions and its
+   * distance from the centre of the page at any size. Text and controls stay in real pixels.
+   */
+  --u: min(calc(100dvh / 728), calc(100vw / 1280), 1.3px);
+  --brand-max-width: 1020px;
+  --brand-radius: 12px;
+  --brand-radius-card: 18px;
+  --brand-edge: 4px;
+  --brand-form-width: 360px;
+  --brand-card-width: 500px;
+  --duration-descend: 900ms;
+
+  /* Layout */
+  --figure-max-width: 720px;
+  /* Room under the floating title and language switch. */
+  --hud-clearance: calc(var(--tap-target) + var(--space-3) * 2);
+  --core-width: 92px;
+  --core-ellipse: 22px;
+  --rise-band-height: 34px;
+  --leader-width: 30px;
+  --sprite-sm: 40px;
+  --sprite-md: 64px;
+  --portrait-size: 72px;
+  --grade-size: 44px;
+  --grade-size-sm: 26px;
+  --tap-target: 44px;
+  --dialog-width: 520px;
+  --bubble-width: 220px;
+  --search-width: 440px;
+  --site-max-width: 1080px;
+  --sheet-width: 440px;
+  --field-height: 48px;
+  --z-map-overlay: 1000;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --core-width: 150px;
+    --core-ellipse: 34px;
+    --rise-band-height: 46px;
+    --leader-width: 64px;
+  }
+}
