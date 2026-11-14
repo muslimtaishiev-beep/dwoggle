@@ -2,12 +2,6 @@ import type { LatLon } from '../../api/types.ts'
 
 export type TileStatus = 'loading' | 'ready' | 'error'
 
-/** Where the map opens: a centre and how much ground to show around it, from one city to a very large country. */
-export interface MapStart {
-  readonly center: LatLon
-  readonly span: 'city' | 'small' | 'medium' | 'large' | 'huge'
-}
-
 /** What every base map implementation must do: show the tiles, the tapped point, its circle and Dwoggle. */
 export interface BaseMapProps {
   point: LatLon | null
@@ -16,8 +10,6 @@ export interface BaseMapProps {
   digging: boolean
   /** A place to show, from the address search. The camera moves there; nothing is selected. */
   target: LatLon | null
-  /** Where the map opens. Read once, when the map is created. */
-  start: MapStart
   onSelect: (point: LatLon) => void
   onStatus: (status: TileStatus) => void
 }

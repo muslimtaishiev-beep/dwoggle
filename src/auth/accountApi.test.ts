@@ -12,12 +12,12 @@ describe('parseAccount', () => {
           purpose: 'other',
           purpose_note: 'School',
           concerns: ['flood', 'heat'],
-          lang: 'uz',
+          lang: 'ky',
         },
         profile_complete: true,
       }),
     ).toEqual({
-      language: 'uz',
+      language: 'ky',
       country: 'KG',
       phone: '+996555123456',
       purpose: 'other',
@@ -41,7 +41,8 @@ describe('parseAccount', () => {
 
   it('never trusts values it does not know', () => {
     const parsed = parseAccount({
-      profile: { country: 'Kyrgyzstan', purpose: 'treasure', phone: '', lang: 'klingon', concerns: ['flood', 'zombies'] },
+      // 'uz' was offered once; a language Dwoggle no longer speaks counts as not chosen.
+      profile: { country: 'Kyrgyzstan', purpose: 'treasure', phone: '', lang: 'uz', concerns: ['flood', 'zombies'] },
       profile_complete: 'yes',
     })
     expect(parsed).toEqual({

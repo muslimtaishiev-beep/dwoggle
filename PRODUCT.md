@@ -22,7 +22,7 @@ Risk signals for one exact place, built from open Earth-observation data (mostly
 
 - Used mostly on phones, down to 360 px wide, also on desktop.
 - The backend returns keys and numbers only (see mock/report.json and src/api/types.ts). Every sentence is built on the client from src/i18n/translations.json.
-- Languages: Kyrgyz, Russian, Kazakh, Uzbek, English, Chinese, Hindi, Spanish, Arabic, French, Portuguese (the most spoken languages and those of Central Asia). Asked as the first question after sign-in. Translations are AI-made and need a native-speaker check.
+- Languages: Kyrgyz, Russian, English. Asked as the first question after sign-in. Kyrgyzstan only: the data covers nothing else, and the people who reviewed it live there.
 - A marmot mascot, Dwoggle, shows one of three moods sent by the backend: relaxed, alert, whistling.
 
 ## Capabilities and Constraints
@@ -37,8 +37,8 @@ Risk signals for one exact place, built from open Earth-observation data (mostly
 - Base map: a free 3D satellite map: imagery draped over terrain (elevation largely from NASA SRTM) with buildings standing up, drawn by MapLibre; no API key. A flat OpenStreetMap map takes over when the 3D map cannot load. 2GIS was rejected because it is paid. The map sits behind one component so providers can be swapped.
 - Address search over the map (Nominatim, free, no key): it moves the map to a found place; the user still taps the exact spot to check it.
 - Pages: the sign-up page (the main page), the dig with its questions after the first sign-in, and the map. The map and the report work without an account; signing in only adds features.
-- Accounts (Firebase Auth): Google, or email and password. After the first sign-in, five questions are asked while Dwoggle digs: language, country (the map opens there), why they came, which hazards worry them, and a phone number. The backend keeps the answers; the device only keeps a copy, without the phone number. The account can be deleted, phone number included.
-- Undecided: a privacy notice for the email, language and country it collects; per-check grading thresholds (owned by the science team); final mascot and layer artwork (placeholders ship in fixed-size boxes).
+- Accounts (Firebase Auth): Google, or email and password. After the first sign-in, four questions are asked while Dwoggle digs: language, why they came, which hazards worry them, and a phone number. The backend keeps the answers. The account can be deleted, phone number included.
+- Undecided: a privacy notice for the email, phone number and answers it collects; per-check grading thresholds (owned by the science team); final mascot and layer artwork (placeholders ship in fixed-size boxes).
 
 ## Brand Commitments
 

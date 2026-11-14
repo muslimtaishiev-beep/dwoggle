@@ -5,7 +5,8 @@
  * the question keeps real pixels.
  */
 .dig {
-  --level: 82dvh;
+  /* One answer takes the camera down a whole screen, so after the first one nothing of the sky is left, as drawn. */
+  --level: 100dvh;
   /* Dwoggle digging, frame 668..1163 x 311..660. */
   --mascot-left: calc(50% + 28 * var(--u));
   --mascot-w: calc(495 * var(--u));
@@ -110,10 +111,11 @@
   --tube-height: calc(436 * var(--u));
   position: absolute;
   z-index: 3;
-  top: 132px;
+  top: calc(132px * var(--frame-scale));
   inset-inline-start: calc(50% - 570 * var(--u));
   display: grid;
-  grid-template-columns: var(--tube-width) min(485px, calc(100vw - 50% + 570 * var(--u) - var(--tube-width) - 52 * var(--u) - var(--space-4)));
+  /* The question shrinks with the frame (see .dig-bubble), and so does its column. */
+  grid-template-columns: var(--tube-width) min(calc(485px * var(--frame-scale)), calc(100vw - 50% + 570 * var(--u) - var(--tube-width) - 52 * var(--u) - var(--space-4)));
   align-items: start;
   column-gap: calc(52 * var(--u));
 }
@@ -146,6 +148,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  zoom: var(--frame-scale);
   gap: var(--space-2);
   padding: 22px 28px 26px;
   border: 2.5px solid var(--brand-brown);
@@ -251,12 +254,6 @@
   animation: dig-scrape 700ms ease-in-out infinite;
 }
 
-/* Right to left: Dwoggle turns round, and the bubble's tail points the other way. */
-[dir="rtl"] .dig__mascot,
-[dir="rtl"] .dig-bubble__tail {
-  transform: scaleX(-1);
-}
-
 /* While he moves down a layer he digs hard. */
 .dig--digging .dig__mascot img {
   animation-duration: 180ms;
@@ -320,11 +317,11 @@
   }
 }
 
-/* ---------- Narrower than the drawing: the question on top, Dwoggle below ---------- */
+/* ---------- Narrower than the drawing, or too short for it: the question on top, Dwoggle below, full size ---------- */
 
-@media (max-width: 1023px) {
+@media (max-width: 1023px), (max-height: 619px) {
   .dig {
-    --level: 70dvh;
+    --frame-scale: 1;
     --mascot-h: 150px;
     --mascot-w: calc(150px * 1.418);
     --mascot-left: calc(100% - 4vw - var(--mascot-w));
@@ -382,7 +379,14 @@
   }
 }
 
-/* Eleven languages: three to a row where there is room, two on a phone. */
+/* A wide but short window: the question keeps to the left, clear of Dwoggle in the right corner. */
+@media (min-width: 800px) and (max-width: 1023px), (min-width: 800px) and (max-height: 619px) {
+  .dig__stage {
+    margin-inline: var(--space-4) auto;
+  }
+}
+
+/* The languages: three to a row where there is room, two on a phone. */
 .dig-bubble__grid--languages {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

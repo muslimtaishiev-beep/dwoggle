@@ -45,6 +45,7 @@
 .brand-header {
   position: relative;
   z-index: 3;
+  zoom: var(--frame-scale);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -256,11 +257,6 @@
   inset-inline-start: calc(50% - 200 * var(--u));
   width: calc(1000 * var(--u));
   height: calc(300 * var(--u));
-}
-
-[dir="rtl"] .surface-scene__mountains,
-[dir="rtl"] .surface-scene__ground {
-  transform: scaleX(-1);
 }
 
 .surface-scene__ground {

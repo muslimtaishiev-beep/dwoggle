@@ -3,15 +3,12 @@ import { useAuth } from '../auth/context.ts'
 import { BrandMark } from '../brand/BrandMark.tsx'
 import { LineIcon } from '../brand/LineIcon.tsx'
 import { useI18n } from '../i18n/context.ts'
-import { LANGS, isLang, type Lang } from '../i18n/i18n.ts'
+import { LANGS, isLang } from '../i18n/i18n.ts'
 import { ROUTES } from '../router.ts'
 import { Link } from './Link.tsx'
 import './MapHeader.css'
 
-/** The languages on the header's switch, as drawn; the rest are in the settings. */
-const QUICK_LANGS: readonly Lang[] = ['ky', 'ru', 'en']
-
-/** The settings under the gear: every language, how the grades work, and the account. */
+/** The settings under the gear: the language (the header's switch is hidden on a phone), how the grades work, and the account. */
 function SettingsMenu({ onGrading, onClose }: { onGrading: () => void; onClose: () => void }) {
   const { lang, setLang, t } = useI18n()
   const auth = useAuth()
@@ -85,28 +82,17 @@ function SettingsMenu({ onGrading, onClose }: { onGrading: () => void; onClose: 
   )
 }
 
-/** The brown bar over the map, as drawn: account, logo, a quick language switch and the settings. */
+/** The brown bar over the map, as drawn: the logo, a quick language switch, and the settings (with the account). */
 export function MapHeader({ onGrading }: { onGrading: () => void }) {
   const { lang, setLang, t } = useI18n()
-  const { state } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
-  const quick = QUICK_LANGS.includes(lang) ? QUICK_LANGS : [...QUICK_LANGS, lang]
 
   return (
     <header className="map-header">
-      {state.status === 'signedIn' ? (
-        <button type="button" className="map-header__round" aria-label={t('account.open')} onClick={() => setMenuOpen(true)}>
-          <LineIcon name="user" size={22} />
-        </button>
-      ) : (
-        <Link to={ROUTES.signIn} className="map-header__round" aria-label={t('site.sign_in')}>
-          <LineIcon name="user" size={22} />
-        </Link>
-      )}
       <BrandMark />
       <div className="map-header__end">
         <div className="map-header__langs" role="group" aria-label={t('settings.language')}>
-          {quick.map((code) => (
+          {LANGS.map((code) => (
             <button
               key={code}
               type="button"
@@ -123,12 +109,12 @@ export function MapHeader({ onGrading }: { onGrading: () => void }) {
         <div className="map-header__settings">
           <button
             type="button"
-            className="map-header__round map-header__round--small"
+            className="map-header__round"
             aria-label={t('settings.title')}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <LineIcon name="gear" size={20} />
+            <LineIcon name="gear" size={20} filled />
           </button>
           {menuOpen && <SettingsMenu onGrading={onGrading} onClose={() => setMenuOpen(false)} />}
         </div>

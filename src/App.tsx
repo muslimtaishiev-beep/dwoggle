@@ -30,7 +30,7 @@ function homeOf(user: User): Route {
 /**
  * Which page to show. The main page is the sign-up page; a signed-in visitor never sees it and goes to the map,
  * or to the dig while the backend still needs their profile. The map is open to everyone: signing in only adds
- * the profile (the map then opens on the visitor's country).
+ * the profile.
  */
 export default function App() {
   const path = usePath()
@@ -45,7 +45,7 @@ export default function App() {
   if (path === ROUTES.map) {
     return (
       <Suspense fallback={<Loading />}>
-        <MapPage country={user?.country ?? null} />
+        <MapPage />
       </Suspense>
     )
   }

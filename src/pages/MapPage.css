@@ -1,7 +1,8 @@
 /*
  * The map page, as drawn on a 1280 x 720 frame: the brown header, the map, and the brown ground below it,
  * both meeting the map with a wavy edge. The report panel stands on the map's right; on a phone it becomes a
- * sheet over the bottom of the map.
+ * sheet over the bottom of the map. Header, panel and ground shrink with the frame (--frame-scale), so on a
+ * small laptop screen, or zoomed in, the whole report still fits beside the map.
  */
 .map-page {
   position: relative;
@@ -37,6 +38,7 @@
   display: flex;
   flex-direction: column;
   width: 330px;
+  zoom: var(--frame-scale);
   pointer-events: none;
 }
 
@@ -91,7 +93,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  min-height: 170px;
+  /* A fixed height, as drawn: a long question from Dwoggle makes his bubble grow upwards, over the map. */
+  height: 176px;
+  zoom: var(--frame-scale);
   padding: 8px 32px 18px;
   padding-bottom: max(18px, env(safe-area-inset-bottom));
   background: var(--brand-brown);
@@ -127,8 +131,11 @@
 
 /* ---------- Narrower than the drawing ---------- */
 
-/* Narrower than the drawing: Dwoggle and his bubble on the left, the search over the tiles on the right. */
-@media (max-width: 1180px) {
+/*
+ * Too narrow for the drawing's single row, even shrunk to 85 %: Dwoggle and his bubble on the left, the search
+ * over the tiles on the right.
+ */
+@media (max-width: 1087px) {
   .map-page__ground {
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
@@ -136,6 +143,8 @@
       "ask actions";
     row-gap: 12px;
     column-gap: 20px;
+    height: auto;
+    min-height: 176px;
     padding-inline: 20px;
   }
 
@@ -170,12 +179,18 @@
 }
 
 @media (max-width: 767px) {
+  /* On a phone everything is back at its full size. */
+  .map-page {
+    --frame-scale: 1;
+  }
+
   .map-page__ground {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "search"
       "actions";
     gap: 12px;
+    height: auto;
     min-height: 0;
     padding: 12px 12px 14px;
   }

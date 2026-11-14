@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Report } from '../api/types.ts'
+import type { Check, Report } from '../api/types.ts'
 import { StandingDwoggle } from '../brand/StandingDwoggle.tsx'
 import { useI18n } from '../i18n/context.ts'
 import { buildAnswer, whyAnswer, worstCheck } from '../report/facts.ts'
@@ -28,6 +28,12 @@ export function AskDwoggle({ report, checking, notice }: AskDwoggleProps) {
   const question = asked !== null && asked.report === report ? asked.question : null
   const worst = report ? worstCheck(report) : null
 
+  /** "Why is earthquake a D?" In Kyrgyz the check's name comes first, so the sentence gets its capital back. */
+  const whyQuestion = (check: Check) => {
+    const text = t('ask.why', { check: t(`check.${check.id}`).toLocaleLowerCase(i18n.lang), grade: check.grade ?? '' })
+    return text.charAt(0).toLocaleUpperCase(i18n.lang) + text.slice(1)
+  }
+
   let title: string
   let body = null
   if (notice !== null) {
@@ -40,7 +46,7 @@ export function AskDwoggle({ report, checking, notice }: AskDwoggleProps) {
       <div className="ask__chips">
         {worst?.grade && (
           <button type="button" className="ask__chip" onClick={() => setAsked({ report, question: { kind: 'why' } })}>
-            {t('ask.why', { check: t(`check.${worst.id}`).toLocaleLowerCase(i18n.lang), grade: worst.grade })}
+            {whyQuestion(worst)}
           </button>
         )}
         <button type="button" className="ask__chip" onClick={() => setAsked({ report, question: { kind: 'build' } })}>
@@ -52,7 +58,7 @@ export function AskDwoggle({ report, checking, notice }: AskDwoggleProps) {
       </div>
     )
   } else {
-    title = question.kind === 'build' ? t('ask.build') : t('ask.why', { check: t(`check.${worst?.id ?? 'earthquake'}`).toLocaleLowerCase(i18n.lang), grade: worst?.grade ?? '' })
+    title = question.kind === 'build' || worst === null ? t('ask.build') : whyQuestion(worst)
     body = (
       <>
         <p className="ask__answer">{question.kind === 'build' || worst === null ? buildAnswer(report, i18n) : whyAnswer(worst, i18n)}</p>

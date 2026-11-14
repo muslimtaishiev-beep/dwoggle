@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 // The library draws tiles in a web worker; the bundler has to be told to ship that file.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useRef, useState } from 'react'
-import { MAP_3D } from '../../config.ts'
+import { KYRGYZSTAN, MAP_3D, MAP_BOUNDS_MARGIN_DEG, MAP_DEFAULT_CENTER } from '../../config.ts'
 import { satelliteStyle } from './satelliteStyle.ts'
 import { circleRing, MARKER, type BaseMapProps } from './shared.ts'
 
@@ -36,12 +36,11 @@ function areaData(point: BaseMapProps['point'], radiusM: number): FeatureCollect
  * The 3D base map: a tilted camera over satellite imagery and terrain, with buildings that stand up.
  * The library is loaded on demand.
  */
-export function Map3D({ point, radiusM, digging, target, start, onSelect, onStatus, onUnavailable }: Map3DProps) {
+export function Map3D({ point, radiusM, digging, target, onSelect, onStatus, onUnavailable }: Map3DProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   // Set once the style has loaded; layers and markers can only be added after that.
   const [engine, setEngine] = useState<{ lib: MapLibre; map: MapLibreMap } | null>(null)
   const callbacks = useRef({ onSelect, onStatus, onUnavailable })
-  const startRef = useRef(start)
 
   useEffect(() => {
     callbacks.current = { onSelect, onStatus, onUnavailable }
@@ -50,7 +49,6 @@ export function Map3D({ point, radiusM, digging, target, start, onSelect, onStat
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
-    const opening = startRef.current
     let cancelled = false
     let loaded = false
     let failures = 0
@@ -73,8 +71,14 @@ export function Map3D({ point, radiusM, digging, target, start, onSelect, onStat
             label: token('--map-label'),
             labelHalo: token('--map-label-halo'),
           }),
-          center: [opening.center.lon, opening.center.lat],
-          zoom: MAP_3D.startZoom[opening.span],
+          center: [MAP_DEFAULT_CENTER.lon, MAP_DEFAULT_CENTER.lat],
+          zoom: MAP_3D.startZoom,
+          // The camera stays over Kyrgyzstan.
+          maxBounds: [
+            [KYRGYZSTAN.bounds.west - MAP_BOUNDS_MARGIN_DEG, KYRGYZSTAN.bounds.south - MAP_BOUNDS_MARGIN_DEG],
+            [KYRGYZSTAN.bounds.east + MAP_BOUNDS_MARGIN_DEG, KYRGYZSTAN.bounds.north + MAP_BOUNDS_MARGIN_DEG],
+          ],
+          minZoom: MAP_3D.minZoom,
           pitch: MAP_3D.pitch,
           bearing: MAP_3D.bearing,
           attributionControl: false,

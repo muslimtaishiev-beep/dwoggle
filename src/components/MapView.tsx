@@ -2,7 +2,7 @@ import { Component, lazy, Suspense, useCallback, useState, type ReactNode } from
 import type { LatLon } from '../api/types.ts'
 import { useI18n } from '../i18n/context.ts'
 import { Map3D } from './map/Map3D.tsx'
-import type { MapStart, TileStatus } from './map/shared.ts'
+import type { TileStatus } from './map/shared.ts'
 import { StateMessage } from './StateMessage.tsx'
 import './MapView.css'
 
@@ -15,8 +15,6 @@ interface MapViewProps {
   digging: boolean
   /** A place found by the address search; the map moves there. */
   target: LatLon | null
-  /** Where the map opens. */
-  start: MapStart
   onSelect: (point: LatLon) => void
 }
 
@@ -46,7 +44,7 @@ class MapBoundary extends Component<{ fallback: ReactNode; children: ReactNode }
  * The map. This is the one component the rest of the app knows: it shows the 3D map when the
  * browser can draw it and falls back to the flat map when it cannot. Swap providers in src/config.ts.
  */
-export function MapView({ point, radiusM, digging, target, start, onSelect }: MapViewProps) {
+export function MapView({ point, radiusM, digging, target, onSelect }: MapViewProps) {
   const { t } = useI18n()
   const [flat, setFlat] = useState(() => !hasWebGL())
   const [tiles, setTiles] = useState<TileStatus>('loading')
@@ -56,7 +54,7 @@ export function MapView({ point, radiusM, digging, target, start, onSelect }: Ma
     setTiles('loading')
   }, [])
 
-  const mapProps = { point, radiusM, digging, target, start, onSelect, onStatus: setTiles }
+  const mapProps = { point, radiusM, digging, target, onSelect, onStatus: setTiles }
   const mapError = <StateMessage kind="error" message={t('map.error')} floating />
 
   return (

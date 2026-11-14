@@ -47,7 +47,7 @@ export async function searchPlaces(query: string, lang: Lang, signal: AbortSigna
   url.searchParams.set('q', query)
   url.searchParams.set('format', 'jsonv2')
   url.searchParams.set('limit', String(GEOCODER.limit))
-  url.searchParams.set('viewbox', GEOCODER.preferBox)
+  url.searchParams.set('countrycodes', GEOCODER.countryCodes)
   url.searchParams.set('accept-language', lang)
   const response = await fetch(url, { signal, headers: { Accept: 'application/json' } })
   if (!response.ok) throw new Error(`Geocoder answered HTTP ${response.status}`)

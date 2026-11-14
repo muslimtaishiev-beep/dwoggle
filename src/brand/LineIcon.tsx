@@ -35,6 +35,8 @@ export function LineIcon({ name, size = 20, filled = false }: { name: LineIconNa
       height={size}
       viewBox="0 0 24 24"
       fill={filled ? 'currentColor' : 'none'}
+      // A filled icon keeps its holes (the cog's centre).
+      fillRule="evenodd"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"

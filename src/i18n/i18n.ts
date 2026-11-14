@@ -1,28 +1,23 @@
 import translations from './translations.json'
 
 /**
- * The languages Dwoggle speaks: the most spoken languages in the world and those of Central Asia.
- * This is also the order they are offered in: Central Asia first, where Dwoggle is made.
+ * The languages Dwoggle speaks, in the order they are offered: Kyrgyz and Russian, the languages of Kyrgyzstan,
+ * which is the one country its data covers, and English.
  */
-export const LANGS = ['ky', 'ru', 'kk', 'uz', 'en', 'zh', 'hi', 'es', 'ar', 'fr', 'pt'] as const
+export const LANGS = ['ky', 'ru', 'en'] as const
 export type Lang = (typeof LANGS)[number]
-export const DEFAULT_LANG: Lang = 'en'
 
-/** Languages written right to left; the page is mirrored for them. */
-const RTL_LANGS: readonly Lang[] = ['ar']
-
-export function direction(lang: Lang): 'ltr' | 'rtl' {
-  return RTL_LANGS.includes(lang) ? 'rtl' : 'ltr'
-}
-
-/** The first of the browser's preferred languages that Dwoggle speaks ("ru-KG" gives ru), or English. */
+/**
+ * The first of the browser's preferred languages that Dwoggle speaks ("ru-KG" gives ru). A browser that speaks
+ * none of them gets Russian: in Kyrgyzstan it is the language such a visitor is most likely to read.
+ */
 export function browserLang(): Lang {
   const preferred = typeof navigator === 'undefined' ? [] : (navigator.languages ?? [navigator.language])
   for (const tag of preferred) {
     const primary = tag.toLowerCase().split('-')[0]
     if (isLang(primary)) return primary
   }
-  return DEFAULT_LANG
+  return 'ru'
 }
 
 export type MessageKey = keyof typeof translations.en

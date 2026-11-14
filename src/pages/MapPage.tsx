@@ -10,9 +10,8 @@ import { MapView } from '../components/MapView.tsx'
 import { ReportPanel } from '../components/ReportPanel.tsx'
 import { SavedPanel } from '../components/SavedPanel.tsx'
 import { Underground, type UndergroundView } from '../components/Underground.tsx'
-import type { MapStart } from '../components/map/shared.ts'
-import { DEFAULT_RADIUS_M, DIG_MIN_MS, MAP_DEFAULT_CENTER } from '../config.ts'
-import { countryView, DEFAULT_COUNTRY, findCountry } from '../data/countries.ts'
+import { DEFAULT_RADIUS_M, DIG_MIN_MS } from '../config.ts'
+import { isInKyrgyzstan } from '../data/coverage.ts'
 import { useReducedMotion } from '../hooks/useReducedMotion.ts'
 import { useSavedAreas } from '../hooks/useSavedAreas.ts'
 import { useI18n } from '../i18n/context.ts'
@@ -29,32 +28,18 @@ import './MapPage.css'
  */
 type Phase = 'idle' | 'digging' | 'open' | 'layers' | 'closing'
 
-const CITY_VIEW: MapStart = { center: MAP_DEFAULT_CENTER, span: 'city' }
-
-/** Where the map opens: the visitor's country, or the capital at street level where the 3D buildings show. */
-function startFor(countryCode: string | null): MapStart {
-  const country = findCountry(countryCode)
-  if (!country || country.code === DEFAULT_COUNTRY) return CITY_VIEW
-  return countryView(country)
-}
-
-/** A shared link names its place: /map?at=42.82400,74.60400. */
+/** A shared link names its place: /map?at=42.82400,74.60400. Places Dwoggle has no data for are ignored. */
 function pointFromLink(): LatLon | null {
   const [lat, lon] = (new URLSearchParams(window.location.search).get('at') ?? '').split(',').map(Number)
   if (lat === undefined || lon === undefined || !Number.isFinite(lat) || !Number.isFinite(lon)) return null
-  return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lat, lon } : null
-}
-
-interface MapPageProps {
-  /** ISO code of the signed-in visitor's country, or null when there is no account. */
-  country: string | null
+  return isInKyrgyzstan({ lat, lon }) ? { lat, lon } : null
 }
 
 /**
  * The map, as the designer drew it: a brown header, the 3D satellite map, the report panel beside it, and the
  * brown ground below with the search, Dwoggle in his hole answering questions, and "Where am I", "Saved", "Layers".
  */
-export default function MapPage({ country }: MapPageProps) {
+export default function MapPage() {
   const { lang, t } = useI18n()
   const reducedMotion = useReducedMotion()
   // A shared link opens straight on its place.
@@ -77,6 +62,11 @@ export default function MapPage({ country }: MapPageProps) {
 
   const select = useCallback(
     (next: LatLon) => {
+      // Dwoggle has data for Kyrgyzstan only; anywhere else he says so instead of digging.
+      if (!isInKyrgyzstan(next)) {
+        setNotice(t('map.outside'))
+        return
+      }
       setPoint(next)
       setView('layers')
       setLayerIndex(0)
@@ -87,7 +77,7 @@ export default function MapPage({ country }: MapPageProps) {
       // With reduced motion there is no dig: the panel opens straight away.
       setPhase(reducedMotion ? 'open' : 'digging')
     },
-    [reducedMotion],
+    [reducedMotion, t],
   )
 
   useEffect(() => {
@@ -139,7 +129,11 @@ export default function MapPage({ country }: MapPageProps) {
       return
     }
     navigator.geolocation.getCurrentPosition(
-      (position) => setPlace({ lat: position.coords.latitude, lon: position.coords.longitude }),
+      (position) => {
+        const here = { lat: position.coords.latitude, lon: position.coords.longitude }
+        if (isInKyrgyzstan(here)) setPlace(here)
+        else setNotice(t('actions.where_outside'))
+      },
       () => setNotice(t('actions.where_failed')),
       { enableHighAccuracy: true, timeout: 10000 },
     )
@@ -158,7 +152,6 @@ export default function MapPage({ country }: MapPageProps) {
             radiusM={report?.location.radius_m ?? DEFAULT_RADIUS_M}
             digging={phase === 'digging'}
             target={place}
-            start={startFor(country)}
             onSelect={select}
           />
         </div>

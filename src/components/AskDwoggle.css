@@ -78,10 +78,6 @@
   clip-path: polygon(100% 0, 0 100%, 100% 100%);
 }
 
-[dir="rtl"] .ask__bubble::before {
-  transform: scaleX(-1);
-}
-
 .ask__title {
   font-size: 19px;
   line-height: 1.15;

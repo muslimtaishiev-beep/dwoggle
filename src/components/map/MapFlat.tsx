@@ -3,7 +3,7 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef } from 'react'
 import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import type { LatLon } from '../../api/types.ts'
-import { MAP_FLAT } from '../../config.ts'
+import { KYRGYZSTAN, MAP_BOUNDS_MARGIN_DEG, MAP_DEFAULT_CENTER, MAP_FLAT } from '../../config.ts'
 import { MARKER, type BaseMapProps } from './shared.ts'
 
 const pinIcon = L.divIcon({ ...MARKER.pin, iconSize: [0, 0] })
@@ -58,7 +58,7 @@ function ShowTarget({ target }: { target: LatLon | null }) {
 }
 
 /** The flat fallback map: Leaflet with raster tiles. Loaded only when the 3D map cannot be used. */
-export default function MapFlat({ point, radiusM, digging, target, start, onSelect, onStatus }: BaseMapProps) {
+export default function MapFlat({ point, radiusM, digging, target, onSelect, onStatus }: BaseMapProps) {
   const failedTiles = useRef(0)
 
   const tileEvents = useMemo<LeafletEventHandlerFnMap>(
@@ -78,8 +78,15 @@ export default function MapFlat({ point, radiusM, digging, target, start, onSele
   return (
     <MapContainer
       className="map-view__map"
-      center={[start.center.lat, start.center.lon]}
-      zoom={MAP_FLAT.startZoom[start.span]}
+      center={[MAP_DEFAULT_CENTER.lat, MAP_DEFAULT_CENTER.lon]}
+      zoom={MAP_FLAT.startZoom}
+      // The map stays over Kyrgyzstan.
+      maxBounds={[
+        [KYRGYZSTAN.bounds.south - MAP_BOUNDS_MARGIN_DEG, KYRGYZSTAN.bounds.west - MAP_BOUNDS_MARGIN_DEG],
+        [KYRGYZSTAN.bounds.north + MAP_BOUNDS_MARGIN_DEG, KYRGYZSTAN.bounds.east + MAP_BOUNDS_MARGIN_DEG],
+      ]}
+      maxBoundsViscosity={1}
+      minZoom={MAP_FLAT.minZoom}
       worldCopyJump
     >
       <TileLayer

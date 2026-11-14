@@ -231,9 +231,16 @@
   /*
    * The designer drew the brand pages on a 1280 x 728 frame. One --u is one pixel of that frame, scaled to the
    * window, so the scene (mountains, earth, Dwoggle, his speech bubble) keeps the drawing's proportions and its
-   * distance from the centre of the page at any size. Text and controls stay in real pixels.
+   * distance from the centre of the page at any size.
    */
   --u: min(calc(100dvh / 728), calc(100vw / 1280), 1.3px);
+  /*
+   * How much of their drawn size the text and controls of those pages keep: they shrink with the frame, down to
+   * 85 %, and never grow past it. So on a small laptop screen, or zoomed in with Ctrl +, the form and the scene
+   * get smaller together instead of running into each other. It is the frame unit as a plain number
+   * (tan(atan2(a, b)) is a / b); used as a zoom factor. The stacked layouts set it back to 1.
+   */
+  --frame-scale: clamp(0.85, tan(atan2(var(--u), 1px)), 1);
   --brand-max-width: 1020px;
   --brand-radius: 12px;
   --brand-radius-card: 18px;

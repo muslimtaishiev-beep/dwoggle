@@ -2,9 +2,9 @@
 .report-panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   max-height: 100%;
-  padding: 18px 18px 12px;
+  padding: 16px 18px 10px;
   overflow-y: auto;
   border-radius: var(--brand-radius-card);
   background: var(--brand-paper);
@@ -74,8 +74,8 @@
   grid-template-columns: 28px auto 1fr auto;
   align-items: center;
   gap: 12px;
-  min-height: 36px;
-  padding: 3px 0;
+  min-height: 34px;
+  padding: 2px 0;
   border-bottom: 1px solid var(--map-ui-line);
 }
 

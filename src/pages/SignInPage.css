@@ -1,16 +1,16 @@
 /*
  * Sign-in, as drawn on a 1280 x 728 frame: the form in a column at the start of the line, Dwoggle with his map
- * standing on the ground past the centre, his greeting in a bubble beside his helmet. The form keeps real
- * pixels, a size up from the drawing; Dwoggle and the bubble are placed in design units (--u) from the centre.
- * Positions are logical (start/end), so for right-to-left languages the whole page mirrors.
+ * standing on the ground past the centre, his greeting in a bubble beside his helmet. Dwoggle and the bubble are
+ * placed in design units (--u) from the centre; the form, a size up from the drawing, shrinks with the frame
+ * (--frame-scale) so the two never meet, whatever the window size or the browser's zoom.
  */
 /* The column is not a positioning box, so Dwoggle below is placed against the whole page. */
 .sign-in__layout {
   width: 100%;
   max-width: var(--brand-max-width);
   margin-inline: auto;
-  /* The earth's top edge is 76 to 98 design units from the bottom: keep the form clear of it. */
-  padding: 18px var(--space-4) calc(100 * var(--u));
+  /* Under the form the earth's edge is about 76 design units from the bottom: keep the form clear of it. */
+  padding: calc(18px * var(--frame-scale)) var(--space-4) calc(84 * var(--u));
 }
 
 .sign-in__panel {
@@ -21,6 +21,7 @@
   width: 100%;
   max-width: 410px;
   margin-inline-start: 10px;
+  zoom: var(--frame-scale);
 }
 
 .sign-in__title {
@@ -204,19 +205,21 @@
   height: calc(30 * var(--u));
 }
 
-/* Right to left: the tail points the other way too. */
-[dir="rtl"] .sign-in__bubble-tail {
-  transform: scaleX(-1);
-}
-
 @keyframes mascot-breathe {
   50% {
     transform: scaleY(1.012) translateY(-2px);
   }
 }
 
-/* Narrower than the drawing: Dwoggle peeks in above the form, smaller, with his greeting beside him. */
-@media (max-width: 1023px) {
+/*
+ * Narrower than the drawing, or too short for it (a small window, or zoomed far in): Dwoggle peeks in above
+ * the form, smaller, with his greeting beside him, and everything is back at its full size.
+ */
+@media (max-width: 1023px), (max-height: 619px) {
+  .brand-page {
+    --frame-scale: 1;
+  }
+
   .sign-in__layout {
     display: flex;
     flex-direction: column;
@@ -274,11 +277,6 @@
     top: 50%;
     clip-path: polygon(100% 0, 0 50%, 100% 100%);
     transform: translateY(-50%);
-  }
-
-  [dir="rtl"] .sign-in__bubble::before,
-  [dir="rtl"] .sign-in__bubble::after {
-    transform: translateY(-50%) scaleX(-1);
   }
 
   .sign-in__bubble::before {

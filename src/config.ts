@@ -10,6 +10,19 @@ export const API_BASE_URL = '/api'
 /** Circle drawn on tap, before the report arrives with its own radius_m. */
 export const DEFAULT_RADIUS_M = 300
 
+/**
+ * Dwoggle covers Kyrgyzstan only: the backend has data for nothing else and refuses any other place.
+ * The box is the one the backend checks (bbox in backend/bekem/config.py).
+ */
+export const KYRGYZSTAN = {
+  code: 'KG',
+  dial: '+996',
+  bounds: { west: 69.2, south: 39.1, east: 80.3, north: 43.3 },
+} as const
+
+/** How far past that box the map may be moved, in degrees, so a place by the border can sit mid-screen. */
+export const MAP_BOUNDS_MARGIN_DEG = 2
+
 export const MAP_DEFAULT_CENTER: LatLon = { lat: 42.8746, lon: 74.5698 } // Bishkek
 
 /**
@@ -37,7 +50,10 @@ export const MAP_3D = {
     glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
   },
   /** Opening zoom by how much ground to show: one city, or a small to very large country. */
-  startZoom: { city: 14.2, small: 7.6, medium: 6.2, large: 4.6, huge: 3.2 },
+  /** The map opens on Bishkek at street level, where the 3D buildings show. */
+  startZoom: 14.2,
+  /** Far enough out to see the whole country, no further. */
+  minZoom: 5.4,
   /** Zoom used after a tap, so the 300 m circle and the buildings around it are clearly visible. */
   areaZoom: 14.8,
   /** Zoom used when the address search finds a place: close enough to pick the exact spot. */
@@ -57,7 +73,8 @@ export const MAP_FLAT = {
   /** Shown on the map as the provider's licence requires, so it stays outside the translations file. */
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 19,
-  startZoom: { city: 12, small: 8, medium: 7, large: 5, huge: 4 },
+  startZoom: 12,
+  minZoom: 6,
   areaZoom: 15,
   searchZoom: 16,
 } as const
@@ -75,8 +92,8 @@ export const DIG_MIN_MS = 1700
  */
 export const GEOCODER = {
   url: 'https://nominatim.openstreetmap.org/search',
-  /** Results inside this box (Kyrgyzstan: west, north, east, south) come first; places elsewhere are still found. */
-  preferBox: '69.2,43.3,80.3,39.1',
+  /** Only places in Kyrgyzstan are found (ISO country code, as Nominatim's countrycodes). */
+  countryCodes: 'kg',
   limit: 5,
 } as const
 

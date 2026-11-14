@@ -13,14 +13,6 @@ const FORBIDDEN_EVERYWHERE = ['safe', 'dangerous', 'plot']
 const FORBIDDEN_BY_LANGUAGE: Readonly<Record<string, readonly string[]>> = {
   ru: ['безопасн', 'опасн', 'участок', 'участк'],
   ky: ['коопсуз', 'коркунучтуу', 'участок', 'жер тилкеси'],
-  kk: ['қауіпсіз', 'қауіпті', 'учаске', 'жер телімі'],
-  uz: ['xavfsiz', 'xavfli', 'uchastka'],
-  zh: ['安全', '危险', '地块'],
-  hi: ['सुरक्षित', 'खतरनाक', 'प्लॉट'],
-  es: ['seguro', 'segura', 'peligros', 'parcela', 'lote'],
-  pt: ['seguro', 'segura', 'perigos', 'lote', 'parcela'],
-  fr: ['sûr', 'sans danger', 'dangereu', 'parcelle'],
-  ar: ['آمن', 'خطير', 'قطعة أرض'],
 }
 
 type Catalogs = Record<string, Record<string, string>>

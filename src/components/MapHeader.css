@@ -6,6 +6,7 @@
   align-items: center;
   gap: 18px;
   min-height: 58px;
+  zoom: var(--frame-scale);
   padding: 8px 32px 4px;
   background: var(--brand-brown);
 }
@@ -18,18 +19,13 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border: 0;
   border-radius: 50%;
   background: var(--brand-paper);
   color: var(--brand-brown);
   cursor: pointer;
-}
-
-.map-header__round--small {
-  width: 32px;
-  height: 32px;
 }
 
 .map-header__end {

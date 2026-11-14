@@ -11,7 +11,6 @@
     "test": "vitest run",
     "lint": "oxlint",
     "art": "node scripts/placeholder-art.mjs",
-    "countries": "node scripts/countries.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -37,7 +36,6 @@
     "oxlint": "^1.93.0",
     "typescript": "~7.0.2",
     "vite": "^8.3.8",
-    "vitest": "^5.1.0",
-    "world-countries": "^5.1.0"
+    "vitest": "^5.1.0"
   }
 }

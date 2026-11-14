@@ -28,8 +28,8 @@ describe('buildSummary', () => {
     expect(buildSummary(check('earthquake'), 'ru').text).toContain('1,3 км')
   })
 
-  it('works in a language the backend does not speak', () => {
-    expect(buildSummary(check('landslide'), 'fr')).toEqual({ text: 'Pas assez de données satellite ici.', translated: true })
+  it('builds the sentence in the reader\'s language, not the backend\'s text', () => {
+    expect(buildSummary(check('landslide'), 'ky')).toEqual({ text: 'Спутник маалыматтары жетишсиз.', translated: true })
   })
 
   it('shows the raw params of an unknown key, and keeps the other sentences', () => {

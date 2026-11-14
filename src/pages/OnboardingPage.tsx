@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { useAuth } from '../auth/context.ts'
 import { ProfileFieldError, type ProfileField } from '../auth/accountApi.ts'
 import { CONCERNS, PURPOSE_NOTE_MAX, PURPOSES, type Concern, type ProfileAnswers, type Purpose, type User } from '../auth/types.ts'
@@ -8,25 +8,33 @@ import { ConcernIcon } from '../brand/ConcernIcon.tsx'
 import { ProgressTube } from '../brand/ProgressTube.tsx'
 import { SurfaceScene } from '../brand/SurfaceScene.tsx'
 import { Link } from '../components/Link.tsx'
-import { findCountry, guessCountry, listCountries } from '../data/countries.ts'
 import { useReducedMotion } from '../hooks/useReducedMotion.ts'
 import { useI18n } from '../i18n/context.ts'
 import { LANGS, type Lang, type MessageKey } from '../i18n/i18n.ts'
 import { ROUTES } from '../router.ts'
+import { KYRGYZSTAN } from '../config.ts'
 import '../brand/brand.css'
 import './OnboardingPage.css'
 
-const QUESTIONS = 5
+/** The questions, in the order they are asked. The country is not one of them: Dwoggle covers Kyrgyzstan only. */
+const STEP = { language: 0, purpose: 1, concerns: 2, phone: 3 } as const
+const QUESTIONS = 4
 /** How long one layer of digging takes; matches --duration-descend in tokens.css. */
 const DESCEND_MS = 900
 const CLODS = [0, 1, 2, 3, 4, 5]
 
 /** The question to climb back to when the backend refuses an answer. */
-const STEP_OF_FIELD: Readonly<Record<ProfileField, number>> = { country: 1, purpose: 2, purpose_note: 2, concerns: 3, phone: 4 }
+const STEP_OF_FIELD: Readonly<Record<ProfileField, number>> = {
+  // The country is sent by the app, not asked: should the backend refuse it, the last step shows the general message.
+  country: STEP.phone,
+  purpose: STEP.purpose,
+  purpose_note: STEP.purpose,
+  concerns: STEP.concerns,
+  phone: STEP.phone,
+}
 
 /** The backend's reasons for refusing an answer, in our words. Unknown reasons get the general message. */
 const REFUSALS: Readonly<Record<string, MessageKey>> = {
-  country_invalid: 'profile.error.country_invalid',
   phone_invalid: 'profile.error.phone_invalid',
   purpose_invalid: 'profile.error.purpose_invalid',
   note_required: 'profile.error.note_required',
@@ -40,11 +48,10 @@ interface Refusal {
 
 /** The first question not answered yet, so a visitor who left halfway carries on where they stopped. */
 function firstOpenStep(user: User): number {
-  if (user.language === null) return 0
-  if (user.country === null) return 1
-  if (user.purpose === null || (user.purpose === 'other' && user.purposeNote === null)) return 2
-  if (user.concerns === null) return 3
-  return 4
+  if (user.language === null) return STEP.language
+  if (user.purpose === null || (user.purpose === 'other' && user.purposeNote === null)) return STEP.purpose
+  if (user.concerns === null) return STEP.concerns
+  return STEP.phone
 }
 
 interface BubbleProps {
@@ -90,7 +97,7 @@ function Field({ id, label, error, children }: { id: string; label: string; erro
 }
 
 /**
- * The questions after the first sign-in, asked while Dwoggle digs: language, country, purpose, concerns, phone.
+ * The questions after the first sign-in, asked while Dwoggle digs: language, purpose, concerns, phone.
  * The language comes first and takes effect at once, so the rest of the dig is already in that language. Every
  * answer takes him one layer deeper: the camera follows him down, the tunnel grows behind him and the earth gets
  * darker. The phone comes last: the answers are sent to the backend then, so if it refuses one (a phone number
@@ -103,7 +110,6 @@ export function OnboardingPage({ user }: { user: User }) {
   const reducedMotion = useReducedMotion()
   const [step, setStep] = useState(() => firstOpenStep(user))
   const [language, setLanguage] = useState<Lang>(user.language ?? lang)
-  const [country, setCountry] = useState(() => user.country ?? guessCountry())
   const [purpose, setPurpose] = useState<Purpose | null>(user.purpose)
   const [purposeNote, setPurposeNote] = useState(user.purposeNote ?? '')
   // "Something else" opens a field for a few words in place of the choices.
@@ -114,7 +120,6 @@ export function OnboardingPage({ user }: { user: User }) {
   const [saving, setSaving] = useState(false)
   const [failed, setFailed] = useState(false)
   const [refusal, setRefusal] = useState<Refusal | null>(null)
-  const countries = useMemo(() => listCountries(lang), [lang])
   const timer = useRef<number | undefined>(undefined)
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
@@ -143,18 +148,12 @@ export function OnboardingPage({ user }: { user: User }) {
   const toggleConcern = (concern: Concern) =>
     setConcerns((current) => (current.includes(concern) ? current.filter((c) => c !== concern) : [...current, concern]))
 
-  const submitCountry = (event: FormEvent) => {
-    event.preventDefault()
-    setRefusal(null)
-    digTo(2)
-  }
-
   const choosePurpose = (option: Purpose) => {
     setPurpose(option)
     setRefusal(null)
     // "Other" asks for a few words first; every other answer moves on at once.
     if (option === 'other') setNoteOpen(true)
-    else digTo(3)
+    else digTo(STEP.concerns)
   }
 
   const submitNote = (event: FormEvent) => {
@@ -164,14 +163,13 @@ export function OnboardingPage({ user }: { user: User }) {
       return
     }
     setRefusal(null)
-    digTo(3)
+    digTo(STEP.concerns)
   }
 
   const finishConcerns = () => {
-    // Start the number with the chosen country's dialling code; the visitor types the rest.
-    const dial = findCountry(country)?.dial
-    setPhone((current) => (current.trim() === '' && dial ? `${dial} ` : current))
-    digTo(4)
+    // The number starts with Kyrgyzstan's dialling code; the visitor types the rest.
+    setPhone((current) => (current.trim() === '' ? `${KYRGYZSTAN.dial} ` : current))
+    digTo(STEP.phone)
   }
 
   const submitPhone = (event: FormEvent) => {
@@ -186,7 +184,7 @@ export function OnboardingPage({ user }: { user: User }) {
     setRefusal(null)
     const answers: ProfileAnswers = {
       language,
-      country,
+      country: KYRGYZSTAN.code,
       phone: phone.trim(),
       purpose,
       purposeNote: purpose === 'other' ? purposeNote.trim() : null,
@@ -201,7 +199,7 @@ export function OnboardingPage({ user }: { user: User }) {
           setRefusal({ field: error.field, code: error.code })
           const target = STEP_OF_FIELD[error.field]
           if (error.field === 'purpose_note') setNoteOpen(true)
-          if (target !== 4) digTo(target)
+          if (target !== STEP.phone) digTo(target)
         } else {
           setFailed(true)
         }
@@ -210,7 +208,7 @@ export function OnboardingPage({ user }: { user: User }) {
   }
 
   let bubble: ReactNode
-  if (step === 0) {
+  if (step === STEP.language) {
     bubble = (
       <Bubble title={t('onboarding.language.title')} lead={t('onboarding.language.lead')}>
         <div className="dig-bubble__grid dig-bubble__grid--languages" role="group" aria-labelledby="dig-question">
@@ -224,7 +222,7 @@ export function OnboardingPage({ user }: { user: User }) {
               onClick={() => {
                 setLanguage(option)
                 setLang(option)
-                digTo(1)
+                digTo(STEP.purpose)
               }}
             >
               <span className="brand-tile__label">{t(`lang.${option}`)}</span>
@@ -233,40 +231,7 @@ export function OnboardingPage({ user }: { user: User }) {
         </div>
       </Bubble>
     )
-  } else if (step === 1) {
-    const error = refusalFor('country')
-    bubble = (
-      <Bubble title={t('onboarding.country.title')} lead={t('onboarding.country.lead')} onBack={() => digTo(0)}>
-        <form className="dig-bubble__form" onSubmit={submitCountry}>
-          <label className="visually-hidden" htmlFor="dig-country">
-            {t('welcome.country.label')}
-          </label>
-          <select
-            id="dig-country"
-            className="brand-input dig-bubble__select"
-            autoComplete="country"
-            value={country}
-            aria-invalid={error !== null}
-            onChange={(event) => setCountry(event.target.value)}
-          >
-            {countries.map((option) => (
-              <option key={option.code} value={option.code}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-          {error && (
-            <p className="brand-field__note brand-field__note--error" role="alert">
-              {error}
-            </p>
-          )}
-          <button type="submit" className="brand-button">
-            {t('onboarding.country.confirm')}
-          </button>
-        </form>
-      </Bubble>
-    )
-  } else if (step === 2 && noteOpen) {
+  } else if (step === STEP.purpose && noteOpen) {
     const error = refusalFor('purpose', 'purpose_note')
     bubble = (
       <Bubble title={t('onboarding.purpose.title')} lead={t('purpose.other')} onBack={() => setNoteOpen(false)}>
@@ -290,10 +255,10 @@ export function OnboardingPage({ user }: { user: User }) {
         </form>
       </Bubble>
     )
-  } else if (step === 2) {
+  } else if (step === STEP.purpose) {
     const error = refusalFor('purpose')
     bubble = (
-      <Bubble title={t('onboarding.purpose.title')} lead={t('onboarding.purpose.lead')} onBack={() => digTo(1)}>
+      <Bubble title={t('onboarding.purpose.title')} lead={t('onboarding.purpose.lead')} onBack={() => digTo(STEP.language)}>
         <div className="dig-bubble__grid dig-bubble__grid--purposes" role="group" aria-labelledby="dig-question">
           {PURPOSES.map((option) => (
             <button
@@ -314,9 +279,9 @@ export function OnboardingPage({ user }: { user: User }) {
         )}
       </Bubble>
     )
-  } else if (step === 3) {
+  } else if (step === STEP.concerns) {
     bubble = (
-      <Bubble title={t('onboarding.concerns.title')} lead={t('onboarding.concerns.lead')} onBack={() => digTo(2)}>
+      <Bubble title={t('onboarding.concerns.title')} lead={t('onboarding.concerns.lead')} onBack={() => digTo(STEP.purpose)}>
         <div className="dig-bubble__grid dig-bubble__grid--icons" role="group" aria-labelledby="dig-question">
           {CONCERNS.map((concern) => (
             <button
@@ -338,10 +303,10 @@ export function OnboardingPage({ user }: { user: User }) {
         </button>
       </Bubble>
     )
-  } else if (step === 4) {
+  } else if (step === STEP.phone) {
     const error = refusalFor('phone') ?? (failed ? t('onboarding.error') : null)
     bubble = (
-      <Bubble title={t('onboarding.phone.title')} lead={t('onboarding.phone.lead')} onBack={saving ? undefined : () => digTo(3)}>
+      <Bubble title={t('onboarding.phone.title')} lead={t('onboarding.phone.lead')} onBack={saving ? undefined : () => digTo(STEP.concerns)}>
         <form className="dig-bubble__form" onSubmit={submitPhone}>
           <Field id="dig-phone" label={t('onboarding.phone.label')} error={error}>
             <input
