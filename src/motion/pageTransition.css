@@ -1,0 +1,128 @@
+/*
+ * How one screen gives way to the next (see pageTransition.ts). The kind is on <html data-transition="…"> while
+ * a transition runs. Only opacity, transforms and a clip move. Browsers without view transitions change screen
+ * at once.
+ */
+
+/* ---------- fade: a plain cross-fade; also what "reduce motion" gets ---------- */
+
+:root[data-transition="fade"]::view-transition-old(root),
+:root[data-transition="fade"]::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: ease;
+}
+
+/* ---------- enter-dig: the form goes, Dwoggle drops to all fours ---------- */
+
+/* The scenery is the same on both screens, so the cross-fade leaves it still; the form fades out with it. */
+:root[data-transition="enter-dig"]::view-transition-old(root),
+:root[data-transition="enter-dig"]::view-transition-new(root) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-out);
+}
+
+/* Dwoggle himself: one figure that moves from where he stood to where he digs, as one pose gives way to the other. */
+:root[data-transition="enter-dig"] .sign-in__dwoggle,
+:root[data-transition="enter-dig"] .dig__mascot {
+  view-transition-name: dwoggle;
+}
+
+:root[data-transition="enter-dig"]::view-transition-group(dwoggle) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-in-out);
+}
+
+/* Each pose keeps its own shape as the box changes, instead of being stretched into the other's. */
+:root[data-transition="enter-dig"]::view-transition-old(dwoggle),
+:root[data-transition="enter-dig"]::view-transition-new(dwoggle) {
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 100%;
+}
+
+:root[data-transition="enter-dig"]::view-transition-old(dwoggle) {
+  animation: transition-pose-out 200ms var(--ease-out) both;
+}
+
+:root[data-transition="enter-dig"]::view-transition-new(dwoggle) {
+  animation: transition-pose-in 300ms var(--ease-out) 120ms both;
+}
+
+@keyframes transition-pose-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes transition-pose-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- question: one question gives way to the next, while everything else stays live ---------- */
+
+:root[data-transition="question"] {
+  view-transition-name: none;
+}
+
+:root[data-transition="question"] .dig__bubble-slot {
+  view-transition-name: dig-question;
+  /* The transition brings the question in; its own entrance would play twice. */
+  animation: none;
+}
+
+/* Each question keeps its own size while the box between them changes. */
+:root[data-transition="question"]::view-transition-old(dig-question),
+:root[data-transition="question"]::view-transition-new(dig-question) {
+  height: auto;
+}
+
+/* The old question leaves upwards, where the camera is leaving it behind. */
+:root[data-transition="question"]::view-transition-old(dig-question) {
+  animation: transition-question-out 180ms var(--ease-out) both;
+}
+
+/* The new one arrives as Dwoggle reaches the next layer. */
+:root[data-transition="question"]::view-transition-new(dig-question) {
+  animation: transition-question-in 320ms var(--ease-out) calc(var(--duration-descend) * 0.55) both;
+}
+
+:root[data-transition="question"]::view-transition-group(dig-question) {
+  animation-duration: 1ms;
+}
+
+@keyframes transition-question-out {
+  to {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.98);
+  }
+}
+
+@keyframes transition-question-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+}
+
+/* ---------- surface: the map opens out of the hole Dwoggle stands in ---------- */
+
+:root[data-transition="surface"]::view-transition-old(root) {
+  animation: none;
+}
+
+:root[data-transition="surface"]::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: transition-reveal 650ms var(--ease-in-out) both;
+}
+
+@keyframes transition-reveal {
+  from {
+    clip-path: circle(0 at var(--reveal-x, 50%) var(--reveal-y, 50%));
+  }
+
+  to {
+    clip-path: circle(150vmax at var(--reveal-x, 50%) var(--reveal-y, 50%));
+  }
+}

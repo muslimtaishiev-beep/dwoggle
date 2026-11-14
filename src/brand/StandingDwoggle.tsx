@@ -78,7 +78,8 @@ export function StandingDwoggle({ className }: { className: string }) {
   const lid = useId()
   const axis = { '--fold-axis': `${RIG.axis[0]}% ${RIG.axis[1]}%` } as CSSProperties
   return (
-    <span className={`standing-dwoggle ${className}`} style={axis}>
+    // data-reveal-origin: an animated change of screen opens from where he stands (motion/pageTransition.ts).
+    <span className={`standing-dwoggle ${className}`} style={axis} data-reveal-origin="">
       <img src="/brand/dwoggle-body.webp" alt="" {...ART} draggable={false} />
       <svg className="standing-dwoggle__layer" viewBox={VIEW_BOX} aria-hidden="true">
         {EYES.map((eye, i) => {

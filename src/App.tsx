@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { createElement, Suspense } from 'react'
 import { useAuth } from './auth/context.ts'
 import { hasCachedProfile } from './auth/profile.ts'
 import { EMPTY_PROFILE, type User } from './auth/types.ts'
@@ -6,12 +6,10 @@ import { Redirect } from './components/Link.tsx'
 import { StateMessage } from './components/StateMessage.tsx'
 import { useI18n } from './i18n/context.ts'
 import { SignInPage } from './pages/SignInPage.tsx'
+import { mapPage } from './pages/mapPageLoader.ts'
 import { OnboardingPage } from './pages/OnboardingPage.tsx'
 import { ROUTES, usePath, type Route } from './router.ts'
 import './App.css'
-
-// The map brings the 3D map library with it, so it is loaded only when the map is opened.
-const MapPage = lazy(() => import('./pages/MapPage.tsx'))
 
 function Loading() {
   const { t } = useI18n()
@@ -43,11 +41,7 @@ export default function App() {
   }
 
   if (path === ROUTES.map) {
-    return (
-      <Suspense fallback={<Loading />}>
-        <MapPage />
-      </Suspense>
-    )
+    return <Suspense fallback={<Loading />}>{createElement(mapPage())}</Suspense>
   }
 
   if (path === ROUTES.welcome) {

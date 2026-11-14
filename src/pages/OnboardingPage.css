@@ -97,12 +97,17 @@
   z-index: 3;
 }
 
+/*
+ * The logo's name turns pale as the earth comes up behind it: late in the first descent, when the earth's edge
+ * reaches the header, and early on the way back up, before the sky is behind it again.
+ */
 .dig .brand-mark__name {
-  transition: color var(--duration-descend);
+  transition: color 180ms ease 80ms;
 }
 
 .dig--underground .brand-mark__name {
   color: var(--brand-cream);
+  transition-delay: calc(var(--duration-descend) * 0.72);
 }
 
 /* Tube at frame x 70..118 from y 132; the question at x 170..655 from y 148. */
@@ -244,77 +249,13 @@
   pointer-events: none;
 }
 
-.dig__mascot img {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transform-origin: 40% 100%;
-  animation: dig-scrape 700ms ease-in-out infinite;
+/* Underground the earth he throws is paler than the dark around him. */
+.dig {
+  --dig-clod: var(--earth-clod);
 }
 
-/* While he moves down a layer he digs hard. */
-.dig--digging .dig__mascot img {
-  animation-duration: 180ms;
-}
-
-@keyframes dig-scrape {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0);
-  }
-
-  50% {
-    transform: translateY(3px) rotate(-1.5deg);
-  }
-}
-
-/* Clods of earth thrown back from his front paws. */
-.dig__clod {
-  position: absolute;
-  bottom: 6%;
-  left: 10%;
-  width: calc(8px + var(--clod) * 1.5px);
-  height: calc(7px + var(--clod) * 1px);
-  border-radius: 40%;
-  background: var(--earth-clod);
-  opacity: 0;
-  animation: dig-clod 1400ms ease-out infinite;
-  animation-delay: calc(var(--clod) * -233ms);
-}
-
-.dig--digging .dig__clod {
-  animation-duration: 600ms;
-  animation-delay: calc(var(--clod) * -100ms);
-}
-
-.dig--underground .dig__clod {
-  background: var(--earth-3);
-}
-
-@keyframes dig-clod {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) rotate(0);
-  }
-
-  10% {
-    opacity: 1;
-  }
-
-  50% {
-    transform: translate(calc(var(--mascot-w) * (0.2 + var(--clod) * 0.06)), calc(var(--mascot-h) * -0.35)) rotate(160deg);
-  }
-
-  90% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate(calc(var(--mascot-w) * (0.3 + var(--clod) * 0.1)), 0) rotate(320deg);
-  }
+.dig--underground {
+  --dig-clod: var(--earth-1);
 }
 
 /* ---------- Narrower than the drawing, or too short for it: the question on top, Dwoggle below, full size ---------- */
@@ -416,12 +357,7 @@
     transition: none;
   }
 
-  .dig__bubble-slot,
-  .dig__mascot img {
+  .dig__bubble-slot {
     animation: none;
-  }
-
-  .dig__clod {
-    display: none;
   }
 }

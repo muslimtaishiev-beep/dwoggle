@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/context.ts'
 import { toAuthError, type AuthErrorKind } from '../auth/errors.ts'
 import { MIN_PASSWORD_LENGTH, normalizeEmail } from '../auth/validate.ts'
@@ -8,6 +8,7 @@ import { StandingDwoggle } from '../brand/StandingDwoggle.tsx'
 import { SurfaceScene } from '../brand/SurfaceScene.tsx'
 import { useI18n } from '../i18n/context.ts'
 import type { MessageKey } from '../i18n/i18n.ts'
+import { preloadMapPage } from './mapPageLoader.ts'
 import './SignInPage.css'
 
 type Mode = 'create' | 'signIn'
@@ -54,6 +55,9 @@ export function SignInPage() {
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<Problem | null>(null)
   const [resetSentTo, setResetSentTo] = useState<string | null>(null)
+
+  // Someone who logs in goes straight to the map: have its code ready, so that change of screen can be animated.
+  useEffect(preloadMapPage, [])
 
   const run = async (task: () => Promise<void>) => {
     setBusy(true)

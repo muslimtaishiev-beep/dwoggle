@@ -155,6 +155,9 @@
   --duration-leave: 280ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Things thrown in the air: easeOutCubic on the way up, easeInCubic on the way down. */
+  --ease-rise: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-fall: cubic-bezier(0.32, 0, 0.67, 0);
   /* A steady pull with a soft stop, so every layer is seen coming out. */
   --ease-emerge: cubic-bezier(0.3, 0.1, 0.25, 1);
 
@@ -202,6 +205,9 @@
   --mascot-fur: #9f684d;
   --mascot-cheek: #ffebcd;
   --mascot-ink: #1a1412;
+  /* The digging drawing's own fur and cheek, round his eyes: for the lids he blinks with there. */
+  --mascot-dig-fur: #865a40;
+  --mascot-dig-cheek: #eeddbc;
   /* His left arm, which the map hides in the drawing: the fur and outline of the arm beside it. */
   --mascot-arm: #986142;
   --mascot-line: #000000;

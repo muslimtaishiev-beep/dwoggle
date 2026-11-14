@@ -1,27 +1,35 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { useAuth } from '../auth/context.ts'
 import { ProfileFieldError, type ProfileField } from '../auth/accountApi.ts'
-import { CONCERNS, PURPOSE_NOTE_MAX, PURPOSES, type Concern, type ProfileAnswers, type Purpose, type User } from '../auth/types.ts'
+import { CONCERNS, type Concern, type ProfileAnswers, type Purpose, type User } from '../auth/types.ts'
 import { BrandHeader } from '../brand/BrandHeader.tsx'
 import { BubbleTail } from '../brand/BubbleTail.tsx'
+import { DiggingDwoggle } from '../brand/DiggingDwoggle.tsx'
 import { ConcernIcon } from '../brand/ConcernIcon.tsx'
 import { ProgressTube } from '../brand/ProgressTube.tsx'
 import { SurfaceScene } from '../brand/SurfaceScene.tsx'
 import { Link } from '../components/Link.tsx'
 import { useReducedMotion } from '../hooks/useReducedMotion.ts'
 import { useI18n } from '../i18n/context.ts'
+import { withTransition } from '../motion/pageTransition.ts'
 import { LANGS, type Lang, type MessageKey } from '../i18n/i18n.ts'
 import { ROUTES } from '../router.ts'
 import { KYRGYZSTAN } from '../config.ts'
 import '../brand/brand.css'
+import { preloadMapPage } from './mapPageLoader.ts'
 import './OnboardingPage.css'
+
+/**
+ * The reasons offered for coming, of the backend's eight: the four that fit someone looking at a place in
+ * Kyrgyzstan, so the choice is quick and none needs explaining.
+ */
+const PURPOSE_CHOICES = ['buy_land', 'build', 'own_home', 'curious'] as const satisfies readonly Purpose[]
 
 /** The questions, in the order they are asked. The country is not one of them: Dwoggle covers Kyrgyzstan only. */
 const STEP = { language: 0, purpose: 1, concerns: 2, phone: 3 } as const
 const QUESTIONS = 4
 /** How long one layer of digging takes; matches --duration-descend in tokens.css. */
 const DESCEND_MS = 900
-const CLODS = [0, 1, 2, 3, 4, 5]
 
 /** The question to climb back to when the backend refuses an answer. */
 const STEP_OF_FIELD: Readonly<Record<ProfileField, number>> = {
@@ -37,8 +45,6 @@ const STEP_OF_FIELD: Readonly<Record<ProfileField, number>> = {
 const REFUSALS: Readonly<Record<string, MessageKey>> = {
   phone_invalid: 'profile.error.phone_invalid',
   purpose_invalid: 'profile.error.purpose_invalid',
-  note_required: 'profile.error.note_required',
-  note_too_long: 'profile.error.note_too_long',
 }
 
 interface Refusal {
@@ -49,7 +55,7 @@ interface Refusal {
 /** The first question not answered yet, so a visitor who left halfway carries on where they stopped. */
 function firstOpenStep(user: User): number {
   if (user.language === null) return STEP.language
-  if (user.purpose === null || (user.purpose === 'other' && user.purposeNote === null)) return STEP.purpose
+  if (user.purpose === null) return STEP.purpose
   if (user.concerns === null) return STEP.concerns
   return STEP.phone
 }
@@ -111,9 +117,6 @@ export function OnboardingPage({ user }: { user: User }) {
   const [step, setStep] = useState(() => firstOpenStep(user))
   const [language, setLanguage] = useState<Lang>(user.language ?? lang)
   const [purpose, setPurpose] = useState<Purpose | null>(user.purpose)
-  const [purposeNote, setPurposeNote] = useState(user.purposeNote ?? '')
-  // "Something else" opens a field for a few words in place of the choices.
-  const [noteOpen, setNoteOpen] = useState(false)
   const [concerns, setConcerns] = useState<Concern[]>(() => [...(user.concerns ?? [])])
   const [phone, setPhone] = useState(user.phone ?? '')
   const [digging, setDigging] = useState(false)
@@ -124,11 +127,16 @@ export function OnboardingPage({ user }: { user: User }) {
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
-  /** Dig one layer down (or up), then run `after` once Dwoggle has arrived. */
+  // The dig ends on the map: have its code ready, so that last change of screen can be animated.
+  useEffect(preloadMapPage, [])
+
+  /** Dig one layer down (or up), then run `after` once Dwoggle has arrived. The old question gives way to the new. */
   const digTo = (next: number, after?: () => void) => {
     window.clearTimeout(timer.current)
-    setStep(next)
-    setDigging(true)
+    withTransition('question', () => {
+      setStep(next)
+      setDigging(true)
+    })
     timer.current = window.setTimeout(
       () => {
         setDigging(false)
@@ -142,7 +150,7 @@ export function OnboardingPage({ user }: { user: User }) {
   const refusalFor = (...fields: ProfileField[]): string | null => {
     if (refusal === null || !fields.includes(refusal.field)) return null
     const key = REFUSALS[refusal.code]
-    return key ? t(key, { max: PURPOSE_NOTE_MAX }) : t('onboarding.error')
+    return key ? t(key) : t('onboarding.error')
   }
 
   const toggleConcern = (concern: Concern) =>
@@ -150,18 +158,6 @@ export function OnboardingPage({ user }: { user: User }) {
 
   const choosePurpose = (option: Purpose) => {
     setPurpose(option)
-    setRefusal(null)
-    // "Other" asks for a few words first; every other answer moves on at once.
-    if (option === 'other') setNoteOpen(true)
-    else digTo(STEP.concerns)
-  }
-
-  const submitNote = (event: FormEvent) => {
-    event.preventDefault()
-    if (purposeNote.trim() === '') {
-      setRefusal({ field: 'purpose_note', code: 'note_required' })
-      return
-    }
     setRefusal(null)
     digTo(STEP.concerns)
   }
@@ -187,18 +183,17 @@ export function OnboardingPage({ user }: { user: User }) {
       country: KYRGYZSTAN.code,
       phone: phone.trim(),
       purpose,
-      purposeNote: purpose === 'other' ? purposeNote.trim() : null,
+      purposeNote: null,
       concerns,
     }
     auth.saveProfile(answers).then(
-      // Saved: one more layer, then the app moves on to the map.
-      (showProfile) => digTo(QUESTIONS, showProfile),
+      // Saved: one more layer, then the map opens out of the hole he has dug.
+      (showProfile) => digTo(QUESTIONS, () => withTransition('surface', showProfile)),
       (error: unknown) => {
         setSaving(false)
         if (error instanceof ProfileFieldError) {
           setRefusal({ field: error.field, code: error.code })
           const target = STEP_OF_FIELD[error.field]
-          if (error.field === 'purpose_note') setNoteOpen(true)
           if (target !== STEP.phone) digTo(target)
         } else {
           setFailed(true)
@@ -231,36 +226,12 @@ export function OnboardingPage({ user }: { user: User }) {
         </div>
       </Bubble>
     )
-  } else if (step === STEP.purpose && noteOpen) {
-    const error = refusalFor('purpose', 'purpose_note')
-    bubble = (
-      <Bubble title={t('onboarding.purpose.title')} lead={t('purpose.other')} onBack={() => setNoteOpen(false)}>
-        <form className="dig-bubble__form" onSubmit={submitNote}>
-          <Field id="dig-note" label={t('onboarding.purpose.note')} error={error}>
-            <input
-              id="dig-note"
-              className="brand-input"
-              autoComplete="off"
-              maxLength={PURPOSE_NOTE_MAX}
-              value={purposeNote}
-              aria-invalid={error !== null}
-              aria-describedby="dig-note-note"
-              autoFocus
-              onChange={(event) => setPurposeNote(event.target.value)}
-            />
-          </Field>
-          <button type="submit" className="brand-button">
-            {t('onboarding.purpose.note_confirm')}
-          </button>
-        </form>
-      </Bubble>
-    )
   } else if (step === STEP.purpose) {
     const error = refusalFor('purpose')
     bubble = (
       <Bubble title={t('onboarding.purpose.title')} lead={t('onboarding.purpose.lead')} onBack={() => digTo(STEP.language)}>
         <div className="dig-bubble__grid dig-bubble__grid--purposes" role="group" aria-labelledby="dig-question">
-          {PURPOSES.map((option) => (
+          {PURPOSE_CHOICES.map((option) => (
             <button
               key={option}
               type="button"
@@ -372,11 +343,8 @@ export function OnboardingPage({ user }: { user: User }) {
         </div>
       </main>
 
-      <div className="dig__mascot" aria-hidden="true">
-        <img src="/brand/dwoggle-digging.webp" alt="" width={990} height={698} />
-        {CLODS.map((clod) => (
-          <span key={clod} className="dig__clod" style={{ '--clod': clod } as CSSProperties} />
-        ))}
+      <div className="dig__mascot" aria-hidden="true" data-reveal-origin="">
+        <DiggingDwoggle hard={digging} />
       </div>
     </div>
   )

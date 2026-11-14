@@ -16,29 +16,39 @@
   box-shadow: inset 0 0 0 3px var(--brand-paper);
 }
 
-/* The liquid is as tall as the glass and slides up into it, so filling it moves pixels instead of resizing them. */
-.progress-tube__liquid {
+/*
+ * Inside the glass's white rim, the liquid is as tall as the well and slides up into it: fast at first, then
+ * easing to its mark, like liquid being poured in.
+ */
+.progress-tube__well {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  bottom: 3px;
-  left: 3px;
+  inset: 3px;
+  overflow: hidden;
   border-radius: 999px;
-  background: var(--brand-yellow);
-  transform: translateY(calc((1 - var(--fill)) * 100% + (1 - var(--fill)) * 6px));
-  transition: transform var(--duration-descend) var(--ease-in-out);
 }
 
-/* The meniscus, and a highlight down the glass. */
-.progress-tube__liquid::before {
-  content: "";
+.progress-tube__liquid {
   position: absolute;
-  top: -5px;
-  right: 0;
+  inset: 0;
+  background: var(--brand-yellow);
+  transition: transform 700ms var(--ease-out);
+}
+
+/* Its surface: a ripple twice the tube's width that drifts sideways at an even pace. */
+.progress-tube__surface {
+  position: absolute;
+  bottom: calc(100% - 1px);
   left: 0;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--brand-yellow-light);
+  width: 200%;
+  height: 9px;
+  fill: var(--brand-yellow);
+  animation: progress-tube-ripple 2.4s linear infinite;
+}
+
+@keyframes progress-tube-ripple {
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .progress-tube__liquid::after {
@@ -60,8 +70,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Reduced motion: the level still changes, quickly, and the surface lies still. */
 @media (prefers-reduced-motion: reduce) {
   .progress-tube__liquid {
-    transition: none;
+    transition: transform 200ms ease;
+  }
+
+  .progress-tube__surface {
+    animation: none;
   }
 }

@@ -102,8 +102,14 @@ The sign-in page and the dig follow the designer's screens. Art lives in [public
 
 - `dwoggle-head.png`: the logo's head, traced from the design and made from the designer's file `Dwoggle mascot v3 helmet.png`.
 - `dwoggle-body.webp`, `dwoggle-map-left.webp`, `dwoggle-map-back.webp`, `dwoggle-map-shadow.webp`, `dwoggle-paw-left.webp`, `dwoggle-paw-right.webp`: standing Dwoggle on the sign-in page, cut into layers so he can close his map like a book (his left paw brings the left half over onto the right) and open it again. Made from the same file with `python3 scripts/mascot-layers.py "Dwoggle mascot v3 helmet.png"` (needs pillow, numpy, scipy), which also writes the arm's motion to `src/brand/standingDwoggleRig.ts` and `src/brand/StandingDwoggleFold.css`. What the map hid (his chest, the side of his body) and the left arm are drawn in the drawing's own flat colours; with the map open the layers add up to the drawing itself.
-- `dwoggle-digging.webp`: **temporary**, cut out of a screenshot of the onboarding design. Replace it with the original digging artwork (transparent PNG, same name, any size).
+- `dwoggle-dig-*.webp` (body, both front paws, tail, head and chest, earth): Dwoggle digging in the dig, cut into layers so his paws really scrape, his tail wags and he rocks ([src/brand/DiggingDwoggle.tsx](src/brand/DiggingDwoggle.tsx)). Made with `python3 scripts/mascot-dig.py scripts/art/dwoggle-digging.webp`. That source is still a cut-out from a screenshot of the design: when the designer's own file arrives (same drawing, transparent background), run the script on it for sharper layers.
 - In development, `/dev/dig` shows the dig without signing in (saving at the end fails on purpose).
+
+## Motion
+
+- Changes of screen are view transitions ([src/motion/pageTransition.ts](src/motion/pageTransition.ts), rules in [pageTransition.css](src/motion/pageTransition.css)): after signing in the form gives way to the dig and Dwoggle drops to all fours; each question of the dig gives way to the next; at the end the map opens in a circle from where he stands. Browsers without view transitions change screen at once.
+- In the dig he digs calmly while a question is read and about 2.6 times faster on the way down a layer; the same animations change speed in place.
+- With `prefers-reduced-motion` the changes of screen are a short cross-fade, and Dwoggle keeps still and only blinks.
 
 ## Restyling
 

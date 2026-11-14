@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useI18n } from '../i18n/context.ts'
 import type { Lang } from '../i18n/i18n.ts'
+import { withTransition } from '../motion/pageTransition.ts'
 import { deleteAccount, fetchAccount, saveAccount } from './accountApi.ts'
 import { AuthContext, type AuthContextValue, type AuthState } from './context.ts'
 import { AuthError, toAuthError } from './errors.ts'
@@ -45,11 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { lang, setLang } = useI18n()
   const [state, setState] = useState<AuthState>({ status: 'loading' })
   const account = useRef<FirebaseUser | null>(null)
-  // The sign-in watcher below runs once; it reads the current language from here.
+  // The sign-in watcher below runs once; it reads the current language and sign-in state from here.
   const langRef = useRef(lang)
+  const statusRef = useRef(state.status)
   useEffect(() => {
     langRef.current = lang
-  }, [lang])
+    statusRef.current = state.status
+  }, [lang, state.status])
 
   // Firebase restores a returning visitor's session by itself and reports every sign-in and sign-out here.
   useEffect(() => {
@@ -66,11 +69,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           void loadProfile(firebase, next, langRef.current).then(({ profile, status }) => {
             // Ignore the answer if someone else signed in, or the user signed out, while it was on its way.
-            if (!cancelled && account.current?.uid === next.uid) {
+            if (cancelled || account.current?.uid !== next.uid) return
+            const show = () => {
               // The language chosen in the dig opens the app in that language again.
               if (profile.language !== null) setLang(profile.language)
               setState({ status: 'signedIn', user: toUser(next, profile, status) })
             }
+            // Someone has just signed in on the sign-up page: the form gives way to the dig, or to the map.
+            // A session restored when the page opens just appears.
+            if (statusRef.current === 'signedOut') withTransition(status === 'incomplete' ? 'enter-dig' : 'surface', show)
+            else show()
           })
         })
       },
