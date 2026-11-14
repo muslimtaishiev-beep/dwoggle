@@ -1,0 +1,20 @@
+{
+  "kara-suu-flood": {
+    "task_id": "c922372e-76b5-4904-a979-4759f5e2e406",
+    "lat": 40.705,
+    "lon": 72.873,
+    "status": "processing"
+  },
+  "bishkek-issyk-ata": {
+    "task_id": "04aca11c-8820-477f-801a-abf58a559cf3",
+    "lat": 42.815,
+    "lon": 74.62,
+    "status": "pending"
+  },
+  "kant-safe": {
+    "task_id": "672004e9-32d1-479f-bc51-033b6f80ba4c",
+    "lat": 42.89,
+    "lon": 74.85,
+    "status": "pending"
+  }
+}
