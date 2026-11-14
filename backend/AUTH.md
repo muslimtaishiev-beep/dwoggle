@@ -76,7 +76,11 @@ if (!me.profile_complete) showProfileForm();     // choices from GET /api/auth/o
 
 const r = await api("/api/me/profile", {
   method: "PUT",
-  body: JSON.stringify({ country: "KG", phone: "0555 12 34 56", purpose: "buy_land", purpose_note: null, lang }),
+  body: JSON.stringify({
+    country: "KG", phone: "0555 12 34 56", purpose: "buy_land", purpose_note: null,
+    concerns: ["flood", "earthquake"],   // any of flood, landslide, earthquake, heat; [] clears; omit = keep
+    lang,                                 // any of the 11 app languages
+  }),
 });
 if (r.status === 422) {
   const { detail } = await r.json();      // { field: "phone", code: "phone_invalid", message: "Введите правильный номер…" }
@@ -95,9 +99,9 @@ Country picker: store the ISO code (`KG`), show names with
 
 | Endpoint | Auth | What it does |
 |---|---|---|
-| `GET /api/auth/options?lang=ru` | – | The "why are you here" choices with labels, the sign-up prompt, `enabled` |
+| `GET /api/auth/options?lang=ru` | – | The "why are you here" and `concerns` choices with labels, the 11 `languages`, the sign-up prompt, `enabled` |
 | `GET /api/me` | token | `{user, profile, profile_complete}` |
-| `PUT /api/me/profile` | token | Save `{country, phone, purpose, purpose_note?, lang}`. Phone comes back as `+996…` |
+| `PUT /api/me/profile` | token | Save `{country, phone, purpose, purpose_note?, concerns?, lang}`. Phone comes back as `+996…` |
 | `DELETE /api/me` | token | Delete the profile and the Firebase account |
 
 Errors: `401 {code: token_missing | token_invalid | token_expired}` (sign in again), `422 {field, code, message}`
@@ -105,6 +109,12 @@ Errors: `401 {code: token_missing | token_invalid | token_expired}` (sign in aga
 
 Why they're here: `buy_land`, `build`, `own_home`, `realtor`, `government`, `research`, `curious`, `other`
 (`other` needs a short note). These are the user groups from the pitch, so the answers show who Bekem is really for.
+
+Concerns (optional, may be empty): `flood`, `landslide`, `earthquake`, `heat`.
+
+Languages: `lang` accepts the 11 app languages `ky ru kk uz en zh hi es ar fr pt` and is stored as sent.
+The backend's own texts (error messages, labels) come back in en/ru/ky: `kk`/`uz` → Russian, the rest → English.
+`GET /api/languages` gives the exact mapping.
 
 ## Without Firebase (frontend development)
 

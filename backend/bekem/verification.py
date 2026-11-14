@@ -29,14 +29,16 @@ def _trend_out(tr: Trend | None) -> dict | None:
 def station_check(station, tmax: dict[int, float] | None, satellite: Trend | None) -> dict:
     """NOAA station vs MODIS heat trend, comparing direction only."""
     if station is None:
-        return {"source": "noaa_station", "independent": True, "status": "unavailable", "key": "verify.station.none", "params": {}}
+        return {"source": "noaa_station", "source_id": "noaa_ghcn", "independent": True, "status": "unavailable",
+                "key": "verify.station.none", "params": {}}
     tr = _trend(tmax or {})
     if tr is None or satellite is None:
-        return {"source": "noaa_station", "independent": True, "status": "unavailable", "key": "verify.station.short",
-                "params": {"name": station.name}}
+        return {"source": "noaa_station", "source_id": "noaa_ghcn", "independent": True, "status": "unavailable",
+                "key": "verify.station.short", "params": {"name": station.name}}
     agrees = tr.direction == satellite.direction
     return {
         "source": "noaa_station",
+        "source_id": "noaa_ghcn",
         "independent": True,
         "status": "agrees" if agrees else "differs",
         "key": "verify.station.agrees" if agrees else "verify.station.differs",
@@ -50,7 +52,7 @@ def station_check(station, tmax: dict[int, float] | None, satellite: Trend | Non
 def appeears_same_data_check(source_id: str, series: dict[int, float] | None, ours: Trend | None, unit: str,
                              status: str) -> dict:
     """AppEEARS recalculation of a MODIS trend (same data, different tool)."""
-    base = {"source": "appeears", "dataset": source_id, "independent": False}
+    base = {"source": "appeears", "source_id": "appeears", "dataset": source_id, "independent": False}
     if status != "done":
         return {**base, "status": status, "key": f"verify.appeears.{status}", "params": {}}
     tr = _trend(series or {})
@@ -63,13 +65,14 @@ def appeears_same_data_check(source_id: str, series: dict[int, float] | None, ou
         "key": "verify.appeears.same" if same else "verify.appeears.differs",
         "params": {"change": round(tr.change, 2 if unit == "NDVI" else 1), "unit": "" if unit == "NDVI" else unit,
                    "sig": "@significant" if tr.significant else "@not_significant"},
-        "series": {"id": f"appeears_{source_id}", "unit": unit, "points": _points(series), "trend": _trend_out(tr)},
+        "series": {"id": f"appeears_{source_id}", "unit": unit, "resolution_m": 250 if unit == "NDVI" else 1000,
+                   "source_id": "appeears", "points": _points(series), "trend": _trend_out(tr)},
     }
 
 
 def mod44w_check(water_years: dict[int, int] | None, landsat_wet_years: int | None, status: str) -> dict:
     """MODIS MOD44W yearly water map (independent of Landsat) vs our Landsat water years."""
-    base = {"source": "appeears", "dataset": "mod44w", "independent": True}
+    base = {"source": "appeears", "source_id": "mod44w", "dataset": "mod44w", "independent": True}
     if status != "done":
         return {**base, "status": status, "key": f"verify.appeears.{status}", "params": {}}
     if not water_years or landsat_wet_years is None:

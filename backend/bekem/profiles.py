@@ -7,6 +7,9 @@ import re
 # "Why are you here?" The answer tells us who Bekem is really for (families, builders, MChS, realtors).
 PURPOSES = ("buy_land", "build", "own_home", "realtor", "government", "research", "curious", "other")
 
+# "What worries you most?" Optional, any subset (can be empty). Green is not a worry people pick.
+CONCERNS = ("flood", "landslide", "earthquake", "heat")
+
 # ISO 3166-1 alpha-2. The frontend shows names with Intl.DisplayNames in the user's language.
 COUNTRIES = frozenset(
     "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW "
@@ -52,6 +55,17 @@ def normalize_phone(raw: str, country: str) -> str:
     if country == "KG" and digits.startswith("+996") and not KG_MOBILE.match(digits):
         raise ProfileError("phone", "phone_invalid")
     return digits
+
+
+def validate_concerns(concerns: list[str]) -> list[str]:
+    """Known ids only, duplicates dropped, original order kept."""
+    out: list[str] = []
+    for c in concerns:
+        if c not in CONCERNS:
+            raise ProfileError("concerns", "concerns_invalid")
+        if c not in out:
+            out.append(c)
+    return out
 
 
 def validate_profile(country: str, phone: str, purpose: str, purpose_note: str | None) -> dict:

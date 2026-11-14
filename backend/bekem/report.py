@@ -13,7 +13,8 @@ from .cache import Cache
 from .config import Settings
 from .faults import nearest_fault
 from .grading import FAULT_SEARCH_KM, SERIES_META, CheckResult, SeriesOut, grade_all
-from .i18n import Lang, t
+from .geocode import PlaceNamer
+from .i18n import Lang, t, text_lang
 from .nasa.appeears import AppEEARSManager
 from .nasa.giovanni import Giovanni
 from .nasa.noaa import fetch_summer_tmax, nearest_station
@@ -25,14 +26,21 @@ log = logging.getLogger(__name__)
 # Bump when provider computations change, so stale cached metrics are not reused.
 METRICS_VERSION = 3
 
+# Every id used anywhere in a report (check source_ids, series source_id, verification source_id)
+# is listed here; tests/test_api.py checks that.
 SOURCES = [
     {"id": "landsat_water", "name": "Landsat water history: NASA/USGS Landsat, processed by JRC Global Surface Water v1.4 (2000-2021, Pekel et al. 2016) and by Bekem from Landsat 8-9 Collection 2 (2022+)", "url": "https://global-surface-water.appspot.com/", "resolution": "30 m", "nasa": True},
     {"id": "nasadem", "name": "NASADEM elevation (NASA JPL)", "url": "https://lpdaac.usgs.gov/products/nasadem_hgtv001/", "resolution": "30 m", "nasa": True},
-    {"id": "gpm", "name": "NASA GPM IMERG Monthly V07", "url": "https://gpm.nasa.gov/data/imerg", "resolution": "~11 km", "nasa": True},
     {"id": "modis_lst", "name": "NASA MODIS MOD11A2 v061 land surface temperature", "url": "https://lpdaac.usgs.gov/products/mod11a2v061/", "resolution": "1 km", "nasa": True},
     {"id": "modis_ndvi", "name": "NASA MODIS MOD13Q1 v061 vegetation index", "url": "https://lpdaac.usgs.gov/products/mod13q1v061/", "resolution": "250 m", "nasa": True},
+    {"id": "giovanni_imerg", "name": "NASA GPM IMERG Final Daily V07, via the NASA Giovanni Time Series API", "url": "https://giovanni.gsfc.nasa.gov/", "resolution": "~11 km", "nasa": True},
+    {"id": "giovanni_gldas", "name": "NASA GLDAS Noah 2.1 monthly runoff and soil moisture, via NASA Giovanni (Hydrology Time Series)", "url": "https://disc.gsfc.nasa.gov/information/tools?title=Hydrology%20Time%20Series", "resolution": "~28 km", "nasa": True},
+    {"id": "appeears", "name": "NASA AppEEARS (LP DAAC): MODIS MOD11A2 and MOD13Q1 recalculated through NASA's own tool", "url": "https://appeears.earthdatacloud.nasa.gov/", "resolution": "1 km / 250 m", "nasa": True},
+    {"id": "mod44w", "name": "NASA MODIS MOD44W v061 yearly land/water mask, via AppEEARS", "url": "https://lpdaac.usgs.gov/products/mod44wv061/", "resolution": "250 m", "nasa": True},
     {"id": "landslide", "name": "NASA Global Landslide Susceptibility Map (Stanley & Kirschbaum 2017), used only if configured", "url": "https://gpm.nasa.gov/landslides/data.html", "resolution": "1 km", "nasa": True},
     {"id": "gem_faults", "name": "GEM Global Active Faults Database (Styron & Pagani 2020), CC BY-SA 4.0", "url": "https://github.com/GEMScienceTools/gem-global-active-faults", "resolution": "regional map, about ±1 km", "nasa": False},
+    {"id": "noaa_ghcn", "name": "NOAA NCEI GHCN weather stations, Global Summary of the Month (the Climate Data Online archive)", "url": "https://www.ncei.noaa.gov/cdo-web/", "resolution": "station point", "nasa": False},
+    {"id": "osm", "name": "Place names and address search: © OpenStreetMap contributors (ODbL), via Nominatim", "url": "https://www.openstreetmap.org/copyright", "resolution": "-", "nasa": False},
 ]
 
 
@@ -53,12 +61,14 @@ class ReportService:
         cache: Cache,
         giovanni: Giovanni | None = None,
         appeears: AppEEARSManager | None = None,
+        places: PlaceNamer | None = None,
     ):
         self.settings = settings
         self.provider = provider
         self.cache = cache
         self.giovanni = giovanni
         self.appeears = appeears
+        self.places = places
         self._locks: dict[str, threading.Lock] = {}
         self._locks_guard = threading.Lock()
 
@@ -106,6 +116,7 @@ class ReportService:
         extras: dict[str, str] = {}
 
         gio_future = _pool.submit(self._giovanni, lat, lon, refresh) if self.giovanni else None
+        place_future = _pool.submit(self.places.name, lat, lon, lang) if self.places else None
         m, cached, computed = self.metrics(lat, lon, refresh)
 
         if gio_future is None:
@@ -128,9 +139,17 @@ class ReportService:
         checks, mood = grade_all(m, fault, self.settings.radius_m)
         verification = self._verify(lat, lon, m, checks, extras)
 
+        place = None
+        if place_future is not None:
+            try:
+                place = place_future.result(timeout=3)
+            except Exception:  # a name is nice to have; never fail a report over it
+                log.warning("no place name for %s,%s", lat, lon)
+
         return {
-            "location": {"lat": lat, "lon": lon, "radius_m": self.settings.radius_m},
+            "location": {"lat": lat, "lon": lon, "radius_m": self.settings.radius_m, "place": place},
             "lang": lang,
+            "text_lang": text_lang(lang),  # the en/ru/ky our own texts are in (see /api/languages)
             "mood": {"id": mood, "title": t(f"mood.{mood}.title", lang), "line": t(f"mood.{mood}.line", lang)},
             "checks": [_render_check(c, lang, self.settings.radius_m, verification.get(c.id, [])) for c in checks],
             "disclaimer": t("disclaimer", lang),
@@ -186,6 +205,7 @@ def _render_check(c: CheckResult, lang: Lang, radius_m: int, verification: list[
         "summary": " ".join(msg["text"] for msg in messages),
         "messages": messages,
         "metrics": c.metrics,
+        "source_ids": c.source_ids,
         "series": [_render_series(s, lang, radius_m) for s in c.series],
         # Second opinions; they never change the grade. "independent": false = same data, different tool.
         "verification": [{**v, "text": t(v["key"], lang, **v["params"])} for v in verification],

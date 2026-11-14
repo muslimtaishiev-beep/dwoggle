@@ -187,3 +187,30 @@ def test_cloud_run_uses_its_own_identity_without_a_key(monkeypatch):
 
     monkeypatch.delenv("K_SERVICE")
     assert make_auth(Settings(provider="earthengine", ee_service_account_key="")) is None  # laptop, no key: 503
+
+
+def test_firestore_arrays_round_trip():
+    assert _from_firestore(_to_firestore(["flood", "heat"])) == ["flood", "heat"]
+    assert _to_firestore([]) == {"arrayValue": {}} and _from_firestore({"arrayValue": {}}) == []
+
+
+def test_concerns_and_eleven_languages_in_profile(client):
+    h = {"Authorization": "Bearer dev:cara:cara@example.com"}
+    opts = client.get("/api/auth/options", params={"lang": "uz"}).json()
+    assert [c["id"] for c in opts["concerns"]] == ["flood", "landslide", "earthquake", "heat"]
+    assert len(opts["languages"]) == 11 and opts["concerns"][0]["label"] == "Паводок/сель"  # uz -> ru texts
+
+    r = client.put("/api/me/profile", headers=h, json={"country": "KG", "phone": "0555123456", "purpose": "build",
+                                                       "concerns": ["flood", "heat", "flood"], "lang": "zh"}).json()
+    assert r["profile"]["concerns"] == ["flood", "heat"] and r["profile"]["lang"] == "zh"
+
+    kept = client.put("/api/me/profile", headers=h, json={"country": "KG", "phone": "0555123456", "purpose": "build"}).json()
+    assert kept["profile"]["concerns"] == ["flood", "heat"]  # omitted = keep
+    cleared = client.put("/api/me/profile", headers=h, json={"country": "KG", "phone": "0555123456", "purpose": "build", "concerns": []}).json()
+    assert cleared["profile"]["concerns"] == []
+
+    bad = client.put("/api/me/profile", headers=h, json={"country": "KG", "phone": "0555123456", "purpose": "build",
+                                                         "concerns": ["green"], "lang": "kk"})
+    assert bad.status_code == 422 and bad.json()["detail"]["field"] == "concerns"
+    assert bad.json()["detail"]["message"].startswith("Выберите")  # kk -> Russian text
+    client.delete("/api/me", headers=h)

@@ -13,7 +13,7 @@ import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Annotated, Literal
+from typing import Annotated
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
@@ -24,23 +24,23 @@ from pydantic import BaseModel, Field
 from . import __version__
 from .auth import Auth, AuthError, AuthUser, make_auth
 from .cache import Cache
-from .config import get_settings
+from .config import get_settings, on_cloud_run
 from .faults import faults_in_bbox
-from .geocode import Geocoder
+from .geocode import Geocoder, PlaceNamer
 from .grading import METHODOLOGY
-from .i18n import LANGS, TEXTS, t
+from .i18n import APP_LANGS, LANGS, TEXTS, AppLang, t, text_lang
 from .nasa.appeears import AppEEARSManager
 from .nasa.earthdata import EarthdataToken
 from .nasa.giovanni import Giovanni
 from .nasa.noaa import STATIONS_PATH
-from .profiles import PURPOSES, ProfileError, validate_profile
+from .profiles import CONCERNS, PURPOSES, ProfileError, validate_concerns, validate_profile
 from .providers import make_provider
 from .report import ReportService, snap
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("bekem")
 
-LangQ = Annotated[Literal["en", "ru", "ky"], Query(description="Response language")]
+LangQ = Annotated[AppLang, Query(description="App language (11). Backend texts fall back to en/ru/ky, see /api/languages")]
 
 
 class State:
@@ -75,7 +75,8 @@ async def lifespan(app: FastAPI):
             _adopt_demo_appeears(state.appeears)
             state.appeears.start()
     try:
-        state.service = ReportService(s, make_provider(s), state.cache, state.giovanni, state.appeears)
+        places = PlaceNamer(s, state.cache) if s.place_names else None
+        state.service = ReportService(s, make_provider(s), state.cache, state.giovanni, state.appeears, places)
         log.info("provider=%s ready (giovanni=%s, appeears=%s)", s.provider, bool(state.giovanni), bool(state.appeears))
     except Exception as e:  # keep the app up: faults, geocode and cached demo still work
         state.provider_error = _explain(e)
@@ -164,18 +165,17 @@ def _check_bounds(lat: float, lon: float) -> None:
 
 @app.get("/api/health")
 def health():
+    """Public status. Detailed errors appear only on a developer's machine, never on the live server."""
     giovanni: dict = {"enabled": bool(state.giovanni)}
     if state.giovanni:
-        try:
-            giovanni["quota_used"] = state.giovanni.quota()  # fraction of this month's Giovanni compute quota
-        except Exception as e:
-            giovanni["error"] = str(e)[:200]
+        quota = _giovanni_quota()
+        giovanni["quota_used" if quota is not None else "status"] = quota if quota is not None else "unavailable"
     stations = json.loads(STATIONS_PATH.read_text(encoding="utf-8")) if STATIONS_PATH.exists() else []
     return {
         "status": "ok" if state.service else "degraded",
         "version": __version__,
         "provider": settings.provider,
-        "provider_error": state.provider_error,
+        "provider_error": None if on_cloud_run() else state.provider_error,
         "cached_reports": state.cache.count(),
         "landslide_map": bool(settings.landslide_asset),
         "auth": state.auth.mode if state.auth else "not_configured",
@@ -186,6 +186,21 @@ def health():
             "noaa": {"enabled": settings.noaa_enabled, "stations": len(stations)},
         },
     }
+
+
+_quota_cache: dict = {"at": 0.0, "value": None}
+
+
+def _giovanni_quota() -> float | None:
+    """Giovanni's monthly quota share, asked at most every 10 minutes (health is public)."""
+    if time.time() - _quota_cache["at"] > 600:
+        try:
+            _quota_cache["value"] = state.giovanni.quota()
+        except Exception:
+            log.exception("Giovanni quota check failed")
+            _quota_cache["value"] = None
+        _quota_cache["at"] = time.time()
+    return _quota_cache["value"]
 
 
 @app.get("/api/report")
@@ -199,8 +214,11 @@ def report(
     """The report card for a point: five grades, Bekem's mood, and 25-year series for the charts."""
     _check_bounds(lat, lon)
     if state.service is None:
-        raise HTTPException(503, f"Satellite provider is not available: {state.provider_error}")
+        raise HTTPException(503, "Satellite data is not available right now." if on_cloud_run()
+                            else f"Satellite provider is not available: {state.provider_error}")
     _rate_limit(request)
+    # refresh=true bypasses the cache (costly Earth Engine + NASA calls): developer machines only.
+    refresh = refresh and not on_cloud_run()
     try:
         return state.service.build(lat, lon, lang, refresh=refresh)
     except Exception as e:
@@ -255,7 +273,7 @@ def faults(bbox: Annotated[str | None, Query(description="min_lon,min_lat,max_lo
 def demo(lang: LangQ = "en"):
     """The demo plots, with names in the requested language."""
     plots = json.loads(settings.demo_path.read_text(encoding="utf-8"))
-    return {"plots": [{"id": p["id"], "lat": p["lat"], "lon": p["lon"], "name": p["name"].get(lang, p["name"]["en"])} for p in plots]}
+    return {"plots": [{"id": p["id"], "lat": p["lat"], "lon": p["lon"], "name": p["name"].get(text_lang(lang), p["name"]["en"])} for p in plots]}
 
 
 @app.get("/api/methodology")
@@ -278,12 +296,17 @@ def methodology(lang: LangQ = "en"):
 @app.get("/api/i18n")
 def i18n(lang: LangQ = "en"):
     """Every UI string the backend knows, so the frontend can reuse the same wording."""
-    return {k: v.get(lang) or v["en"] for k, v in TEXTS.items()}
+    return {k: v.get(text_lang(lang)) or v["en"] for k, v in TEXTS.items()}
 
 
 @app.get("/api/languages")
 def languages():
-    return {"languages": list(LANGS)}
+    """App languages, and which of en/ru/ky the backend's own texts come back in for each."""
+    return {
+        "languages": list(APP_LANGS),
+        "text_languages": list(LANGS),
+        "fallback": {lang: text_lang(lang) for lang in APP_LANGS},
+    }
 
 
 # --- Sign-in & profile -------------------------------------------------------------------------
@@ -312,14 +335,20 @@ User = Annotated[AuthUser, Depends(current_user)]
 
 
 class ProfileIn(BaseModel):
-    country: str = Field(description="ISO 3166-1 alpha-2, e.g. KG")
-    phone: str = Field(description="International or local format; stored as +996555123456")
-    purpose: str = Field(description="Why they're here: one of the ids from /api/auth/options")
-    purpose_note: str | None = Field(None, description="Free text, required when purpose is 'other'")
-    lang: Literal["en", "ru", "ky"] = "en"
+    country: str = Field(max_length=8, description="ISO 3166-1 alpha-2, e.g. KG")
+    phone: str = Field(max_length=40, description="International or local format; stored as +996555123456")
+    purpose: str = Field(max_length=32, description="Why they're here: one of the ids from /api/auth/options")
+    purpose_note: str | None = Field(None, max_length=1000, description="Free text (300 chars max), required for 'other'")
+    concerns: list[str] | None = Field(
+        None, max_length=len(CONCERNS),
+        description="Any of flood, landslide, earthquake, heat (may be empty). Omit to keep the saved value.",
+    )
+    lang: AppLang = "en"
 
 
 def _profile_out(user: AuthUser, profile: dict | None) -> dict:
+    if profile is not None:
+        profile.setdefault("concerns", [])  # profiles saved before concerns existed
     complete = bool(profile and all(profile.get(k) for k in ("country", "phone", "purpose")))
     return {
         "user": {"uid": user.uid, "email": user.email, "email_verified": user.email_verified,
@@ -336,6 +365,8 @@ def auth_options(lang: LangQ = "en"):
         "methods": ["password", "google.com"],
         "question": t("purpose.question", lang),
         "purposes": [{"id": p, "label": t(f"purpose.{p}", lang)} for p in PURPOSES],
+        "concerns": [{"id": c, "label": t(f"check.{c}", lang)} for c in CONCERNS],
+        "languages": list(APP_LANGS),
         "fields": {"country": "ISO 3166-1 alpha-2", "phone": "E.164 (+996...)", "purpose_note_max": 300},
         "prompt": t("signup.prompt", lang),
         "enabled": state.auth is not None,
@@ -352,14 +383,16 @@ def me(user: User):
 def save_profile(user: User, body: ProfileIn, request: Request):
     """Create or update country, phone and purpose. Email and sign-in method come from Firebase."""
     _rate_limit(request)
+    existing = state.auth.store.get(user.uid) or {}
     try:
         fields = validate_profile(body.country, body.phone, body.purpose, body.purpose_note)
+        concerns = validate_concerns(body.concerns) if body.concerns is not None else existing.get("concerns", [])
     except ProfileError as e:
         raise HTTPException(422, {"field": e.field, "code": e.code, "message": t(f"err.{e.code}", body.lang)}) from e
     now = datetime.now(timezone.utc)
-    existing = state.auth.store.get(user.uid) or {}
     profile = {
         **fields,
+        "concerns": concerns,
         "lang": body.lang,
         "email": user.email,
         "email_verified": user.email_verified,

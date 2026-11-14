@@ -144,6 +144,8 @@ def _to_firestore(value) -> dict:
         return {"integerValue": str(value)}
     if isinstance(value, datetime):
         return {"timestampValue": value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")}
+    if isinstance(value, (list, tuple)):
+        return {"arrayValue": {"values": [_to_firestore(v) for v in value]} if value else {}}
     return {"stringValue": str(value)}
 
 
@@ -153,6 +155,8 @@ def _from_firestore(field: dict):
         return int(value)
     if kind == "nullValue":
         return None
+    if kind == "arrayValue":
+        return [_from_firestore(v) for v in value.get("values", [])]
     return value  # stringValue, booleanValue, timestampValue (ISO string)
 
 

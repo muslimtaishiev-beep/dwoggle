@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     warm_demo_on_start: bool = True
 
     nominatim_url: str = "https://nominatim.openstreetmap.org/search"
+    nominatim_reverse_url: str = "https://nominatim.openstreetmap.org/reverse"
+    place_names: bool = True  # add an OpenStreetMap place name to each report's location
     nominatim_user_agent: str = "bekem/1.0 (https://github.com/bekem)"
 
 

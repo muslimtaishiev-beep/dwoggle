@@ -11,6 +11,7 @@ os.environ["BEKEM_CACHE_PATH"] = str(Path(tempfile.mkdtemp()) / "cache.sqlite3")
 os.environ["BEKEM_RATE_LIMIT_PER_MIN"] = "0"
 os.environ["BEKEM_WARM_DEMO_ON_START"] = "0"
 os.environ["BEKEM_NOAA_ENABLED"] = "0"  # tests never touch the network
+os.environ["BEKEM_PLACE_NAMES"] = "0"
 # Ignore any real keys in backend/.env: tests use dev tokens and an in-memory user store.
 for key in ("EE_PROJECT", "EE_SERVICE_ACCOUNT_KEY", "EE_SERVICE_ACCOUNT_KEY_JSON", "FIREBASE_PROJECT",
             "FIREBASE_SERVICE_ACCOUNT_KEY", "FIREBASE_SERVICE_ACCOUNT_KEY_JSON", "EARTHDATA_USERNAME", "EARTHDATA_PASSWORD"):

@@ -61,6 +61,7 @@ class CheckResult:
     messages: list[tuple[str, dict]] = field(default_factory=list)
     metrics: dict = field(default_factory=dict)
     series: list[SeriesOut] = field(default_factory=list)
+    source_ids: list[str] = field(default_factory=list)  # sources the GRADE is built from (ids in report.SOURCES)
 
 
 def worsen(grade: str, steps: int = 1) -> str:
@@ -297,8 +298,21 @@ def mood(checks: list[CheckResult]) -> str:
     return "relaxed"
 
 
+GRADE_SOURCES = {
+    "flood": ["landsat_water", "nasadem"],
+    "landslide": ["nasadem"],
+    "earthquake": ["gem_faults"],
+    "heat": ["modis_lst"],
+    "green": ["modis_ndvi"],
+}
+
+
 def grade_all(m: RawMetrics, fault: FaultHit | None, radius_m: int) -> tuple[list[CheckResult], str]:
     checks = [grade_flood(m, radius_m), grade_landslide(m), grade_earthquake(fault), grade_heat(m), grade_green(m)]
+    for c in checks:
+        c.source_ids = list(GRADE_SOURCES[c.id])
+        if c.id == "landslide" and m.landslide_class is not None:
+            c.source_ids.append("landslide")
     return checks, mood(checks)
 
 
@@ -306,12 +320,12 @@ def grade_all(m: RawMetrics, fault: FaultHit | None, radius_m: int) -> tuple[lis
 
 METHODOLOGY = {
     "flood": {
-        "data": ["Landsat water history, 30 m: NASA/USGS Landsat processed by JRC GSW (2000-2021) and by Bekem with an MNDWI water test on Landsat 8/9 (2022+). The text always states the years actually observed.", "NASADEM elevation, 30 m", "NASA GPM IMERG rainfall, ~11 km"],
+        "data": ["Landsat water history, 30 m: NASA/USGS Landsat processed by JRC GSW (2000-2021) and by Bekem with an MNDWI water test on Landsat 8/9 (2022+). The text always states the years actually observed.", "NASADEM elevation, 30 m", "Context only: NASA GPM IMERG rainfall (~11 km) and GLDAS runoff/soil moisture (~28 km) via NASA Giovanni"],
         "rules": [
             f"A year counts as 'water seen' if at least {WATER_YEAR_MIN_PCT:g}% of the {{radius}} m circle was water.",
             "Years with water: 0 = A, 1-2 = B, 3-5 = C, 6 or more = D.",
-            f"If the plot is at least {LOW_LYING_M:g} m lower than the median ground within 1 km and water was seen, one grade worse.",
-            f"If the plot sits below its surroundings and the land within 1.5 km reaches {MUDFLOW_UPSLOPE_DEG:g}° (95th percentile), at least C (mudflow path).",
+            f"If the area is at least {LOW_LYING_M:g} m lower than the median ground within 1 km and water was seen, one grade worse.",
+            f"If the area sits below its surroundings and the land within 1.5 km reaches {MUDFLOW_UPSLOPE_DEG:g}° (95th percentile), at least C (mudflow path).",
             "Rainfall trend is shown for context and does not change the grade.",
         ],
     },

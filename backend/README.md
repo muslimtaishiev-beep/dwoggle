@@ -98,6 +98,11 @@ Errors: `422` = point outside Kyrgyzstan or bad params, `429` = rate limit, `502
     //   appeears mod44w: agrees | differs | pending     ("independent": true, a separate sensor)
   ],
   "extras": {"giovanni": "ok", "noaa": "ok", "appeears": "pending"},
+  // lang: as requested (11 app languages); text_lang: the en/ru/ky our texts are in (kk/uz → ru, others → en)
+  // location.place: OpenStreetMap name in the requested language, e.g.
+  //   {"name": "Кара-Суу", "locality": "Кара-Суу", "region": "Ошская область", "display": "Кара-Суу, Ошская область",
+  //    "attribution": "© OpenStreetMap contributors"}  (null if the name service is busy; show the attribution)
+  // every check has "source_ids": the sources its GRADE is built from; every id is listed in "sources"
   "disclaimer": "...", "sources": [...],
   "provider": "earthengine", "cached": true, "computed_at": "2026-11-14T10:00:00+00:00"
 }

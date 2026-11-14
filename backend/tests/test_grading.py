@@ -135,3 +135,31 @@ def test_flood_text_states_the_real_year_span():
     assert "(2003–2025)" in t(r.messages[0][0], "ru", **r.messages[0][1])
     sources = {p["year"]: p["source"] for p in r.series[0].points}
     assert sources[2021] == "jrc" and sources[2022] == "landsat_own"
+
+
+def test_product_wording_rules():
+    import re
+
+    forbidden = {
+        "en": re.compile(r"(plot|safe|unsafe|danger|dangerous)", re.I),
+        "ru": re.compile(r"участ|опасн", re.I),
+        "ky": re.compile(r"коопсуз|коркунуч", re.I),
+    }
+    for key, entry in TEXTS.items():
+        for lang, rule in forbidden.items():
+            assert not rule.search(entry[lang]), f"{key}:{lang}: {entry[lang]}"
+    for key in ("disclaimer", "verify.appeears.pending", "signup.prompt"):
+        for lang in LANGS:
+            assert "bekem" not in TEXTS[key][lang].lower() and "бекем" not in TEXTS[key][lang].lower(), key
+
+
+def test_place_name_from_openstreetmap():
+    from bekem.geocode import parse_place
+
+    bishkek = {"name": "Асанбай кичирайону", "addresstype": "quarter", "address": {
+        "quarter": "Асанбай кичирайону", "city": "Бишкек шаары", "country": "Кыргызстан", "country_code": "kg"}}
+    p = parse_place(bishkek)
+    assert p["display"] == "Асанбай кичирайону, Бишкек шаары" and p["attribution"] == "© OpenStreetMap contributors"
+    town = {"name": "Кара-Суу", "address": {"town": "Кара-Суу", "state": "Ошская область", "country": "Кыргызстан"}}
+    assert parse_place(town)["display"] == "Кара-Суу, Ошская область"
+    assert parse_place({"address": {}}) is None

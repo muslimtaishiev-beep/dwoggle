@@ -2,6 +2,12 @@
 
 Grading produces message keys + parameters; this module renders them. The frontend gets both
 the rendered text and the raw key/params, so it can re-render or override wording itself.
+
+Wording rules (product): never "safe" or "dangerous" (grades are risk signals), and "this area",
+never "plot" / "участок". tests/test_grading.py enforces both.
+
+The app speaks 11 languages; the backend writes its own texts in en/ru/ky and falls back to the
+nearest of those (Kazakh and Uzbek readers in the region read Russian; everyone else gets English).
 """
 
 from __future__ import annotations
@@ -11,13 +17,22 @@ from typing import Literal
 Lang = Literal["en", "ru", "ky"]
 LANGS: tuple[Lang, ...] = ("en", "ru", "ky")
 
+AppLang = Literal["ky", "ru", "kk", "uz", "en", "zh", "hi", "es", "ar", "fr", "pt"]
+APP_LANGS: tuple[str, ...] = ("ky", "ru", "kk", "uz", "en", "zh", "hi", "es", "ar", "fr", "pt")
+TEXT_FALLBACK: dict[str, Lang] = {"kk": "ru", "uz": "ru", "zh": "en", "hi": "en", "es": "en", "ar": "en", "fr": "en", "pt": "en"}
+
+
+def text_lang(lang: str) -> Lang:
+    """The en/ru/ky language our own texts come back in for an app language."""
+    return lang if lang in LANGS else TEXT_FALLBACK.get(lang, "en")  # type: ignore[return-value]
+
 TEXTS: dict[str, dict[str, str]] = {
     # --- Bekem's moods ------------------------------------------------------------------
     "mood.relaxed.title": {"en": "Bekem is relaxed", "ru": "Бекем спокоен", "ky": "Бекем тынч"},
     "mood.relaxed.line": {
-        "en": "Looks like a safe plot.",
-        "ru": "Похоже, участок безопасный.",
-        "ky": "Бул жер коопсуз окшойт.",
+        "en": "Few warning signs in this area.",
+        "ru": "В этой местности мало тревожных признаков.",
+        "ky": "Бул аймакта тынчсыздандырган белгилер аз.",
     },
     "mood.alert.title": {"en": "Bekem is alert", "ru": "Бекем насторожился", "ky": "Бекем сергек"},
     "mood.alert.line": {
@@ -27,13 +42,13 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "mood.whistling.title": {"en": "Bekem is whistling!", "ru": "Бекем свистит!", "ky": "Бекем ышкырып жатат!"},
     "mood.whistling.line": {
-        "en": "Danger: high flood or landslide risk.",
-        "ru": "Опасно: высокий риск паводка или оползня.",
-        "ky": "Коркунуч: суу ташкыны же жер көчкү коркунучу жогору.",
+        "en": "High flood or landslide risk in this area.",
+        "ru": "Высокий риск паводка или оползня в этой местности.",
+        "ky": "Бул аймакта суу ташкыны же жер көчкү тобокелдиги жогору.",
     },
     "greeting": {
         "en": "Tap any land. I'll tell you what I know about it.",
-        "ru": "Нажми на любой участок. Я расскажу, что о нём знаю.",
+        "ru": "Нажми на любое место на карте. Я расскажу, что о нём знаю.",
         "ky": "Каалаган жерди басыңыз. Мен ал жөнүндө билгенимди айтып берем.",
     },
     # --- Check titles -------------------------------------------------------------------
@@ -54,19 +69,19 @@ TEXTS: dict[str, dict[str, str]] = {
         "ky": "{total} жылдык байкоодо ({first}–{last}) спутниктер {radius} м радиуста бир да жолу суу көрүшкөн жок.",
     },
     "flood.low": {
-        "en": "This plot is {drop} m lower than the land around it.",
-        "ru": "Участок на {drop} м ниже окружающей местности.",
-        "ky": "Бул жер айланасынан {drop} м төмөн жайгашкан.",
+        "en": "This area is {drop} m lower than the land around it.",
+        "ru": "Эта местность на {drop} м ниже окрестностей.",
+        "ky": "Бул аймак айланасынан {drop} м төмөн жайгашкан.",
     },
     "flood.mudflow": {
-        "en": "Steep slopes rise above the plot: a possible mudflow path.",
-        "ru": "Над участком крутые склоны: возможный путь селя.",
-        "ky": "Жердин үстүндө тик капталдар бар: сел өтүшү мүмкүн.",
+        "en": "Steep slopes rise above this area: a possible mudflow path.",
+        "ru": "Над этой местностью крутые склоны: возможный путь селя.",
+        "ky": "Бул аймактын үстүндө тик капталдар бар: сел өтүшү мүмкүн.",
     },
     "flood.rain_up": {
         "en": "Spring-summer rainfall here is rising (+{change} mm since {start}, significant ✓).",
         "ru": "Весенне-летние осадки здесь растут (+{change} мм с {start} года, значимо ✓).",
-        "ky": "Бул жерде жаз-жайкы жаан-чачын көбөйүүдө ({start}-жылдан бери +{change} мм, ишенимдүү ✓).",
+        "ky": "Бул аймакта жаз-жайкы жаан-чачын көбөйүүдө ({start}-жылдан бери +{change} мм, ишенимдүү ✓).",
     },
     "flood.rain_extreme_up": {
         "en": "The heaviest rain day of the season is getting heavier (+{change} mm since {start}, significant ✓).",
@@ -82,12 +97,12 @@ TEXTS: dict[str, dict[str, str]] = {
     "landslide.slope.A": {
         "en": "Flat ground, very low landslide risk.",
         "ru": "Ровная местность, риск оползня очень низкий.",
-        "ky": "Түз жер, жер көчкү коркунучу өтө төмөн.",
+        "ky": "Түз жер, жер көчкү тобокелдиги өтө төмөн.",
     },
     "landslide.slope.B": {
         "en": "Gentle slope, low landslide risk.",
         "ru": "Пологий склон, риск оползня низкий.",
-        "ky": "Жантайыңкы жер, жер көчкү коркунучу төмөн.",
+        "ky": "Жантайыңкы жер, жер көчкү тобокелдиги төмөн.",
     },
     "landslide.slope.C": {
         "en": "Noticeable slope (up to {slope}°). Check the soil before building.",
@@ -97,12 +112,12 @@ TEXTS: dict[str, dict[str, str]] = {
     "landslide.slope.D": {
         "en": "Steep slope (up to {slope}°). High landslide risk.",
         "ru": "Крутой склон (до {slope}°). Высокий риск оползня.",
-        "ky": "Тик каптал ({slope}° чейин). Жер көчкү коркунучу жогору.",
+        "ky": "Тик каптал ({slope}° чейин). Жер көчкү тобокелдиги жогору.",
     },
     "landslide.susc": {
         "en": "NASA landslide map: {cls} susceptibility.",
         "ru": "Карта оползней NASA: {cls} подверженность.",
-        "ky": "NASA жер көчкү картасы: коркунуч деңгээли {cls}.",
+        "ky": "NASA жер көчкү картасы: тобокелдик деңгээли {cls}.",
     },
     "landslide.runout": {
         "en": "Very steep land within 1.5 km: soil or rocks can come down from above.",
@@ -227,24 +242,24 @@ TEXTS: dict[str, dict[str, str]] = {
         "ky": "NASA AppEEARS ошол эле MODIS маалыматынан башка тренд берет ({change}{unit}, {sig}). Бул баага этият болуңуз.",
     },
     "verify.appeears.pending": {
-        "en": "Bekem is double-checking this place with NASA AppEEARS (takes minutes to hours).",
-        "ru": "Бекем перепроверяет это место через NASA AppEEARS (от минут до нескольких часов).",
-        "ky": "Бекем бул жерди NASA AppEEARS аркылуу кайра текшерип жатат (бир нече мүнөттөн сааттарга чейин).",
+        "en": "Double-checking this area with NASA AppEEARS (takes minutes to hours).",
+        "ru": "Перепроверяем эту местность через NASA AppEEARS (от минут до нескольких часов).",
+        "ky": "Бул аймак NASA AppEEARS аркылуу кайра текшерилүүдө (бир нече мүнөттөн сааттарга чейин).",
     },
     "verify.appeears.unavailable": {
-        "en": "NASA AppEEARS check not available for this place yet.",
-        "ru": "Проверка NASA AppEEARS для этого места пока недоступна.",
-        "ky": "Бул жер үчүн NASA AppEEARS текшерүүсү азырынча жок.",
+        "en": "NASA AppEEARS check not available for this area yet.",
+        "ru": "Проверка NASA AppEEARS для этой местности пока недоступна.",
+        "ky": "Бул аймак үчүн NASA AppEEARS текшерүүсү азырынча жок.",
     },
     "verify.mod44w.agrees": {
-        "en": "MODIS water map (separate sensor, 250 m): water at the plot or 250 m around it in {n} of {total} years ({first}–{last}). Agrees with Landsat.",
-        "ru": "Карта воды MODIS (другой спутник, 250 м): вода на участке или в 250 м от него в {n} из {total} лет ({first}–{last}). Совпадает с Landsat.",
-        "ky": "MODIS суу картасы (башка спутник, 250 м): жерде же 250 м айланасында {total} жылдын ({first}–{last}) {n} жылында суу болгон. Landsat менен дал келет.",
+        "en": "MODIS water map (separate sensor, 250 m): water in this area or within 250 m of it in {n} of {total} years ({first}–{last}). Agrees with Landsat.",
+        "ru": "Карта воды MODIS (другой спутник, 250 м): вода в этой местности или в 250 м от неё в {n} из {total} лет ({first}–{last}). Совпадает с Landsat.",
+        "ky": "MODIS суу картасы (башка спутник, 250 м): бул аймакта же 250 м айланасында {total} жылдын ({first}–{last}) {n} жылында суу болгон. Landsat менен дал келет.",
     },
     "verify.mod44w.differs": {
-        "en": "MODIS water map (separate sensor, 250 m): water at the plot or 250 m around it in {n} of {total} years ({first}–{last}). Does not agree with Landsat; the sensors see at different scales.",
-        "ru": "Карта воды MODIS (другой спутник, 250 м): вода на участке или в 250 м от него в {n} из {total} лет ({first}–{last}). Не совпадает с Landsat: спутники видят в разном масштабе.",
-        "ky": "MODIS суу картасы (башка спутник, 250 м): жерде же 250 м айланасында {total} жылдын ({first}–{last}) {n} жылында суу болгон. Landsat менен дал келбейт: спутниктер ар башка масштабда көрөт.",
+        "en": "MODIS water map (separate sensor, 250 m): water in this area or within 250 m of it in {n} of {total} years ({first}–{last}). Does not agree with Landsat; the sensors see at different scales.",
+        "ru": "Карта воды MODIS (другой спутник, 250 м): вода в этой местности или в 250 м от неё в {n} из {total} лет ({first}–{last}). Не совпадает с Landsat: спутники видят в разном масштабе.",
+        "ky": "MODIS суу картасы (башка спутник, 250 м): бул аймакта же 250 м айланасында {total} жылдын ({first}–{last}) {n} жылында суу болгон. Landsat менен дал келбейт: спутниктер ар башка масштабда көрөт.",
     },
     # --- Sign-up: why are you here? ----------------------------------------------------------
     "purpose.question": {
@@ -277,9 +292,9 @@ TEXTS: dict[str, dict[str, str]] = {
     "purpose.curious": {"en": "Just curious", "ru": "Просто интересно", "ky": "Жөн гана кызыкдармын"},
     "purpose.other": {"en": "Other (tell us)", "ru": "Другое (напишите)", "ky": "Башка (жазыңыз)"},
     "signup.prompt": {
-        "en": "Save this plot and get Bekem's alerts: sign up in 30 seconds.",
-        "ru": "Сохраните участок и получайте предупреждения Бекема: регистрация за 30 секунд.",
-        "ky": "Бул жерди сактап, Бекемдин эскертүүлөрүн алыңыз: 30 секундада катталыңыз.",
+        "en": "Save this area and get alerts: sign up in 30 seconds.",
+        "ru": "Сохраните эту местность и получайте предупреждения: регистрация за 30 секунд.",
+        "ky": "Бул аймакты сактап, эскертүүлөрдү алыңыз: 30 секундада катталыңыз.",
     },
     # --- Sign-in errors (field-level codes are stable for the frontend) ------------------------
     "err.country_invalid": {"en": "Choose a country.", "ru": "Выберите страну.", "ky": "Өлкөнү тандаңыз."},
@@ -291,6 +306,11 @@ TEXTS: dict[str, dict[str, str]] = {
     "err.purpose_invalid": {"en": "Choose why you're here.", "ru": "Выберите, зачем вы здесь.", "ky": "Эмне үчүн келгениңизди тандаңыз."},
     "err.note_required": {"en": "Tell us a few words.", "ru": "Напишите пару слов.", "ky": "Бир нече сөз жазыңыз."},
     "err.note_too_long": {"en": "Please keep it under 300 characters.", "ru": "Не больше 300 символов.", "ky": "300 белгиден ашпасын."},
+    "err.concerns_invalid": {
+        "en": "Pick from flood, landslide, earthquake and heat.",
+        "ru": "Выберите из: паводок, оползень, землетрясение, жара.",
+        "ky": "Тандаңыз: суу ташкыны, жер көчкү, жер титирөө, ысык.",
+    },
     "err.token_missing": {"en": "Please sign in.", "ru": "Пожалуйста, войдите.", "ky": "Сураныч, кириңиз."},
     "err.token_invalid": {"en": "Invalid sign-in. Please sign in again.", "ru": "Ошибка входа. Войдите снова.", "ky": "Кирүүдө ката. Кайра кириңиз."},
     "err.token_expired": {"en": "Your sign-in has expired. Please sign in again.", "ru": "Сессия истекла. Войдите снова.", "ky": "Сессия бүттү. Кайра кириңиз."},
@@ -344,24 +364,25 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "disclaimer": {
         "en": (
-            "Bekem gives risk signals from satellite data, not official permission. MChS zoning still decides. "
-            "Satellite pixels are 30 m to 1 km, so this grades the area around the plot, not the exact fence line."
+            "These are risk signals from satellite data, not official permission. MChS zoning still decides. "
+            "Satellite pixels are 30 m to 1 km, so the grades describe the surrounding area, not exact property lines."
         ),
         "ru": (
-            "Бекем даёт сигналы риска по спутниковым данным, а не официальное разрешение. Решает зонирование МЧС. "
-            "Пиксели спутников от 30 м до 1 км, поэтому оценивается местность вокруг участка, а не его точные границы."
+            "Это сигналы риска по спутниковым данным, а не официальное разрешение. Решает зонирование МЧС. "
+            "Пиксели спутников от 30 м до 1 км, поэтому оценивается окружающая местность, а не точные границы владения."
         ),
         "ky": (
-            "Бекем спутник маалыматы боюнча коркунуч белгилерин берет, расмий уруксат эмес. Акыркы чечимди ӨКМдин "
-            "зоналоосу чечет. Спутник пикселдери 30 м ден 1 км ге чейин, ошондуктан жердин так чеги эмес, "
-            "айланасы бааланат."
+            "Бул спутник маалыматы боюнча тобокелдик белгилери, расмий уруксат эмес. Акыркы чечимди ӨКМдин "
+            "зоналоосу чечет. Спутник пикселдери 30 м ден 1 км ге чейин, ошондуктан менчиктин так чеги эмес, "
+            "айланадагы аймак бааланат."
         ),
     },
 }
 
 
-def t(key: str, lang: Lang = "en", **params) -> str:
-    """Render a message. String params starting with "@" are message keys themselves."""
+def t(key: str, lang: str = "en", **params) -> str:
+    """Render a message in `lang` (any app language; see text_lang). Params starting with "@" are keys."""
+    lang = text_lang(lang)
     entry = TEXTS.get(key)
     if entry is None:
         return key
