@@ -1,0 +1,433 @@
+/*
+ * Talking to Dwoggle: white paper between two bands of earth with wavy edges, as on the map page. His answer is
+ * large and stays in one place; Dwoggle's head and shoulders rise from behind the lower band.
+ */
+.chat {
+  --bust: min(34dvh, 300px);
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--brand-paper);
+  color: var(--brand-ink);
+  font-family: var(--font-brand-body);
+  font-weight: var(--font-weight-bold);
+  --color-focus: var(--brand-focus);
+}
+
+/* ---------- The bands ---------- */
+
+.chat__top,
+.chat__bottom {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  background: var(--brand-brown);
+}
+
+.chat__top {
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 58px;
+  padding: 8px 32px 4px;
+}
+
+.chat__top .brand-mark {
+  color: var(--brand-paper);
+}
+
+.chat__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand-paper);
+  color: var(--brand-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.chat__wave {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 18px;
+  pointer-events: none;
+}
+
+.chat__wave--top {
+  top: calc(100% - 1px);
+}
+
+.chat__wave--bottom {
+  bottom: calc(100% - 1px);
+}
+
+.chat__wave-fill {
+  fill: var(--brand-brown);
+}
+
+.chat__wave-line {
+  fill: none;
+  stroke: var(--map-ui-wave);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.chat__bottom {
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 32px 22px;
+  padding-bottom: max(22px, env(safe-area-inset-bottom));
+  box-shadow: inset 0 -12px 0 0 var(--earth-surface-deep);
+}
+
+/* ---------- The middle: what was asked, his answer, ready questions, and Dwoggle ---------- */
+
+.chat__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  padding: 34px 20px 0;
+}
+
+.chat__talk {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 640px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* The visitor's own words, to the side they write from. */
+.chat__question {
+  align-self: flex-end;
+  max-width: 85%;
+  padding: 8px 16px;
+  border-radius: 18px 18px 4px 18px;
+  background: var(--brand-cream);
+  font-size: 16px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.chat__bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 18px 22px;
+  border: 2.5px solid var(--brand-brown);
+  border-radius: 18px;
+  background: var(--brand-paper);
+  animation: chat-bubble-in 220ms var(--ease-out) both;
+}
+
+/* Its tail, pointing down at Dwoggle: a brown triangle with a paper one over it. */
+.chat__bubble::before,
+.chat__bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 26px;
+  height: 14px;
+  background: var(--brand-brown);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform: translateX(-50%);
+}
+
+.chat__bubble::after {
+  top: calc(100% - 3.5px);
+  width: 20px;
+  height: 11px;
+  background: var(--brand-paper);
+}
+
+@keyframes chat-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+.chat__answer {
+  font-size: 20px;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+.chat--long .chat__answer {
+  font-size: 17px;
+}
+
+.chat__unsaid {
+  visibility: hidden;
+}
+
+/* Three dots, lit in turn, while he thinks. */
+.chat__dots {
+  display: flex;
+  gap: 6px;
+  padding: 10px 2px;
+}
+
+.chat__dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--brand-chip);
+  animation: chat-dot 900ms ease-in-out infinite;
+}
+
+.chat__dots i:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.chat__dots i:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes chat-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+  }
+
+  30% {
+    opacity: 1;
+  }
+}
+
+.chat__listen {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--map-ui-chip);
+  color: var(--brand-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Ready questions, on the lower band above the field. */
+.chat__ready {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 820px;
+}
+
+.chat__chip {
+  flex: none;
+  min-height: 38px;
+  padding: 5px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand-cream);
+  color: var(--brand-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Dwoggle from the chest up: the rest of him is below the edge of the lower band. */
+.chat__dwoggle {
+  position: relative;
+  flex: none;
+  width: 100%;
+  height: var(--bust);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.chat__figure {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  /* The top 45 % of the drawing shows: his helmet, face and shoulders, down to just above the map. */
+  height: calc(var(--bust) / 0.45);
+  transform: translateX(-50%);
+  transform-origin: 50% 45%;
+  transition: transform 300ms var(--ease-out);
+}
+
+/* While he listens he leans his head to one side. */
+.chat--listening .chat__figure {
+  transform: translateX(-50%) rotate(-4deg);
+}
+
+/* ---------- The field to type or speak in ---------- */
+
+.chat__field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 640px;
+  min-height: 54px;
+  padding: 4px 6px 4px 20px;
+  border-radius: 999px;
+  background: var(--brand-paper);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge);
+}
+
+.chat__field:focus-within {
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge), 0 0 0 3px var(--brand-yellow);
+}
+
+.chat__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand-ink);
+  font-family: var(--font-brand-plain);
+  font-size: 17px;
+  outline: none;
+}
+
+.chat__input::placeholder {
+  color: var(--brand-placeholder);
+}
+
+.chat__round {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand-cream);
+  color: var(--brand-brown);
+  cursor: pointer;
+}
+
+.chat__round[aria-pressed="true"] {
+  background: var(--grade-ui-d);
+  color: var(--brand-paper);
+}
+
+.chat__round--send {
+  background: var(--brand-brown);
+  color: var(--brand-paper);
+}
+
+.chat__round--send:disabled {
+  background: var(--brand-chip);
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .chat__chip:hover {
+    background: var(--brand-paper);
+  }
+
+  .chat__listen:hover {
+    background: var(--brand-cream);
+  }
+}
+
+/* ---------- A low screen: one row of ready questions, and Dwoggle makes room for a long answer ---------- */
+
+@media (max-height: 760px) {
+  .chat__ready {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chat--long {
+    --bust: min(22dvh, 200px);
+  }
+
+  .chat__stage {
+    padding-top: 26px;
+  }
+}
+
+/* ---------- A phone ---------- */
+
+@media (max-width: 767px) {
+  .chat {
+    --bust: min(30dvh, 230px);
+  }
+
+  .chat__top {
+    padding-inline: 12px;
+  }
+
+  .chat__bottom {
+    padding: 12px 12px 18px;
+  }
+
+  .chat__stage {
+    padding: 28px 12px 0;
+  }
+
+  .chat__answer {
+    font-size: 18px;
+  }
+
+  .chat--long .chat__answer {
+    font-size: 16px;
+  }
+
+  /* One row of ready questions that scrolls sideways, so the band stays low. */
+  .chat__ready {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chat__back span {
+    display: none;
+  }
+
+  .chat__back {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* Reduced motion: the bubble and the dots simply appear, and he does not lean. */
+@media (prefers-reduced-motion: reduce) {
+  .chat__bubble,
+  .chat__dots i {
+    animation: none;
+  }
+
+  .chat__figure {
+    transition: none;
+  }
+}

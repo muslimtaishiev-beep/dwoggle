@@ -24,6 +24,10 @@ const PATHS = {
   navigate: 'M20 4 4 11l7 2 2 7 7-16Z',
   bookmark: 'M7 4h10v16l-5-4-5 4V4Z',
   layers: 'M12 4 3 9l9 5 9-5-9-5ZM3 13.5l9 5 9-5',
+  // A paper plane.
+  send: 'M21 3 3 10.5l7 2.5 2.5 7L21 3ZM10 13l4.5-4.5',
+  // A loudspeaker with a sound wave.
+  sound: 'M4 9.5h3.5L12 6v12l-4.5-3.5H4v-5ZM15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11',
 } as const
 
 export type LineIconName = keyof typeof PATHS

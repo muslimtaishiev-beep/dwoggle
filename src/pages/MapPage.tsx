@@ -3,6 +3,7 @@ import type { LatLon, Report } from '../api/types.ts'
 import { useReport } from '../api/useReport.ts'
 import { AddressSearch } from '../components/AddressSearch.tsx'
 import { AskDwoggle } from '../components/AskDwoggle.tsx'
+import { DwoggleChat } from '../components/DwoggleChat.tsx'
 import { GradingPanel } from '../components/GradingPanel.tsx'
 import { MapActions } from '../components/MapActions.tsx'
 import { MapHeader } from '../components/MapHeader.tsx'
@@ -15,6 +16,8 @@ import { isInKyrgyzstan } from '../data/coverage.ts'
 import { useReducedMotion } from '../hooks/useReducedMotion.ts'
 import { useSavedAreas } from '../hooks/useSavedAreas.ts'
 import { useI18n } from '../i18n/context.ts'
+import { withTransition } from '../motion/pageTransition.ts'
+import type { Topic } from '../report/answers.ts'
 import { ROUTES } from '../router.ts'
 import '../brand/brand.css'
 import './MapPage.css'
@@ -56,6 +59,8 @@ export default function MapPage() {
   // A place to fly to: found by the search, the visitor's position, or a shared link.
   const [place, setPlace] = useState<LatLon | null>(linked)
   const [note, setNote] = useState<string | null>(null)
+  // The chat with Dwoggle, over the map; `ask` is a ready question to open it with.
+  const [chat, setChat] = useState<{ ask: Topic | null } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const { state, retry } = useReport(point, lang)
   const saved = useSavedAreas()
@@ -141,100 +146,114 @@ export default function MapPage() {
 
   const panelShown = point !== null && state.status !== 'idle' && phase !== 'idle'
 
+  // The chat opens out of Dwoggle, where he sits, and fades back to the map.
+  const openChat = (ask: Topic | null) => withTransition('surface', () => setChat({ ask }))
+  const closeChat = useCallback(() => withTransition('fade', () => setChat(null)), [])
+
   return (
     <div className={`map-page map-page--${phase}`}>
-      <MapHeader onGrading={() => setGradingOpen(true)} />
+      {/* The map's own screen; out of reach while the chat is open over it. */}
+      <div className="map-page__screen" inert={chat !== null}>
+        <MapHeader onGrading={() => setGradingOpen(true)} />
 
-      <main className="map-page__stage">
-        <div className="map-page__map" inert={layersShown}>
-          <MapView
-            point={point}
-            radiusM={report?.location.radius_m ?? DEFAULT_RADIUS_M}
-            digging={phase === 'digging'}
-            target={place}
-            onSelect={select}
-          />
-        </div>
+        <main className="map-page__stage">
+          <div className="map-page__map" inert={layersShown}>
+            <MapView
+              point={point}
+              radiusM={report?.location.radius_m ?? DEFAULT_RADIUS_M}
+              digging={phase === 'digging'}
+              target={place}
+              onSelect={select}
+            />
+          </div>
 
-        {(savedOpen || panelShown) && !layersShown && (
-          <aside className="map-page__side">
-            {savedOpen ? (
-              <SavedPanel
-                areas={saved.areas}
-                onOpen={(area) => {
-                  setPlace(area)
-                  select(area)
-                }}
-                onRemove={saved.remove}
-                onClose={() => setSavedOpen(false)}
-              />
-            ) : (
-              point &&
-              state.status !== 'idle' && (
-                <ReportPanel
-                  state={state}
-                  saved={saved.isSaved(point)}
-                  note={note}
-                  onSave={save}
-                  onShare={share}
-                  onRetry={retry}
-                  onClose={close}
+          {(savedOpen || panelShown) && !layersShown && (
+            <aside className="map-page__side">
+              {savedOpen ? (
+                <SavedPanel
+                  areas={saved.areas}
+                  onOpen={(area) => {
+                    setPlace(area)
+                    select(area)
+                  }}
+                  onRemove={saved.remove}
+                  onClose={() => setSavedOpen(false)}
                 />
-              )
-            )}
-          </aside>
-        )}
+              ) : (
+                point &&
+                state.status !== 'idle' && (
+                  <ReportPanel
+                    state={state}
+                    saved={saved.isSaved(point)}
+                    note={note}
+                    onSave={save}
+                    onShare={share}
+                    onRetry={retry}
+                    onClose={close}
+                  />
+                )
+              )}
+            </aside>
+          )}
 
-        {point && layersShown && state.status !== 'idle' && (
-          <Underground
-            key={`${point.lat},${point.lon}`}
-            point={point}
-            state={state}
-            view={view}
-            layerIndex={layerIndex}
-            rise={!reducedMotion && !risen}
-            onRisen={() => setRisen(true)}
-            leaving={phase === 'closing'}
-            onViewChange={setView}
-            onLayerChange={setLayerIndex}
-            onRetry={retry}
-            onClose={() => (reducedMotion ? setPhase('open') : setPhase('closing'))}
-            onLeft={() => setPhase('open')}
-          />
-        )}
-      </main>
+          {!layersShown && (
+            <button type="button" className="map-page__talk" aria-label={t('chat.open')} data-reveal-origin="" onClick={() => openChat(null)}>
+              <img src="/brand/dwoggle-head.png" alt="" width={198} height={170} />
+            </button>
+          )}
 
-      <footer className="map-page__ground">
-        <svg className="map-page__wave" viewBox="0 0 1280 18" preserveAspectRatio="none" aria-hidden="true">
-          <path className="map-page__wave-fill" d="M0 18H1280V8C1130 2 1010 14 840 9S520 3 360 10 120 14 0 6Z" />
-          <path className="map-page__wave-line" d="M0 6C120 14 220 4 360 10S660 3 840 9 1130 2 1280 8" />
-        </svg>
-        <div className="map-page__search">
-          <AddressSearch variant="pill" onPick={setPlace} />
-        </div>
-        <div className="map-page__ask">
-          <AskDwoggle report={report} checking={phase === 'digging'} notice={notice} />
-        </div>
-        <div className="map-page__actions">
-          <MapActions
-            actions={[
-              { icon: 'navigate', label: 'actions.where', onClick: whereAmI },
-              { icon: 'bookmark', label: 'actions.saved', onClick: () => setSavedOpen((open) => !open), pressed: savedOpen },
-              {
-                icon: 'layers',
-                label: 'actions.layers',
-                onClick: () => {
-                  setSavedOpen(false)
-                  setPhase('layers')
+          {point && layersShown && state.status !== 'idle' && (
+            <Underground
+              key={`${point.lat},${point.lon}`}
+              point={point}
+              state={state}
+              view={view}
+              layerIndex={layerIndex}
+              rise={!reducedMotion && !risen}
+              onRisen={() => setRisen(true)}
+              leaving={phase === 'closing'}
+              onViewChange={setView}
+              onLayerChange={setLayerIndex}
+              onRetry={retry}
+              onClose={() => (reducedMotion ? setPhase('open') : setPhase('closing'))}
+              onLeft={() => setPhase('open')}
+            />
+          )}
+        </main>
+
+        <footer className="map-page__ground">
+          <svg className="map-page__wave" viewBox="0 0 1280 18" preserveAspectRatio="none" aria-hidden="true">
+            <path className="map-page__wave-fill" d="M0 18H1280V8C1130 2 1010 14 840 9S520 3 360 10 120 14 0 6Z" />
+            <path className="map-page__wave-line" d="M0 6C120 14 220 4 360 10S660 3 840 9 1130 2 1280 8" />
+          </svg>
+          <div className="map-page__search">
+            <AddressSearch variant="pill" onPick={setPlace} />
+          </div>
+          <div className="map-page__ask">
+            <AskDwoggle report={report} checking={phase === 'digging'} notice={notice} onChat={openChat} />
+          </div>
+          <div className="map-page__actions">
+            <MapActions
+              actions={[
+                { icon: 'navigate', label: 'actions.where', onClick: whereAmI },
+                { icon: 'bookmark', label: 'actions.saved', onClick: () => setSavedOpen((open) => !open), pressed: savedOpen },
+                {
+                  icon: 'layers',
+                  label: 'actions.layers',
+                  onClick: () => {
+                    setSavedOpen(false)
+                    setPhase('layers')
+                  },
+                  disabled: report === null,
+                  pressed: layersShown,
                 },
-                disabled: report === null,
-                pressed: layersShown,
-              },
-            ]}
-          />
-        </div>
-      </footer>
+              ]}
+            />
+          </div>
+        </footer>
+      </div>
 
+      {chat && <DwoggleChat report={report} ask={chat.ask} onClose={closeChat} />}
       <GradingPanel open={gradingOpen} onClose={() => setGradingOpen(false)} />
     </div>
   )

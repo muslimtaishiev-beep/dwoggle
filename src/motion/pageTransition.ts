@@ -30,9 +30,14 @@ export function withTransition(kind: TransitionKind, update: () => void): void {
   transition.finished.then(done, done)
 }
 
-/** The "surface" reveal opens from the middle of Dwoggle, wherever he is on the screen being left. */
+/**
+ * The "surface" reveal opens from the middle of Dwoggle, wherever he is on the screen being left: the first
+ * element marked data-reveal-origin that is actually shown.
+ */
 function placeReveal(root: HTMLElement): void {
-  const box = document.querySelector('[data-reveal-origin]')?.getBoundingClientRect()
+  const box = [...document.querySelectorAll('[data-reveal-origin]')]
+    .map((element) => element.getBoundingClientRect())
+    .find((rect) => rect.width > 0 && rect.height > 0)
   root.style.setProperty('--reveal-x', `${box ? box.left + box.width / 2 : window.innerWidth / 2}px`)
   root.style.setProperty('--reveal-y', `${box ? box.top + box.height / 2 : window.innerHeight / 2}px`)
 }

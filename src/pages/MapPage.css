@@ -6,8 +6,6 @@
  */
 .map-page {
   position: relative;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100dvh;
   overflow: hidden;
   background: var(--brand-brown);
@@ -15,6 +13,14 @@
   font-family: var(--font-brand-body);
   font-weight: var(--font-weight-bold);
   --color-focus: var(--brand-focus);
+}
+
+/* Header, map and ground: three rows that fill the screen. Its own layer, so the chat opens over all of it. */
+.map-page__screen {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  isolation: isolate;
 }
 
 .map-page__stage {
@@ -81,6 +87,32 @@
 .map-page .maplibregl-ctrl-attrib.maplibregl-compact:not(:hover, :focus-within) {
   padding: 0;
   background: var(--brand-paper);
+}
+
+/*
+ * On a phone there is no room for Dwoggle's hole: his head in the map's top corner opens the chat instead,
+ * clear of the report, which comes up from the bottom.
+ */
+.map-page__talk {
+  position: absolute;
+  z-index: calc(var(--z-map-overlay) + 1);
+  top: 18px;
+  inset-inline-end: 12px;
+  display: none;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand-paper);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge), 0 6px 16px rgb(59 37 25 / 0.2);
+  cursor: pointer;
+}
+
+.map-page__talk img {
+  width: 46px;
+  height: auto;
 }
 
 /* ---------- The ground below the map ---------- */
@@ -195,9 +227,13 @@
     padding: 12px 12px 14px;
   }
 
-  /* No room for Dwoggle's hole on a phone: his questions wait for a wider screen. */
+  /* No room for Dwoggle's hole on a phone: his head in the corner of the map opens the chat. */
   .map-page__ask {
     display: none;
+  }
+
+  .map-page__talk {
+    display: grid;
   }
 
   .map-page__actions .map-actions {

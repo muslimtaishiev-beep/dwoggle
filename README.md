@@ -10,7 +10,7 @@ Tap a place on the map and Dwoggle reads 25 years of NASA satellite data for thi
 | --- | --- |
 | `/` | The main page: create an account or log in (Google, or email and password). A signed-in visitor goes straight on to the map, or to the dig while the backend still needs their profile. |
 | `/welcome` | The dig: four questions after the first sign-in (language, why you came, what worries you, phone number), asked while Dwoggle digs one screen deeper per answer. |
-| `/map` | The map. Tap any place on the 3D satellite map and Dwoggle digs into the ground there; the report opens beside the map: a short fact and a grade for each of the five checks (earthquake, flood, landslide, heat, greenery). "Layers" opens the round core with one layer per check and its 25-year chart. Dwoggle answers questions about the report from his hole below the map. |
+| `/map` | The map. Tap any place on the 3D satellite map and Dwoggle digs into the ground there; the report opens beside the map: a short fact and a grade for each of the five checks (earthquake, flood, landslide, heat, greenery). "Layers" opens the round core with one layer per check and its 25-year chart. Pressing Dwoggle (or one of his ready questions) opens the chat with him. |
 
 The map and the report work without an account, at `/map`; signing in only adds a profile. Dwoggle covers Kyrgyzstan only (`KYRGYZSTAN` in [src/config.ts](src/config.ts), the box the backend checks): the map cannot leave the country, the search finds places only in it, and a tap or a shared link outside it gets a short notice instead of a report. The app is a single page with its own small router ([src/router.ts](src/router.ts)), so the host must serve `index.html` for every path; any other address leads to the main page.
 
@@ -101,9 +101,15 @@ Next/back buttons, a horizontal swipe, the arrow keys, or a tap on a layer of th
 The sign-in page and the dig follow the designer's screens. Art lives in [public/brand/](public/brand/):
 
 - `dwoggle-head.png`: the logo's head, traced from the design and made from the designer's file `Dwoggle mascot v3 helmet.png`.
-- `dwoggle-body.webp`, `dwoggle-map-left.webp`, `dwoggle-map-back.webp`, `dwoggle-map-shadow.webp`, `dwoggle-paw-left.webp`, `dwoggle-paw-right.webp`: standing Dwoggle on the sign-in page, cut into layers so he can close his map like a book (his left paw brings the left half over onto the right) and open it again. Made from the same file with `python3 scripts/mascot-layers.py "Dwoggle mascot v3 helmet.png"` (needs pillow, numpy, scipy), which also writes the arm's motion to `src/brand/standingDwoggleRig.ts` and `src/brand/StandingDwoggleFold.css`. What the map hid (his chest, the side of his body) and the left arm are drawn in the drawing's own flat colours; with the map open the layers add up to the drawing itself.
+- `dwoggle-standing.webp`: Dwoggle standing with his map, on the sign-up page and the map. It is the designer's file `Dwoggle mascot v3 helmet.png` cropped to its own bounds and scaled to 669 x 1000. His lids and his mouth are drawn over it ([src/brand/StandingDwoggle.tsx](src/brand/StandingDwoggle.tsx)): he blinks, and his mouth moves when he speaks.
 - `dwoggle-dig-*.webp` (body, both front paws, tail, head and chest, earth): Dwoggle digging in the dig, cut into layers so his paws really scrape, his tail wags and he rocks ([src/brand/DiggingDwoggle.tsx](src/brand/DiggingDwoggle.tsx)). Made with `python3 scripts/mascot-dig.py scripts/art/dwoggle-digging.webp`. That source is still a cut-out from a screenshot of the design: when the designer's own file arrives (same drawing, transparent background), run the script on it for sharper layers.
 - In development, `/dev/dig` shows the dig without signing in (saving at the end fails on purpose).
+
+## The chat with Dwoggle
+
+[src/components/DwoggleChat.tsx](src/components/DwoggleChat.tsx): a white screen between two bands of earth, Dwoggle in the middle. A question is typed, spoken (where the browser can listen) or picked from the ready ones; he answers in a speech bubble, his mouth moving, and reads the answer aloud when the question was spoken or "Listen" is pressed (where the browser has a voice for the language; most have none for Kyrgyz).
+
+The answers do not come from an AI. [src/report/answers.ts](src/report/answers.ts) matches the question to a topic by the words in it (one of the five checks, building, a summary, the grades, where the data comes from) and puts the answer together from the open report and the app's own texts, so the wording rules hold: asked "is it safe?", Dwoggle lists the warning signs and never uses the word. A test checks every answer in every language. When the backend gets a chat endpoint, this is the place to call it.
 
 ## Motion
 

@@ -208,9 +208,8 @@
   /* The digging drawing's own fur and cheek, round his eyes: for the lids he blinks with there. */
   --mascot-dig-fur: #865a40;
   --mascot-dig-cheek: #eeddbc;
-  /* His left arm, which the map hides in the drawing: the fur and outline of the arm beside it. */
-  --mascot-arm: #986142;
-  --mascot-line: #000000;
+  /* The inside of his mouth when he speaks: the red-brown of his helmet's strap, the one such colour in the drawing. */
+  --mascot-tongue: #b5573d;
   /* The map page, as drawn: summary cream, row lines, icon tiles, grade blocks with a darker bottom edge. */
   --map-ui-summary: #f9f0e7;
   --map-ui-line: #ededed;
