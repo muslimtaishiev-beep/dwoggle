@@ -23,12 +23,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Protocol
 
+import google.auth
 import requests
 from google.auth import jwt
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2 import service_account
 
-from .config import BASE_DIR, Settings
+from .config import BASE_DIR, Settings, on_cloud_run
 
 CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
 FIRESTORE = "https://firestore.googleapis.com/v1/projects/{project}/databases/(default)/documents"
@@ -215,11 +216,15 @@ def _service_account_info(s: Settings) -> dict | None:
 
 
 def make_auth(s: Settings) -> Auth | None:
-    """Firebase when a project + service account are configured; dev tokens in mock mode; else None (503)."""
+    """Firebase with a key file or (on Cloud Run) the service's own account; dev tokens in mock mode; else None (503)."""
     info = _service_account_info(s)
-    project = s.firebase_project or (info or {}).get("project_id") or s.ee_project
-    if info and project:
+    creds, project = None, s.firebase_project or (info or {}).get("project_id") or s.ee_project
+    if info:
         creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
+    elif on_cloud_run():
+        creds, adc_project = google.auth.default(scopes=SCOPES)
+        project = project or adc_project
+    if creds is not None and project:
         session = AuthorizedSession(creds)
         return Auth(FirebaseVerifier(project), FirestoreStore(project, session), session, project, "firebase")
     if s.provider == "mock":

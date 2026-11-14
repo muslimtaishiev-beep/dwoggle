@@ -1,7 +1,7 @@
 """Is everything ready for real NASA data? Checks each step and says what to fix.
 
     python scripts/check_setup.py                    # your personal Earth Engine login (this laptop)
-    python scripts/check_setup.py --service-account  # the server key, before deploying to Cloudflare
+    python scripts/check_setup.py --service-account  # the bekem-api key (same identity Cloud Run uses)
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def check_earth_engine(s, service_account: bool = False) -> bool:
     if service_account and not (s.ee_service_account_key or s.ee_service_account_key_json):
         line(BAD, "No service-account key set",
              "Put the path of the downloaded JSON key in BEKEM_EE_SERVICE_ACCOUNT_KEY in backend/.env "
-             "(see deploy/cloudflare/DEPLOY_CLOUDFLARE.md step 2).")
+             "(see backend/AUTH.md, the bekem-api service account).")
         return False
     if s.provider != "earthengine":
         line(BAD, f"BEKEM_PROVIDER is '{s.provider}'", "Set BEKEM_PROVIDER=earthengine in backend/.env for real data.")

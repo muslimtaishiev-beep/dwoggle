@@ -1,0 +1,13 @@
+# What `gcloud run deploy --source backend` must NOT upload. Keep in sync with .dockerignore.
+.gcloudignore
+.env
+*-key.json
+service-account*.json
+
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+data/*.sqlite3*
+data/appeears/

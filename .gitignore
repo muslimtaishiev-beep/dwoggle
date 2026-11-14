@@ -8,4 +8,4 @@ __pycache__/
 *-key.json
 service-account*.json
 node_modules/
-.wrangler/
+.firebase/

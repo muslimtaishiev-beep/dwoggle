@@ -22,11 +22,12 @@ import time
 from datetime import date
 from pathlib import Path
 
-from ..config import BASE_DIR, Settings
+from ..config import BASE_DIR, Settings, on_cloud_run
 from .base import JRC_LAST_YEAR, RawMetrics
 
 log = logging.getLogger(__name__)
 
+EE_SCOPES = ["https://www.googleapis.com/auth/earthengine", "https://www.googleapis.com/auth/cloud-platform"]
 NODATA = -9999  # sentinel for "Earth Engine returned nothing"; becomes None client-side
 FIRST_YEAR = 2000
 
@@ -50,8 +51,14 @@ def init_earth_engine(settings: Settings) -> None:
             info = json.loads(key_data)
             creds = ee.ServiceAccountCredentials(info["client_email"], key_data=key_data)
             ee.Initialize(credentials=creds, project=project or info.get("project_id"))
+        elif on_cloud_run():
+            # Cloud Run: act as the service's own account (bekem-api). No key file anywhere.
+            import google.auth
+
+            creds, adc_project = google.auth.default(scopes=EE_SCOPES)
+            ee.Initialize(credentials=creds, project=project or adc_project)
         else:
-            # Uses credentials saved by `earthengine authenticate`.
+            # This laptop: credentials saved by `earthengine authenticate`.
             ee.Initialize(project=project)
         ee.data.setDeadline(settings.ee_timeout_s * 1000)
         _initialized = True

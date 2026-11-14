@@ -5,7 +5,7 @@ AppEEARS takes minutes to hours, so submit the evening before the demo:
     python scripts/appeears_demo.py status
     python scripts/appeears_demo.py fetch      # CSVs -> data/appeears/<plot_id>/, summary -> data/appeears_demo.json
 
-The server reads data/appeears_demo.json at startup (also inside the Cloudflare container), and keeps
+The server reads data/appeears_demo.json at startup (also on Cloud Run), and keeps
 polling any demo task listed in data/appeears_tasks.json that isn't finished yet.
 
 If a demo plot's coordinates change, run `submit` again (it re-submits changed plots only).

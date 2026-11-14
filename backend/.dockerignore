@@ -1,4 +1,4 @@
-# Secrets never go into the image: the container gets them as env vars from Cloudflare.
+# Secrets never go into the image. On Cloud Run the service runs as bekem-api, so it needs no key at all.
 .env
 *-key.json
 service-account*.json

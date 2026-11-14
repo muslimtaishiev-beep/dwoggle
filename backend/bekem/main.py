@@ -138,10 +138,9 @@ def _rate_limit(request: Request) -> None:
     limit = settings.rate_limit_per_min
     if not limit:
         return
-    # Behind Cloudflare the real client is in CF-Connecting-IP; elsewhere use X-Forwarded-For or the socket.
+    # Behind Firebase Hosting / Cloud Run the visitor is the first address in X-Forwarded-For.
     ip = (
-        request.headers.get("cf-connecting-ip")
-        or request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
         or (request.client.host if request.client else "?")
     )
     now = time.monotonic()

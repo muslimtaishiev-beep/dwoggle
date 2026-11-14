@@ -171,3 +171,19 @@ def test_signup_flow(client):
 
     assert client.delete("/api/me", headers=AUTH).json() == {"deleted": True}
     assert client.get("/api/me", headers=AUTH).json()["profile"] is None
+
+
+def test_cloud_run_uses_its_own_identity_without_a_key(monkeypatch):
+    import google.auth
+    from google.auth.credentials import AnonymousCredentials
+
+    from bekem.auth import make_auth
+    from bekem.config import Settings
+
+    monkeypatch.setenv("K_SERVICE", "bekem-api")
+    monkeypatch.setattr(google.auth, "default", lambda scopes=None: (AnonymousCredentials(), "bekem-514710"))
+    auth = make_auth(Settings(provider="earthengine", ee_project="", ee_service_account_key=""))
+    assert auth is not None and auth.mode == "firebase" and auth.project_id == "bekem-514710"
+
+    monkeypatch.delenv("K_SERVICE")
+    assert make_auth(Settings(provider="earthengine", ee_service_account_key="")) is None  # laptop, no key: 503

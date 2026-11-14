@@ -18,8 +18,8 @@ Signing in is **optional**: anyone can tap the map. After the first report, show
 1. https://console.firebase.google.com → **Add project** → pick the existing Google Cloud project **bekem-514710**
    (the same one Earth Engine uses, so one service account covers everything).
 2. **Build → Authentication → Get started → Sign-in method**: enable **Email/Password** and **Google**.
-3. **Authentication → Settings → Authorized domains**: add your site's domain (`bekem.<you>.workers.dev`, any custom domain).
-   `localhost` is already there.
+3. **Authentication → Settings → Authorized domains**: `localhost` and `bekem-514710.web.app` are already there.
+   Add any custom domain you connect later.
 4. **Build → Firestore Database → Create database**, production mode, location `eur3` (Europe; closest multi-region to Kyrgyzstan).
 5. **Firestore → Rules**: replace everything with the rule below, then **Publish**. The browser must never read
    phone numbers; only the backend writes, with its service account, which bypasses these rules.
@@ -31,14 +31,14 @@ Signing in is **optional**: anyone can tap the map. After the first report, show
      }
    }
    ```
-6. Give the backend's service account (`bekem-api`, from [DEPLOY_CLOUDFLARE.md](../deploy/cloudflare/DEPLOY_CLOUDFLARE.md) step 2)
-   two more roles at https://console.cloud.google.com/iam-admin/iam?project=bekem-514710:
-   **Cloud Datastore User** (profiles) and **Firebase Authentication Admin** (so "delete my account" works).
+6. The backend's service account `bekem-api` needs **Cloud Datastore User** (profiles) and
+   **Firebase Authentication Admin** (so "delete my account" works). The deploy script
+   [setup_gcp.sh](../deploy/firebase/setup_gcp.sh) grants both.
 7. **Project settings → General → Your apps → Web app (</>)**. Register it and copy `firebaseConfig` into the frontend.
    That config is public by design; it is not a secret.
 
-The backend needs nothing new: it reuses `BEKEM_EE_SERVICE_ACCOUNT_KEY(_JSON)` and the project id from it.
-Check with `GET /api/health` → `"auth": "firebase"`.
+The backend needs nothing new. On this laptop it uses `backend/bekem-sa-key.json`; on Cloud Run it runs as
+`bekem-api` with no key at all. Check with `GET /api/health` → `"auth": "firebase"`.
 
 ## 2. Frontend code
 

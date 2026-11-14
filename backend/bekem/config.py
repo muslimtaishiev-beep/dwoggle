@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -55,11 +56,16 @@ class Settings(BaseSettings):
     # Report requests per client IP per minute. 0 disables the limit.
     rate_limit_per_min: int = 30
     # Compute the demo plots in the background at startup, so they answer instantly
-    # even on a fresh container whose disk (and cache) was reset.
+    # even on a fresh Cloud Run instance (its disk, and so the cache, starts empty).
     warm_demo_on_start: bool = True
 
     nominatim_url: str = "https://nominatim.openstreetmap.org/search"
     nominatim_user_agent: str = "bekem/1.0 (https://github.com/bekem)"
+
+
+def on_cloud_run() -> bool:
+    """Cloud Run sets K_SERVICE. There the code runs as the service's own account: no key file needed."""
+    return bool(os.environ.get("K_SERVICE"))
 
 
 @lru_cache

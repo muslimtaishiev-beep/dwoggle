@@ -14,7 +14,7 @@ tap → GET /api/report?lat&lon&lang                       cached: ~70 ms · fir
         └─ i18n.py: EN / RU / KY text
 ```
 
-Setup for real data: [NASA_DATA_SETUP.md](NASA_DATA_SETUP.md). Hosting: [deploy/cloudflare/DEPLOY_CLOUDFLARE.md](../deploy/cloudflare/DEPLOY_CLOUDFLARE.md).
+Setup for real data: [NASA_DATA_SETUP.md](NASA_DATA_SETUP.md). Hosting (Firebase + Cloud Run): [deploy/firebase/DEPLOY_FIREBASE.md](../deploy/firebase/DEPLOY_FIREBASE.md).
 
 ## Run it
 
@@ -43,8 +43,8 @@ python scripts/prewarm.py --refresh
 ```
 
 This computes the three plots in `data/demo_plots.json` and checks them against their expected grades.
-The Kara-Suu point is a town-centre placeholder, since users can tap anywhere. On Cloudflare the
-container warms the demo plots by itself at startup.
+The Kara-Suu point is a town-centre placeholder, since users can tap anywhere. On Cloud Run the
+backend warms the demo plots by itself at startup.
 
 AppEEARS for the demo plots: `scripts/appeears_demo.py submit` (the evening before), later `fetch`. The
 result goes to `data/appeears_demo.json`, which the server loads at startup.
