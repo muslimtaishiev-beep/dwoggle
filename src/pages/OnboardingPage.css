@@ -16,6 +16,12 @@
   --tunnel-left: calc(50% + 50 * var(--u));
   --tunnel-w: calc(330 * var(--u));
   --surface-line: calc(100dvh - 70 * var(--u));
+  /*
+   * Dwoggle digs on the ground at the bottom of the window. When the window is taller than the drawn frame
+   * (zoomed out with Ctrl −, or a tall screen), the logo and the question come down by the difference, so the
+   * question stays beside him, its tail at his helmet, instead of floating far above him.
+   */
+  --frame-top: max(0px, 100dvh - 728 * var(--u));
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -94,6 +100,7 @@
 
 .dig .brand-header {
   position: relative;
+  top: var(--frame-top);
   z-index: 3;
 }
 
@@ -116,7 +123,7 @@
   --tube-height: calc(436 * var(--u));
   position: absolute;
   z-index: 3;
-  top: calc(132px * var(--frame-scale));
+  top: calc(var(--frame-top) + 132px * var(--frame-scale));
   inset-inline-start: calc(50% - 570 * var(--u));
   display: grid;
   /* The question shrinks with the frame (see .dig-bubble), and so does its column. */
@@ -263,6 +270,7 @@
 @media (max-width: 1023px), (max-height: 619px) {
   .dig {
     --frame-scale: 1;
+    --frame-top: 0px;
     --mascot-h: 150px;
     --mascot-w: calc(150px * 1.418);
     --mascot-left: calc(100% - 4vw - var(--mascot-w));

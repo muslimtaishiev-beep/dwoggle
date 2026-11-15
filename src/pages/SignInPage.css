@@ -4,6 +4,15 @@
  * placed in design units (--u) from the centre; the form, a size up from the drawing, shrinks with the frame
  * (--frame-scale) so the two never meet, whatever the window size or the browser's zoom.
  */
+/*
+ * Dwoggle stands on the earth at the bottom of the window, inside the drawn frame (728 units tall). When the
+ * window is taller than that frame (zoomed out with Ctrl −, or a tall screen), the logo and the form come down
+ * by the difference, so the whole drawing stays together on the ground instead of the form floating far above.
+ */
+.sign-in {
+  padding-top: max(0px, 100dvh - 728 * var(--u));
+}
+
 /* The column is not a positioning box, so Dwoggle below is placed against the whole page. */
 .sign-in__layout {
   width: 100%;
@@ -218,6 +227,11 @@
 @media (max-width: 1023px), (max-height: 619px) {
   .brand-page {
     --frame-scale: 1;
+  }
+
+  /* Stacked, the page simply starts at the top. */
+  .sign-in {
+    padding-top: 0;
   }
 
   .sign-in__layout {
