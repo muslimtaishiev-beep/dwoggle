@@ -1,4 +1,7 @@
+import { createHash, randomInt } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import path from 'node:path'
 import type { Plugin } from 'vite'
 import { CONCERNS, PURPOSE_NOTE_MAX, PURPOSES } from '../src/auth/types.ts'
 import { LANGS } from '../src/i18n/i18n.ts'
@@ -182,6 +185,76 @@ function handleSaved(req: IncomingMessage, res: ServerResponse, uid: string, sav
   }
 }
 
+interface StoredReport {
+  id: string
+  owner: string
+  created_at: string
+  lat: number
+  lon: number
+  place: string | null
+  grades: Record<string, string | null>
+  fingerprint: string
+  report: Record<string, unknown>
+}
+
+const REPORT_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+/** How long a mock report takes, so the steps of the full report's window can be seen. */
+const REPORT_DELAY_MS = 4000
+
+/**
+ * POST /api/reports and GET /api/reports/{id}, as the backend answers them, from mock/report.json: a numbered
+ * copy kept in memory, its summary public, its data only for its owner.
+ */
+function createReportsHandler(root: string) {
+  const reports = new Map<string, StoredReport>()
+  return (req: IncomingMessage, res: ServerResponse): void => {
+    const id = decodeURIComponent(new URL(req.url ?? '/', 'http://mock.local').pathname.replace(/^\//, ''))
+    const uid = userIdOf(req)
+    const summary = (stored: StoredReport, withData: boolean) => {
+      const { owner: _owner, report, ...rest } = stored
+      return withData ? { ...rest, report } : rest
+    }
+    if (req.method === 'GET' && id !== '') {
+      const stored = reports.get(id)
+      if (stored) sendJson(res, 200, summary(stored, stored.owner === uid))
+      else sendJson(res, 404, { detail: { code: 'report_not_found' } })
+      return
+    }
+    if (req.method !== 'POST' || id !== '') {
+      sendJson(res, 405, { detail: 'Method not allowed' })
+      return
+    }
+    if (uid === null) {
+      sendJson(res, 401, { detail: { code: 'token_missing', message: 'Please sign in.' } })
+      return
+    }
+    readBody(req)
+      .then(async (body) => {
+        const report = JSON.parse(readFileSync(path.resolve(root, 'mock/report.json'), 'utf8')) as Record<string, unknown>
+        await new Promise((resolve) => setTimeout(resolve, REPORT_DELAY_MS))
+        const year = new Date().getUTCFullYear()
+        const suffix = Array.from({ length: 6 }, () => REPORT_ALPHABET[randomInt(REPORT_ALPHABET.length)]).join('')
+        const location = (report.location ?? {}) as Record<string, unknown>
+        const place = (location.place ?? null) as Record<string, unknown> | null
+        const checks = Array.isArray(report.checks) ? (report.checks as Record<string, unknown>[]) : []
+        const stored: StoredReport = {
+          id: `DW-${year}-${suffix}`,
+          owner: uid,
+          created_at: new Date().toISOString(),
+          lat: Number(body.lat ?? location.lat),
+          lon: Number(body.lon ?? location.lon),
+          place: typeof place?.display === 'string' ? place.display : null,
+          grades: Object.fromEntries(checks.map((check) => [String(check.id), (check.grade as string | null) ?? null])),
+          fingerprint: createHash('sha256').update(JSON.stringify(report)).digest('hex'),
+          report,
+        }
+        reports.set(stored.id, stored)
+        sendJson(res, 200, summary(stored, true))
+      })
+      .catch(() => sendJson(res, 502, { detail: { code: 'report_failed' } }))
+  }
+}
+
 /**
  * Only for `npm run dev:mock`; otherwise /api/me goes to the backend. Dwoggle's voice is off here (503), as on a
  * backend without an ElevenLabs key, so the app's fallback to the browser's voice is what runs.
@@ -191,6 +264,7 @@ export function mockAccount(): Plugin {
     name: 'dwoggle-mock-account',
     configureServer(server) {
       server.middlewares.use('/api/me', createHandler())
+      server.middlewares.use('/api/reports', createReportsHandler(server.config.root))
       server.middlewares.use('/api/voice', (_req, res) => sendJson(res, 503, { detail: { code: 'voice_disabled' } }))
     },
   }

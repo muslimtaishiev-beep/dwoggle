@@ -86,7 +86,7 @@ jobs:
             --service-account "bekem-api@$PROJECT.iam.gserviceaccount.com" \
             --allow-unauthenticated \
             --memory 1Gi --cpu 1 --cpu-boost \
-            --min-instances 0 --max-instances 3 --timeout 60 \
+            --min-instances 0 --max-instances 3 --timeout 120 \
             --env-vars-file cloudrun-env.yaml \
             --quiet
 

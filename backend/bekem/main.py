@@ -6,8 +6,10 @@ Docs: http://localhost:8000/docs
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import secrets
 import threading
 import time
 from collections import defaultdict, deque
@@ -16,7 +18,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 import httpx
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Path, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
@@ -507,3 +509,118 @@ async def voice_listen(request: Request, lang: AppLang = "en"):
     except VoiceError as e:
         raise HTTPException(e.status, {"code": e.code}) from e
     return {"text": text}
+
+
+# --- Advanced reports -------------------------------------------------------------------------
+# A signed-in user asks for everything known about a place. The backend gathers it (the full report, with NASA
+# Giovanni's rain and runoff and the weather station waited for), gives it a number, and keeps the data it was made
+# from, with a fingerprint (SHA-256 of that data). The app writes the PDF from it, in the reader's language. The QR
+# code on the PDF leads to /r/<number>, where anyone can check the report against what is kept here.
+
+REPORT_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"   # no 0/O, 1/I: easy to read off paper
+REPORT_INDEX_MAX = 100
+
+
+class ReportIn(BaseModel):
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+    lang: AppLang = "en"
+
+
+def _new_report_id(now: datetime) -> str:
+    return f"DW-{now.year}-" + "".join(secrets.choice(REPORT_ALPHABET) for _ in range(6))
+
+
+def _fingerprint(data: dict) -> str:
+    canonical = json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _for_keeping(report_body: dict) -> dict:
+    """The report as kept: everything except the fault's whole outline, which is large and is not printed."""
+    data = json.loads(json.dumps(report_body, default=str))
+    for check in data.get("checks", []):
+        (check.get("metrics") or {}).pop("fault_geometry", None)
+    return data
+
+
+def _report_summary(doc: dict) -> dict:
+    """What anyone holding the paper may see: when, where, and the grades. Not who asked for it."""
+    data = json.loads(doc["data"])
+    place = (data.get("location") or {}).get("place") or {}
+    return {
+        "id": doc["id"],
+        "created_at": doc["created_at"],
+        "lat": doc["lat"],
+        "lon": doc["lon"],
+        "place": place.get("display"),
+        "grades": {c["id"]: c.get("grade") for c in data.get("checks", [])},
+        "fingerprint": doc["fingerprint"],
+    }
+
+
+def optional_user(authorization: Annotated[str | None, Header()] = None) -> AuthUser | None:
+    """The signed-in user, if the request carries a valid token; otherwise nobody (no error)."""
+    if state.auth is None or not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    try:
+        return state.auth.verifier.verify(authorization.split(" ", 1)[1].strip())
+    except AuthError:
+        return None
+
+
+@app.post("/api/reports")
+def create_report(user: User, body: ReportIn, request: Request):
+    """Gather everything about a place into a numbered report. Takes up to about a minute."""
+    _check_bounds(body.lat, body.lon)
+    if state.service is None:
+        raise HTTPException(503, {"code": "provider_unavailable"})
+    _rate_limit(request)
+    now = datetime.now(timezone.utc)
+    index = (state.auth.report_index.get(user.uid) or {}).get("reports") or []
+    today = now.date().isoformat()
+    if sum(1 for r in index if str(r.get("created_at", "")).startswith(today)) >= settings.reports_per_day:
+        raise HTTPException(429, {"code": "reports_daily_limit", "limit": settings.reports_per_day})
+    try:
+        data = _for_keeping(state.service.build(body.lat, body.lon, body.lang))
+    except Exception as e:
+        log.exception("advanced report failed for %s,%s", body.lat, body.lon)
+        raise HTTPException(502, {"code": "report_failed"}) from e
+    report_id = _new_report_id(now)
+    created = now.isoformat(timespec="seconds")
+    doc = {
+        "id": report_id,
+        "uid": user.uid,
+        "created_at": created,
+        "lat": data["location"]["lat"],
+        "lon": data["location"]["lon"],
+        "lang": body.lang,
+        "fingerprint": _fingerprint(data),
+        "data": json.dumps(data, ensure_ascii=False),
+    }
+    state.auth.reports.save(report_id, doc)
+    place = (data["location"].get("place") or {}).get("display")
+    entry = {"id": report_id, "created_at": created, "lat": doc["lat"], "lon": doc["lon"], "place": place}
+    state.auth.report_index.save(user.uid, {"reports": ([entry] + index)[:REPORT_INDEX_MAX]})
+    return {**_report_summary(doc), "report": data}
+
+
+@app.get("/api/reports/{report_id}")
+def get_report(report_id: Annotated[str, Path(pattern=r"^DW-\d{4}-[A-Z0-9]{6}$")],
+               viewer: Annotated[AuthUser | None, Depends(optional_user)]):
+    """Check a report by its number: when it was made, where, its grades and fingerprint. Its owner also gets the data."""
+    if state.auth is None:
+        raise HTTPException(503, {"code": "auth_disabled"})
+    doc = state.auth.reports.get(report_id)
+    if not doc:
+        raise HTTPException(404, {"code": "report_not_found"})
+    out = _report_summary(doc)
+    if viewer is not None and viewer.uid == doc.get("uid"):
+        out["report"] = json.loads(doc["data"])
+    return out
+
+
+@app.get("/api/me/reports")
+def my_reports(user: User):
+    """This user's advanced reports, newest first."""
+    return {"reports": (state.auth.report_index.get(user.uid) or {}).get("reports") or []}

@@ -1,0 +1,169 @@
+/* The full report, over the map: a white card in the middle while Dwoggle gathers everything, then the download. */
+.full-report {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  color: var(--brand-ink);
+  font-family: var(--font-brand-body);
+  font-weight: var(--font-weight-bold);
+  --color-focus: var(--brand-focus);
+}
+
+.full-report__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgb(59 37 25 / 0.45);
+  cursor: default;
+}
+
+.full-report__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(420px, 100%);
+  max-height: calc(100dvh - 32px);
+  padding: 18px 20px 22px;
+  overflow-y: auto;
+  border-radius: var(--brand-radius-card);
+  background: var(--brand-paper);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge), 0 14px 40px rgb(59 37 25 / 0.3);
+  transition: transform 260ms var(--ease-drawer), opacity 200ms ease;
+}
+
+@starting-style {
+  .full-report__card {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+
+.full-report__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.full-report__title {
+  font-size: 26px;
+  line-height: 1.05;
+}
+
+.full-report__close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand-cream);
+  color: var(--brand-text);
+  cursor: pointer;
+}
+
+.full-report__body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.full-report__dwoggle {
+  align-self: center;
+  width: 150px;
+}
+
+.full-report__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  color: var(--brand-muted);
+  font-size: 14.5px;
+  list-style: none;
+}
+
+.full-report__steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: color 200ms ease;
+}
+
+.full-report__steps li.is-now {
+  color: var(--brand-ink);
+}
+
+.full-report__steps li.is-done {
+  color: var(--brand-text);
+}
+
+.full-report__dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--brand-line);
+  border-radius: 50%;
+  background: var(--brand-paper);
+}
+
+.is-now .full-report__dot {
+  border-color: var(--brand-yellow);
+  background: var(--brand-yellow);
+  animation: full-report-pulse 1.2s ease-in-out infinite;
+}
+
+.is-done .full-report__dot {
+  border-color: var(--brand-brown);
+  background: var(--brand-brown);
+}
+
+@keyframes full-report-pulse {
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+.full-report__wait {
+  color: var(--brand-muted);
+  font-size: 13px;
+}
+
+.full-report__text {
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.full-report__number {
+  padding: 10px 12px;
+  border-radius: var(--brand-radius);
+  background: var(--brand-cream);
+  color: var(--brand-brown);
+  font-family: var(--font-brand-plain);
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.full-report__action {
+  min-height: 50px;
+  font-size: 22px;
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .full-report__card {
+    transition: none;
+  }
+
+  .is-now .full-report__dot {
+    animation: none;
+  }
+}

@@ -16,6 +16,8 @@ interface ReportPanelProps {
   onAsk: (check: CheckId) => void
   onSave: () => void
   onShare: (report: Report) => void
+  /** "Full report (PDF)": everything about the place, gathered and written as a numbered PDF. */
+  onFullReport: () => void
   onRetry: () => void
   onClose: () => void
 }
@@ -35,7 +37,7 @@ function PanelGrade({ grade }: { grade: Grade | null }) {
  * The tapped area at a glance, beside the map: where it is, what the checks found, one short fact and the grade
  * for each, and saving or sharing it. The layered figure behind "Layers" tells the longer story.
  */
-export function ReportPanel({ state, saved, note, onAsk, onSave, onShare, onRetry, onClose }: ReportPanelProps) {
+export function ReportPanel({ state, saved, note, onAsk, onSave, onShare, onFullReport, onRetry, onClose }: ReportPanelProps) {
   const i18n = useI18n()
   const { t, formatNumber } = i18n
   const report = state.status === 'ready' ? state.report : null
@@ -110,6 +112,10 @@ export function ReportPanel({ state, saved, note, onAsk, onSave, onShare, onRetr
               <LineIcon name="share" size={20} />
             </button>
           </div>
+          <button type="button" className="report-panel__full" onClick={onFullReport}>
+            <LineIcon name="document" size={18} />
+            {t('adv.button')}
+          </button>
           <p className="report-panel__note" role="status">
             {note}
           </p>

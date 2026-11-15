@@ -3,6 +3,7 @@ import type { LatLon, Report } from '../api/types.ts'
 import { useReport } from '../api/useReport.ts'
 import { AskDwoggle } from '../components/AskDwoggle.tsx'
 import { DwoggleChat } from '../components/DwoggleChat.tsx'
+import { FullReport } from '../components/FullReport.tsx'
 import { GradingPanel } from '../components/GradingPanel.tsx'
 import { MapActions } from '../components/MapActions.tsx'
 import { MapHeader } from '../components/MapHeader.tsx'
@@ -65,6 +66,9 @@ export default function MapPage() {
   // The search sheet, over the map; `listen` when it was opened with the microphone.
   const [search, setSearch] = useState<{ listen: boolean } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // The full report's window, for the point it was asked for.
+  const [fullReport, setFullReport] = useState<LatLon | null>(null)
+  const closeFullReport = useCallback(() => setFullReport(null), [])
   const { state, retry } = useReport(point, lang)
   // If the account's saved list cannot be loaded or changed, Dwoggle says so for a moment.
   const saved = useSavedAreas(() => setNotice(t('saved.sync_failed')))
@@ -193,6 +197,7 @@ export default function MapPage() {
                     onAsk={openChat}
                     onSave={save}
                     onShare={share}
+                    onFullReport={() => setFullReport(point)}
                     onRetry={retry}
                     onClose={close}
                   />
@@ -258,6 +263,7 @@ export default function MapPage() {
         </footer>
       </div>
 
+      {fullReport && <FullReport point={fullReport} onClose={closeFullReport} />}
       {chat && <DwoggleChat report={report} ask={chat.ask} onClose={closeChat} />}
       {search && (
         <SearchSheet

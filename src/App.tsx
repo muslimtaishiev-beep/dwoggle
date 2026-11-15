@@ -8,7 +8,8 @@ import { useI18n } from './i18n/context.ts'
 import { SignInPage } from './pages/SignInPage.tsx'
 import { mapPage } from './pages/mapPageLoader.ts'
 import { OnboardingPage } from './pages/OnboardingPage.tsx'
-import { ROUTES, usePath, type Route } from './router.ts'
+import { VerifyPage } from './pages/VerifyPage.tsx'
+import { REPORT_CHECK, ROUTES, usePath, type Route } from './router.ts'
 import './App.css'
 
 function Loading() {
@@ -39,6 +40,9 @@ export default function App() {
   if (import.meta.env.DEV && path === '/dev/dig') {
     return <OnboardingPage user={{ id: 'preview', name: null, email: null, profileStatus: 'incomplete', ...EMPTY_PROFILE }} />
   }
+
+  // A printed report's QR code: open to everyone, signed in or not.
+  if (path.startsWith(REPORT_CHECK)) return <VerifyPage path={path} />
 
   if (path === ROUTES.map) {
     return <Suspense fallback={<Loading />}>{createElement(mapPage())}</Suspense>

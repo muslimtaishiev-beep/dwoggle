@@ -183,6 +183,32 @@
   cursor: pointer;
 }
 
+.report-panel__full {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 0 12px;
+  border: 2px solid var(--brand-line);
+  border-radius: var(--brand-radius);
+  background: var(--brand-paper);
+  box-shadow: 0 var(--brand-edge) 0 0 var(--brand-tile-edge);
+  color: var(--brand-brown);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .report-panel__full:hover {
+    background: var(--brand-cream);
+  }
+}
+
+.report-panel__full:active,
 .report-panel__share:active,
 .report-panel__save:active {
   box-shadow: none;

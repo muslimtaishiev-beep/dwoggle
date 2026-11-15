@@ -65,6 +65,9 @@ result goes to `data/appeears_demo.json`, which the server loads at startup.
 | `GET /api/me/saved`, `PUT /api/me/saved` `{lat, lon, name}`, `DELETE /api/me/saved?lat=..&lon=..` | Places the signed-in user saved from the map, newest first (Firestore `saved/{uid}`, at most 50). Deleted with the account. |
 | `POST /api/voice/speak` `{text, lang}` | Dwoggle's answer read aloud by ElevenLabs, as MP3 (cached in memory). No sign-in needed; 12 per minute per visitor. |
 | `POST /api/voice/listen?lang=ky` (body: the recording, e.g. `audio/webm`) | What was said, by ElevenLabs speech-to-text: `{text}`. At most 1 MB. |
+| `POST /api/reports` `{lat, lon, lang}` | Signed in only. Builds the full report for a point and keeps a copy under a number like `DW-2026-AB12CD` (Firestore `reports/{id}`), with a SHA-256 fingerprint of its data: `{id, created_at, lat, lon, place, grades, fingerprint, report}`. 10 a day per user (`BEKEM_REPORTS_PER_DAY`), then `429 {code: reports_daily_limit, limit}`. |
+| `GET /api/reports/{id}` | Anyone: when, where and the grades of a numbered report, to check a printed copy. Its owner also gets `report`. Unknown number: 404. |
+| `GET /api/me/reports` | The signed-in user's reports, newest first. |
 
 Dwoggle's voice needs `BEKEM_ELEVENLABS_API_KEY` in `backend/.env` (and the `ELEVENLABS_API_KEY` secret for the live
 site); `BEKEM_ELEVENLABS_VOICE_ID` picks the voice. Without a key both voice endpoints answer `503 {code: voice_disabled}`

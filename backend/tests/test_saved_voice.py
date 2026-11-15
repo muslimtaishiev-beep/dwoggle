@@ -54,7 +54,9 @@ def test_deleting_the_account_deletes_saved_areas(client):
     assert client.get("/api/me/saved", headers=carol).json() == {"areas": []}
 
 
-def test_voice_is_off_without_a_key(client):
+def test_voice_is_off_without_a_key(client, monkeypatch):
+    # As on a backend with no key, whatever backend/.env holds on this machine.
+    monkeypatch.setattr(state, "voice", None)
     assert client.get("/api/health").json()["voice"] == "not_configured"
     r = client.post("/api/voice/speak", json={"text": "Салам", "lang": "ky"})
     assert r.status_code == 503 and r.json()["detail"]["code"] == "voice_disabled"

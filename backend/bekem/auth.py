@@ -210,6 +210,10 @@ class Auth:
     store: UserStore
     # The places a user saved from the map: document saved/{uid} with a list `areas`.
     saved: UserStore
+    # Advanced reports: reports/{report id} holds the data a report was made from; report_index/{uid} lists a
+    # user's reports, newest first.
+    reports: UserStore
+    report_index: UserStore
     session: AuthorizedSession | None = None
     project_id: str = ""
     mode: str = "firebase"  # firebase | dev
@@ -217,6 +221,8 @@ class Auth:
     def delete_account(self, uid: str) -> None:
         self.store.delete(uid)
         self.saved.delete(uid)
+        # The reports themselves stay, so a printed report's QR code still checks out; only the list goes.
+        self.report_index.delete(uid)
         if self.session is not None:
             delete_firebase_user(self.session, self.project_id, uid)
 
@@ -242,7 +248,8 @@ def make_auth(s: Settings) -> Auth | None:
     if creds is not None and project:
         session = AuthorizedSession(creds)
         return Auth(FirebaseVerifier(project), FirestoreStore(project, session), FirestoreStore(project, session, "saved"),
+                    FirestoreStore(project, session, "reports"), FirestoreStore(project, session, "report_index"),
                     session, project, "firebase")
     if s.provider == "mock":
-        return Auth(DevVerifier(), MemoryStore(), MemoryStore(), mode="dev")
+        return Auth(DevVerifier(), MemoryStore(), MemoryStore(), MemoryStore(), MemoryStore(), mode="dev")
     return None

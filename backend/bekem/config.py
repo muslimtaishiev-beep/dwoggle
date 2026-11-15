@@ -70,6 +70,9 @@ class Settings(BaseSettings):
     elevenlabs_voice_id: str = "JBFqnCBsd6RMkjVDRZzb"  # a premade multilingual voice; any voice from the library works
     elevenlabs_tts_model: str = "eleven_multilingual_v2"
     elevenlabs_stt_model: str = "scribe_v1"
+    # Advanced reports one user may make per day (each one asks Earth Engine and NASA for everything).
+    reports_per_day: int = 10
+
     # Requests to /api/voice per client IP per minute (they cost ElevenLabs characters). 0 disables the limit.
     voice_rate_limit_per_min: int = 12
 

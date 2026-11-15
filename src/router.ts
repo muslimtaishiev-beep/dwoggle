@@ -1,7 +1,9 @@
 import { useSyncExternalStore } from 'react'
 
-/** The pages of the app. The main page is the sign-up page; any other address leads to it. */
+/** The pages of the app. The main page is the sign-up page; any other address leads to it. /r/<number> checks a report. */
 export const ROUTES = { signIn: '/', welcome: '/welcome', map: '/map' } as const
+/** Where a report's QR code leads: /r/<number>. */
+export const REPORT_CHECK = '/r/'
 export type Route = (typeof ROUTES)[keyof typeof ROUTES]
 
 const listeners = new Set<() => void>()

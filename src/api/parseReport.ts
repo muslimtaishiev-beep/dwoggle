@@ -241,6 +241,7 @@ function parseCheck(value: unknown, at: string, listed: ReadonlyMap<string, List
     sources: sources.map(({ id: sourceId, name, url, nasa }) => ({ id: sourceId, name, url, nasa })),
     is_nasa_data: sources.every((source) => source.nasa),
     trend: hasValues ? first.trend : null,
+    series: series.map((item) => item.trend).filter((trend) => trend.values.some((v) => v !== null)),
     verification: optionalArray(raw.verification, parseMessage, `${at}.verification`),
     metrics: parseMetrics(raw.metrics),
   }

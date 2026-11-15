@@ -79,6 +79,8 @@ export interface Check {
   readonly is_nasa_data: boolean
   /** The first series of the check; null for checks without yearly data (landslide, earthquake). */
   readonly trend: Trend | null
+  /** Every yearly series of the check with data, the first one included (flood also has rain, runoff, soil). */
+  readonly series: readonly Trend[]
   /** Second opinions from other sources. They never change the grade. Not shown yet. */
   readonly verification: readonly Message[]
   /** The backend's plain numbers and flags behind the grade, e.g. distance_km, change_pct, mudflow_path. */
