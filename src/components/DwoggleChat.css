@@ -232,27 +232,16 @@
   cursor: pointer;
 }
 
-/* Under an answer written by AI: a small, quiet line that it is AI and can be wrong. */
+/* At the very bottom, once for the whole chat: the answers and the voice are AI, and AI can be wrong. */
 .chat__ai-note {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  color: var(--brand-muted);
+  max-width: 640px;
+  margin-top: -2px;
+  color: var(--brand-cream);
   font-size: 12.5px;
   font-weight: 700;
   line-height: 1.3;
-}
-
-.chat__ai-badge {
-  flex: none;
-  padding: 1px 6px;
-  border-radius: 6px;
-  background: var(--brand-cream);
-  color: var(--brand-text);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  text-align: center;
+  opacity: 0.85;
 }
 
 /* Ready questions, on the lower band above the field. */

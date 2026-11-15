@@ -26,8 +26,6 @@ interface Turn {
   /** What was asked, as typed, spoken or chosen; null for his greeting. */
   readonly question: string | null
   readonly answer: string
-  /** Written by AI (Claude), not one of the app's prepared answers: it gets a note that it can be wrong. */
-  readonly ai?: boolean
 }
 
 interface DwoggleChatProps {
@@ -107,10 +105,10 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
 
   /** His answer, after `wait` more milliseconds of thinking; aloud too if the question was spoken. */
   const finish = useCallback(
-    (question: string, answer: string, aloud: boolean, wait: number, ai = false) => {
+    (question: string, answer: string, aloud: boolean, wait: number) => {
       history.current = [...history.current, { role: 'user' as const, content: question }, { role: 'assistant' as const, content: answer }].slice(-HISTORY)
       thinkTimer.current = window.setTimeout(() => {
-        setTurn({ question, answer, ai })
+        setTurn({ question, answer })
         setThinking(false)
         if (aloud) speech.speak(answer)
       }, wait)
@@ -140,15 +138,12 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
       pending.current = controller
       const started = performance.now()
       askOnServer([...history.current, { role: 'user', content: question }], lang, facts, controller.signal)
-        .then(
-          (answer) => ({ answer, ai: true }),
-          () => ({ answer: answerTo(topic, report, i18n), ai: false }),
-        )
-        .then(({ answer, ai }) => {
+        .catch(() => answerTo(topic, report, i18n))
+        .then((answer) => {
           // A newer question, or closing the chat, cancels this one.
           if (controller.signal.aborted) return
           pending.current = null
-          finish(question, answer, aloud, Math.max(0, THINK_MS - (performance.now() - started)), ai)
+          finish(question, answer, aloud, Math.max(0, THINK_MS - (performance.now() - started)))
         })
     },
     [begin, facts, finish, i18n, lang, report, respond],
@@ -239,15 +234,8 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
               </p>
             )}
             <p className="visually-hidden" role="status">
-              {thinking ? t('chat.thinking') : turn.ai ? `${turn.answer} ${t('chat.ai_note')}` : turn.answer}
+              {thinking ? t('chat.thinking') : turn.answer}
             </p>
-            {/* An answer written by AI says so, and that it can be wrong. */}
-            {turn.ai && !thinking && (
-              <p className="chat__ai-note" aria-hidden="true">
-                <span className="chat__ai-badge">{t('chat.ai_badge')}</span>
-                {t('chat.ai_note')}
-              </p>
-            )}
             {speech.supported && !thinking && (
               <button type="button" className="chat__listen" onClick={() => (speech.speaking ? speech.stop() : speech.speak(turn.answer))}>
                 <LineIcon name={speech.speaking ? 'close' : 'sound'} size={16} />
@@ -296,6 +284,8 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
             <LineIcon name="send" size={20} />
           </button>
         </div>
+        {/* Once, for the whole chat: his answers and his voice come from AI, which can be wrong. */}
+        <p className="chat__ai-note">{t('chat.ai_note')}</p>
       </form>
     </div>
   )
