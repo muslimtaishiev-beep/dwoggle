@@ -101,7 +101,8 @@ export default function MapPage() {
 
   useEffect(() => {
     if (notice === null) return
-    const timer = window.setTimeout(() => setNotice(null), 4000)
+    // Long enough to read: a longer message stays longer.
+    const timer = window.setTimeout(() => setNotice(null), Math.max(4000, notice.length * 70))
     return () => window.clearTimeout(timer)
   }, [notice])
 
@@ -137,18 +138,29 @@ export default function MapPage() {
   }
 
   const whereAmI = () => {
-    if (!('geolocation' in navigator)) {
+    if (!('geolocation' in navigator) || !window.isSecureContext) {
       setNotice(t('actions.where_failed'))
       return
     }
+    setNotice(t('actions.where_looking'))
+    const found = (position: GeolocationPosition) => {
+      const here = { lat: position.coords.latitude, lon: position.coords.longitude }
+      if (isInKyrgyzstan(here)) {
+        setNotice(null)
+        setPlace(here)
+      } else setNotice(t('actions.where_outside'))
+    }
+    const failed = (error: GeolocationPositionError) =>
+      setNotice(t(error.code === error.PERMISSION_DENIED ? 'actions.where_denied' : 'actions.where_unavailable'))
+    // GPS first. A computer has none and finds itself by Wi-Fi, which the precise request often gives up on: then
+    // the ordinary one, which may also use a position from the last few minutes.
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const here = { lat: position.coords.latitude, lon: position.coords.longitude }
-        if (isInKyrgyzstan(here)) setPlace(here)
-        else setNotice(t('actions.where_outside'))
+      found,
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) return failed(error)
+        navigator.geolocation.getCurrentPosition(found, failed, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 })
       },
-      () => setNotice(t('actions.where_failed')),
-      { enableHighAccuracy: true, timeout: 10000 },
+      { enableHighAccuracy: true, timeout: 8000 },
     )
   }
 
