@@ -81,6 +81,13 @@ site). `BEKEM_ANTHROPIC_MODEL` picks the Claude model (default `claude-sonnet-5-
 `429 {code: chat_busy}` or `502 {code: chat_failed | chat_unreachable | chat_off_script}` (the last one: the answer
 broke the wording rules, so it is not shown); the app then also gives its prepared answer.
 
+Guards against misuse (someone talking Dwoggle into being a free general assistant), all on the server, so no
+wording of a question gets round them: no tools; the new question is cut to 500 characters; an answer is not shown
+(`chat_off_script`) if it looks like code or markup, runs past 900 characters or hits the token limit (1024);
+`BEKEM_CHAT_DAILY_PER_IP` (60) and `BEKEM_CHAT_DAILY_TOTAL` (3000, for everyone on one server) cap the questions a
+day, then `429 {code: chat_daily_limit}`. Also set a monthly spend limit for the key in the Anthropic Console: that
+one holds whatever happens.
+
 Errors: `422` = point outside Kyrgyzstan or bad params, `429` = rate limit, `502` = Earth Engine failed
 (show "Bekem couldn't dig, try again"), `503` = provider not configured.
 

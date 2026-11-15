@@ -164,6 +164,23 @@ def _rate_limit(request: Request, limit: int | None = None, bucket: str = "") ->
         q.append(now)
 
 
+_daily: dict[str, int] = {}
+
+
+def _daily_limit(request: Request, bucket: str, per_ip: int, total: int) -> None:
+    """Counts today's requests (UTC) per client IP and in all, in this server's memory; 429 past either limit."""
+    ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "?")
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    mine, everyone = f"{bucket}{day}:{ip}", f"{bucket}{day}:*"
+    with _hits_lock:
+        if not any(k.startswith(f"{bucket}{day}:") for k in _daily) and _daily:
+            _daily.clear()  # a new day: forget yesterday
+        if (per_ip and _daily.get(mine, 0) >= per_ip) or (total and _daily.get(everyone, 0) >= total):
+            raise HTTPException(429, {"code": f"{bucket.rstrip(':')}_daily_limit"})
+        _daily[mine] = _daily.get(mine, 0) + 1
+        _daily[everyone] = _daily.get(everyone, 0) + 1
+
+
 def _check_bounds(lat: float, lon: float) -> None:
     min_lon, min_lat, max_lon, max_lat = settings.bbox
     if not (min_lat <= lat <= max_lat and min_lon <= lon <= max_lon):
@@ -545,6 +562,7 @@ def chat(body: ChatIn, request: Request):
     if state.chat is None:
         raise HTTPException(503, {"code": "chat_disabled"})
     _rate_limit(request, settings.chat_rate_limit_per_min, "chat:")
+    _daily_limit(request, "chat:", settings.chat_daily_per_ip, settings.chat_daily_total)
     try:
         text = state.chat.answer([m.model_dump() for m in body.messages], body.lang, body.report)
     except ChatError as e:

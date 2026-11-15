@@ -83,6 +83,10 @@ class Settings(BaseSettings):
     anthropic_effort: Literal["low", "medium", "high"] = "low"
     # Questions to /api/chat per client IP per minute (each one costs Claude tokens). 0 disables the limit.
     chat_rate_limit_per_min: int = 10
+    # And per day: per client IP, and for everyone together on one server, so a misuse can never run up the bill.
+    # 0 disables a limit.
+    chat_daily_per_ip: int = 60
+    chat_daily_total: int = 3000
 
 
 def on_cloud_run() -> bool:
