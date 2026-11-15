@@ -144,7 +144,7 @@ export function SearchSheet({ listenAtOnce, onPick, onClose }: SearchSheetProps)
             autoComplete="off"
             enterKeyHint="search"
             aria-label={t('search.label')}
-            placeholder={t(voice.listening ? 'search.listening' : 'search.village_placeholder')}
+            placeholder={t(voice.listening ? 'search.listening' : voice.hearing ? 'search.loading' : 'search.village_placeholder')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />

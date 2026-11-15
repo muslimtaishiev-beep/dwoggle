@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 import httpx
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
@@ -36,6 +36,7 @@ from .nasa.noaa import STATIONS_PATH
 from .profiles import CONCERNS, PURPOSES, ProfileError, validate_concerns, validate_profile
 from .providers import make_provider
 from .report import ReportService, snap
+from .voice import Voice, VoiceError, make_voice
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("bekem")
@@ -51,6 +52,7 @@ class State:
     giovanni: Giovanni | None = None
     appeears: AppEEARSManager | None = None
     auth: Auth | None = None
+    voice: Voice | None = None
 
 
 state = State()
@@ -66,6 +68,8 @@ async def lifespan(app: FastAPI):
         log.info("sign-in: %s", state.auth.mode if state.auth else "not configured")
     except Exception:
         log.exception("sign-in setup failed; auth endpoints will answer 503")
+    state.voice = make_voice(s)
+    log.info("voice: %s", "elevenlabs" if state.voice else "not configured")
     real = s.provider == "earthengine"
     has_earthdata = bool(s.earthdata_username and s.earthdata_password)
     if real and has_earthdata:
@@ -135,8 +139,8 @@ _hits: dict[str, deque[float]] = defaultdict(deque)
 _hits_lock = threading.Lock()
 
 
-def _rate_limit(request: Request) -> None:
-    limit = settings.rate_limit_per_min
+def _rate_limit(request: Request, limit: int | None = None, bucket: str = "") -> None:
+    limit = settings.rate_limit_per_min if limit is None else limit
     if not limit:
         return
     # Behind Firebase Hosting / Cloud Run the visitor is the first address in X-Forwarded-For.
@@ -146,7 +150,7 @@ def _rate_limit(request: Request) -> None:
     )
     now = time.monotonic()
     with _hits_lock:
-        q = _hits[ip]
+        q = _hits[bucket + ip]
         while q and now - q[0] > 60:
             q.popleft()
         if len(q) >= limit:
@@ -179,6 +183,7 @@ def health():
         "cached_reports": state.cache.count(),
         "landslide_map": bool(settings.landslide_asset),
         "auth": state.auth.mode if state.auth else "not_configured",
+        "voice": "elevenlabs" if state.voice else "not_configured",
         "sources": {
             "earthengine": "ok" if state.service and settings.provider == "earthengine" else settings.provider,
             "giovanni": giovanni,
@@ -410,3 +415,95 @@ def delete_me(user: User):
     """Delete the profile AND the sign-in account. Phone numbers are personal data; this must always work."""
     state.auth.delete_account(user.uid)
     return {"deleted": True}
+
+
+# --- Saved areas ------------------------------------------------------------------------------
+# The places a signed-in user saved from the map, newest first, so they follow the account to any device.
+
+SAVED_MAX = 50
+
+
+class SavedIn(BaseModel):
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+    name: str | None = Field(None, max_length=200)
+
+
+def _same(area: dict, lat: float, lon: float) -> bool:
+    return round(float(area.get("lat", 0)), 4) == round(lat, 4) and round(float(area.get("lon", 0)), 4) == round(lon, 4)
+
+
+def _saved(uid: str) -> list[dict]:
+    doc = state.auth.saved.get(uid) or {}
+    areas = doc.get("areas") or []
+    return [a for a in areas if isinstance(a, dict) and "lat" in a and "lon" in a]
+
+
+def _saved_out(areas: list[dict]) -> dict:
+    return {"areas": [{"lat": float(a["lat"]), "lon": float(a["lon"]), "name": a.get("name"), "saved_at": a.get("saved_at")} for a in areas]}
+
+
+@app.get("/api/me/saved")
+def saved_list(user: User):
+    """The places this user saved, newest first."""
+    return _saved_out(_saved(user.uid))
+
+
+@app.put("/api/me/saved")
+def saved_add(user: User, body: SavedIn, request: Request):
+    """Save a place (or move it to the top if it is saved already). Only places in Kyrgyzstan."""
+    _rate_limit(request)
+    _check_bounds(body.lat, body.lon)
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    area = {"lat": round(body.lat, 5), "lon": round(body.lon, 5), "name": (body.name or "").strip() or None, "saved_at": now}
+    areas = [area] + [a for a in _saved(user.uid) if not _same(a, body.lat, body.lon)]
+    areas = areas[:SAVED_MAX]
+    state.auth.saved.save(user.uid, {"areas": areas})
+    return _saved_out(areas)
+
+
+@app.delete("/api/me/saved")
+def saved_remove(user: User, lat: Annotated[float, Query(ge=-90, le=90)], lon: Annotated[float, Query(ge=-180, le=180)]):
+    """Forget one saved place."""
+    areas = [a for a in _saved(user.uid) if not _same(a, lat, lon)]
+    state.auth.saved.save(user.uid, {"areas": areas})
+    return _saved_out(areas)
+
+
+# --- Dwoggle's voice (ElevenLabs) ---------------------------------------------------------------
+# Open without signing in, like the chat itself; a tighter rate limit guards the key's budget.
+
+
+class SpeakIn(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+    lang: AppLang = "en"
+
+
+def _voice(request: Request) -> Voice:
+    if state.voice is None:
+        raise HTTPException(503, {"code": "voice_disabled"})
+    _rate_limit(request, settings.voice_rate_limit_per_min, "voice:")
+    return state.voice
+
+
+@app.post("/api/voice/speak", response_class=Response, responses={200: {"content": {"audio/mpeg": {}}}})
+def voice_speak(body: SpeakIn, request: Request):
+    """The text read aloud in Dwoggle's voice, as MP3."""
+    voice = _voice(request)
+    try:
+        audio = voice.speak(body.text, body.lang)
+    except VoiceError as e:
+        raise HTTPException(e.status, {"code": e.code}) from e
+    return Response(audio, media_type="audio/mpeg", headers={"Cache-Control": "private, max-age=86400"})
+
+
+@app.post("/api/voice/listen")
+async def voice_listen(request: Request, lang: AppLang = "en"):
+    """What was said in a spoken question. The body is the recording itself (audio/webm, audio/mp4, ...)."""
+    voice = _voice(request)
+    audio = await request.body()
+    try:
+        text = voice.listen(audio, request.headers.get("content-type", ""), lang)
+    except VoiceError as e:
+        raise HTTPException(e.status, {"code": e.code}) from e
+    return {"text": text}

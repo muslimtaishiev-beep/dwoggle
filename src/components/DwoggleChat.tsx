@@ -157,7 +157,8 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
           )}
           {/* A new answer is a new bubble, so it pops in again. */}
           <div className="chat__bubble" key={`${turn.question}|${turn.answer}`}>
-            {thinking ? (
+            {/* He thinks while the question is worked out, and again while he works out his answer. */}
+            {thinking || voice.hearing ? (
               <p className="chat__dots" aria-hidden="true">
                 <i />
                 <i />
@@ -208,7 +209,7 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
             autoComplete="off"
             enterKeyHint="send"
             aria-label={t('chat.placeholder')}
-            placeholder={t(voice.listening ? 'search.listening' : 'chat.placeholder')}
+            placeholder={t(voice.listening ? 'search.listening' : voice.hearing ? 'chat.thinking' : 'chat.placeholder')}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
           />

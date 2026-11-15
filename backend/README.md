@@ -62,6 +62,13 @@ result goes to `data/appeears_demo.json`, which the server loads at startup.
 | `GET /api/i18n?lang=ky` | All backend strings (greeting, moods, check titles…). |
 | `GET /api/health` | Provider status, cache size. |
 | `GET /api/auth/options`, `GET/PUT/DELETE /api/me…` | Sign-in profile (country, phone, why they're here). See [AUTH.md](AUTH.md). |
+| `GET /api/me/saved`, `PUT /api/me/saved` `{lat, lon, name}`, `DELETE /api/me/saved?lat=..&lon=..` | Places the signed-in user saved from the map, newest first (Firestore `saved/{uid}`, at most 50). Deleted with the account. |
+| `POST /api/voice/speak` `{text, lang}` | Dwoggle's answer read aloud by ElevenLabs, as MP3 (cached in memory). No sign-in needed; 12 per minute per visitor. |
+| `POST /api/voice/listen?lang=ky` (body: the recording, e.g. `audio/webm`) | What was said, by ElevenLabs speech-to-text: `{text}`. At most 1 MB. |
+
+Dwoggle's voice needs `BEKEM_ELEVENLABS_API_KEY` in `backend/.env` (and the `ELEVENLABS_API_KEY` secret for the live
+site); `BEKEM_ELEVENLABS_VOICE_ID` picks the voice. Without a key both voice endpoints answer `503 {code: voice_disabled}`
+and the app falls back to the browser's own voice.
 
 Errors: `422` = point outside Kyrgyzstan or bad params, `429` = rate limit, `502` = Earth Engine failed
 (show "Bekem couldn't dig, try again"), `503` = provider not configured.

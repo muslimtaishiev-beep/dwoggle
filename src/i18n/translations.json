@@ -298,7 +298,8 @@
     "advice.green.B": "Keep the trees and grass that grow here: they hold the soil.",
     "advice.green.C": "Plant trees and grass. Do not leave the soil bare: rain washes it away.",
     "advice.green.D": "Plant trees and grass as soon as you can. Cover bare soil before the rains.",
-    "panel.tap_hint": "Tap a line and Dwoggle explains it."
+    "panel.tap_hint": "Tap a line and Dwoggle explains it.",
+    "saved.sync_failed": "Could not reach your saved places. Check the connection and try again."
   },
   "ky": {
     "app.title": "Dwoggle",
@@ -599,7 +600,8 @@
     "advice.green.B": "Бул жерде өскөн бак-дарак менен чөптү сактаңыз: алар топуракты кармап турат.",
     "advice.green.C": "Бак-дарак жана чөп отургузуңуз, жерди жылаңач калтырбаңыз: жылаңач топуракты жамгыр жууп кетет.",
     "advice.green.D": "Мүмкүн болушунча эртерээк бак-дарак жана чөп отургузуңуз. Жамгырга чейин жылаңач жерди жабыңыз.",
-    "panel.tap_hint": "Сапты басыңыз, Dwoggle аны түшүндүрөт."
+    "panel.tap_hint": "Сапты басыңыз, Dwoggle аны түшүндүрөт.",
+    "saved.sync_failed": "Сакталган жерлерге туташуу болбоду. Интернетти текшерип, кайра аракет кылыңыз."
   },
   "ru": {
     "app.title": "Dwoggle",
@@ -900,6 +902,7 @@
     "advice.green.B": "Берегите деревья и траву, которые здесь растут: они держат почву.",
     "advice.green.C": "Сажайте деревья и траву, не оставляйте землю голой: голую землю смывает дождём.",
     "advice.green.D": "Как можно скорее посадите деревья и траву. Укройте голую землю до дождей.",
-    "panel.tap_hint": "Нажмите на строку, и Dwoggle объяснит её."
+    "panel.tap_hint": "Нажмите на строку, и Dwoggle объяснит её.",
+    "saved.sync_failed": "Не удалось связаться с сохранёнными местами. Проверьте интернет и попробуйте ещё раз."
   }
 }

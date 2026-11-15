@@ -153,6 +153,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
 
+      async idToken() {
+        signedInAccount()
+        return (await loadFirebase()).idToken()
+      },
+
       async deleteAccount() {
         signedInAccount()
         const firebase = await loadFirebase()

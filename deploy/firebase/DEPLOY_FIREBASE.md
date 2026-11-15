@@ -33,12 +33,13 @@ Cloud Run, plus 10 GB of hosting. Cloud Run sleeps (costs nothing) when nobody u
 
 ## 3. GitHub secrets (1 min)
 
-https://github.com/muslimtaishiev-beep/dwoggle/settings/secrets/actions → **New repository secret**, twice:
+https://github.com/muslimtaishiev-beep/dwoggle/settings/secrets/actions → **New repository secret**, one for each:
 
 | Name | Value |
 |---|---|
 | `EARTHDATA_USERNAME` | your NASA Earthdata username (same as in `backend/.env`) |
 | `EARTHDATA_PASSWORD` | your NASA Earthdata password |
+| `ELEVENLABS_API_KEY` | ElevenLabs API key, for Dwoggle's voice (optional: without it the app uses the browser's voice) |
 
 ## 4. Deploy
 

@@ -109,6 +109,14 @@ The sign-in page and the dig follow the designer's screens. Art lives in [public
 - `dwoggle-dig-*.webp` (body, both front paws, tail, head and chest, earth): Dwoggle digging in the dig, cut into layers so his paws really scrape, his tail wags and he rocks ([src/brand/DiggingDwoggle.tsx](src/brand/DiggingDwoggle.tsx)). Made with `python3 scripts/mascot-dig.py scripts/art/dwoggle-digging.webp`. That source is still a cut-out from a screenshot of the design: when the designer's own file arrives (same drawing, transparent background), run the script on it for sharper layers.
 - In development, `/dev/dig` shows the dig without signing in (saving at the end fails on purpose).
 
+## Saved areas
+
+"Save this area" keeps the place in this browser for a visitor without an account. Once signed in, the list lives with the account on the backend (`GET/PUT/DELETE /api/me/saved`, Firestore `saved/{uid}`), so it is the same on every device; the places saved on this device before signing in are added to it once ([src/hooks/useSavedAreas.ts](src/hooks/useSavedAreas.ts)). A change shows at once and is undone, with a short notice, if the backend refuses it.
+
+## Voice
+
+Dwoggle's voice is ElevenLabs, through the backend, so the key never reaches the browser ([src/api/voiceApi.ts](src/api/voiceApi.ts)): `POST /api/voice/speak` reads an answer aloud (he does so by himself when the question was spoken; a typed one gets a "Listen" button), and `POST /api/voice/listen` turns a recorded question into words, Kyrgyz included. A recording stops on a second press of the microphone or after a moment of quiet. Without a key on the backend both answer 503 and the app falls back to the browser's own voice and recognizer. Put the key in `backend/.env` as `BEKEM_ELEVENLABS_API_KEY` and, for the live site, in the GitHub secret `ELEVENLABS_API_KEY`.
+
 ## The chat with Dwoggle
 
 [src/components/DwoggleChat.tsx](src/components/DwoggleChat.tsx): a white screen between two bands of earth, Dwoggle in the middle. A question is typed, spoken (where the browser can listen) or picked from the ready ones; he answers in a speech bubble, his mouth moving, and reads the answer aloud when the question was spoken or "Listen" is pressed (where the browser has a voice for the language; most have none for Kyrgyz).

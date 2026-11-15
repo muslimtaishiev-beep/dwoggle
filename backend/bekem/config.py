@@ -64,6 +64,15 @@ class Settings(BaseSettings):
     place_names: bool = True  # add an OpenStreetMap place name to each report's location
     nominatim_user_agent: str = "bekem/1.0 (https://github.com/bekem)"
 
+    # Dwoggle's voice (ElevenLabs): answers read aloud and questions heard. Without a key /api/voice/* answers 503
+    # and the app falls back to the browser's own voice.
+    elevenlabs_api_key: str = ""
+    elevenlabs_voice_id: str = "JBFqnCBsd6RMkjVDRZzb"  # a premade multilingual voice; any voice from the library works
+    elevenlabs_tts_model: str = "eleven_multilingual_v2"
+    elevenlabs_stt_model: str = "scribe_v1"
+    # Requests to /api/voice per client IP per minute (they cost ElevenLabs characters). 0 disables the limit.
+    voice_rate_limit_per_min: int = 12
+
 
 def on_cloud_run() -> bool:
     """Cloud Run sets K_SERVICE. There the code runs as the service's own account: no key file needed."""

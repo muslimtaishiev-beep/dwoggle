@@ -66,7 +66,8 @@ export default function MapPage() {
   const [search, setSearch] = useState<{ listen: boolean } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const { state, retry } = useReport(point, lang)
-  const saved = useSavedAreas()
+  // If the account's saved list cannot be loaded or changed, Dwoggle says so for a moment.
+  const saved = useSavedAreas(() => setNotice(t('saved.sync_failed')))
 
   const select = useCallback(
     (next: LatLon) => {

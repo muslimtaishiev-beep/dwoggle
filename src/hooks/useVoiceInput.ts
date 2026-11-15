@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { listenOnServer, serverVoiceOff } from '../api/voiceApi.ts'
+import type { Lang } from '../i18n/i18n.ts'
 
 /** The part of the browser's speech recognition this app uses (Chrome and Safari ship it, prefixed). */
 interface Recognition {
@@ -20,39 +22,143 @@ function recognitionClass(): RecognitionConstructor | null {
   return scope.SpeechRecognition ?? scope.webkitSpeechRecognition ?? null
 }
 
-/** Whether this browser can listen to speech at all. */
-export function canListen(): boolean {
-  return recognitionClass() !== null
+function canRecord(): boolean {
+  return typeof window !== 'undefined' && typeof MediaRecorder !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia)
 }
 
-/** Speaking instead of typing, in the given language. `supported` is false where the browser cannot listen. */
-export function useVoiceInput(lang: string, onText: (text: string) => void) {
-  const [listening, setListening] = useState(false)
-  const current = useRef<Recognition | null>(null)
-  const supported = recognitionClass() !== null
+/** Whether this browser can take a spoken question at all. */
+export function canListen(): boolean {
+  return canRecord() || recognitionClass() !== null
+}
 
-  useEffect(() => () => current.current?.abort(), [])
+/** A recording stops by itself after this long, or after this much quiet once the visitor has started speaking. */
+const MAX_RECORDING_MS = 8000
+const QUIET_MS = 1500
+/** Louder than this (0–1, average over the sound) counts as speaking. */
+const SPEAKING_LEVEL = 0.04
 
-  const listen = useCallback(() => {
+export type VoiceInputState = 'idle' | 'listening' | 'hearing'
+
+/**
+ * Speaking instead of typing. The question is recorded and turned into words by the backend (ElevenLabs), which
+ * hears Kyrgyz too; where the backend has no voice, the browser's own recognizer listens. A second press stops
+ * the recording, and so does a moment of quiet after the visitor has spoken.
+ * `state` is 'listening' while recording and 'hearing' while the words are worked out.
+ */
+export function useVoiceInput(lang: Lang, onText: (text: string) => void) {
+  const [state, setState] = useState<VoiceInputState>('idle')
+  const stopRecording = useRef<(() => void) | null>(null)
+  const recognition = useRef<Recognition | null>(null)
+  const heard = useRef(onText)
+  useEffect(() => {
+    heard.current = onText
+  })
+
+  useEffect(
+    () => () => {
+      stopRecording.current?.()
+      recognition.current?.abort()
+    },
+    [],
+  )
+
+  const listenInBrowser = useCallback(() => {
     const Recognizer = recognitionClass()
-    if (!Recognizer || current.current) return
-    const recognition = new Recognizer()
-    recognition.lang = lang
-    recognition.interimResults = false
-    recognition.maxAlternatives = 1
-    recognition.onresult = (event) => {
+    if (!Recognizer) {
+      setState('idle')
+      return
+    }
+    const recognizer = new Recognizer()
+    recognizer.lang = lang
+    recognizer.interimResults = false
+    recognizer.maxAlternatives = 1
+    recognizer.onresult = (event) => {
       const text = event.results[0]?.[0]?.transcript.trim()
-      if (text) onText(text)
+      if (text) heard.current(text)
     }
-    recognition.onend = () => {
-      current.current = null
-      setListening(false)
+    recognizer.onend = () => {
+      recognition.current = null
+      setState('idle')
     }
-    recognition.onerror = recognition.onend
-    current.current = recognition
-    setListening(true)
-    recognition.start()
-  }, [lang, onText])
+    recognizer.onerror = recognizer.onend
+    recognition.current = recognizer
+    setState('listening')
+    recognizer.start()
+  }, [lang])
 
-  return { supported, listening, listen }
+  const record = useCallback(async () => {
+    let stream: MediaStream
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    } catch {
+      setState('idle')
+      return
+    }
+    const recorder = new MediaRecorder(stream)
+    const chunks: Blob[] = []
+    recorder.ondataavailable = (event) => chunks.push(event.data)
+
+    // Stop after a moment of quiet: watch how loud the microphone is.
+    const context = new AudioContext()
+    const analyser = context.createAnalyser()
+    context.createMediaStreamSource(stream).connect(analyser)
+    const samples = new Uint8Array(analyser.fftSize)
+    let spoke = false
+    let quietSince = performance.now()
+    const started = performance.now()
+    const watch = window.setInterval(() => {
+      analyser.getByteTimeDomainData(samples)
+      const level = samples.reduce((sum, v) => sum + Math.abs(v - 128), 0) / samples.length / 128
+      const now = performance.now()
+      if (level > SPEAKING_LEVEL) {
+        spoke = true
+        quietSince = now
+      }
+      if ((spoke && now - quietSince > QUIET_MS) || now - started > MAX_RECORDING_MS) stop()
+    }, 100)
+
+    function stop() {
+      window.clearInterval(watch)
+      stopRecording.current = null
+      if (recorder.state !== 'inactive') recorder.stop()
+    }
+    stopRecording.current = stop
+
+    recorder.onstop = () => {
+      stream.getTracks().forEach((track) => track.stop())
+      void context.close()
+      const audio = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
+      if (!spoke) {
+        setState('idle')
+        return
+      }
+      setState('hearing')
+      listenOnServer(audio, lang).then(
+        (text) => {
+          setState('idle')
+          if (text.trim()) heard.current(text.trim())
+        },
+        () => {
+          // No voice on the backend: the browser's recognizer, which asks the visitor to speak again.
+          if (serverVoiceOff()) listenInBrowser()
+          else setState('idle')
+        },
+      )
+    }
+    setState('listening')
+    recorder.start()
+  }, [lang, listenInBrowser])
+
+  /** Start listening, or, while listening, stop and hear what was said. */
+  const listen = useCallback(() => {
+    if (stopRecording.current) {
+      stopRecording.current()
+      return
+    }
+    if (recognition.current || state !== 'idle') return
+    if (canRecord() && !serverVoiceOff()) void record()
+    else listenInBrowser()
+  }, [state, record, listenInBrowser])
+
+  return { supported: canListen(), listening: state === 'listening', hearing: state === 'hearing', listen }
 }

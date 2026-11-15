@@ -103,6 +103,7 @@ async function readBody(req: IncomingMessage): Promise<Record<string, unknown>> 
 
 function createHandler() {
   const profiles = new Map<string, StoredProfile>()
+  const saved = new Map<string, SavedArea[]>()
   const answer = (uid: string) => {
     const profile = profiles.get(uid) ?? null
     return { user: { uid }, profile, profile_complete: profile !== null }
@@ -110,7 +111,7 @@ function createHandler() {
 
   return (req: IncomingMessage, res: ServerResponse, next: () => void): void => {
     const path = new URL(req.url ?? '/', 'http://mock.local').pathname
-    if (path !== '/' && path !== '/profile') {
+    if (path !== '/' && path !== '/profile' && path !== '/saved') {
       next()
       return
     }
@@ -123,7 +124,10 @@ function createHandler() {
       sendJson(res, 200, answer(uid))
     } else if (path === '/' && req.method === 'DELETE') {
       profiles.delete(uid)
+      saved.delete(uid)
       sendJson(res, 200, { deleted: true })
+    } else if (path === '/saved') {
+      handleSaved(req, res, uid, saved)
     } else if (path === '/profile' && req.method === 'PUT') {
       readBody(req)
         .then((body) => {
@@ -140,12 +144,54 @@ function createHandler() {
   }
 }
 
-/** Only for `npm run dev:mock`; otherwise /api/me goes to the backend. */
+interface SavedArea {
+  lat: number
+  lon: number
+  name: string | null
+  saved_at: string
+}
+
+const samePoint = (a: SavedArea, lat: number, lon: number) => a.lat.toFixed(4) === lat.toFixed(4) && a.lon.toFixed(4) === lon.toFixed(4)
+
+/** GET, PUT and DELETE /api/me/saved, as the backend answers them: always the whole list, newest first. */
+function handleSaved(req: IncomingMessage, res: ServerResponse, uid: string, saved: Map<string, SavedArea[]>): void {
+  const list = saved.get(uid) ?? []
+  const query = new URL(req.url ?? '/', 'http://mock.local').searchParams
+  if (req.method === 'GET') {
+    sendJson(res, 200, { areas: list })
+  } else if (req.method === 'DELETE') {
+    const lat = Number(query.get('lat'))
+    const lon = Number(query.get('lon'))
+    const next = list.filter((area) => !samePoint(area, lat, lon))
+    saved.set(uid, next)
+    sendJson(res, 200, { areas: next })
+  } else if (req.method === 'PUT') {
+    readBody(req)
+      .then((body) => {
+        const lat = Number(body.lat)
+        const lon = Number(body.lon)
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error('bad point')
+        const name = typeof body.name === 'string' && body.name.trim() !== '' ? body.name.trim() : null
+        const next = [{ lat, lon, name, saved_at: new Date().toISOString() }, ...list.filter((area) => !samePoint(area, lat, lon))].slice(0, 50)
+        saved.set(uid, next)
+        sendJson(res, 200, { areas: next })
+      })
+      .catch(() => sendJson(res, 400, { detail: 'Bad request' }))
+  } else {
+    sendJson(res, 405, { detail: 'Method not allowed' })
+  }
+}
+
+/**
+ * Only for `npm run dev:mock`; otherwise /api/me goes to the backend. Dwoggle's voice is off here (503), as on a
+ * backend without an ElevenLabs key, so the app's fallback to the browser's voice is what runs.
+ */
 export function mockAccount(): Plugin {
   return {
     name: 'dwoggle-mock-account',
     configureServer(server) {
       server.middlewares.use('/api/me', createHandler())
+      server.middlewares.use('/api/voice', (_req, res) => sendJson(res, 503, { detail: { code: 'voice_disabled' } }))
     },
   }
 }

@@ -328,6 +328,23 @@
   cursor: pointer;
 }
 
+/* While it records, the microphone glows red and pulses, so it is clear Dwoggle is listening. */
+.chat__round[aria-pressed="true"] {
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  50% {
+    box-shadow: 0 0 0 7px rgb(206 97 66 / 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat__round[aria-pressed="true"] {
+    animation: none;
+  }
+}
+
 .chat__round[aria-pressed="true"] {
   background: var(--grade-ui-d);
   color: var(--brand-paper);

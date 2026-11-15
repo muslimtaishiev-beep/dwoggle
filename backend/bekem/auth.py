@@ -142,6 +142,10 @@ def _to_firestore(value) -> dict:
         return {"booleanValue": value}
     if isinstance(value, int):
         return {"integerValue": str(value)}
+    if isinstance(value, float):
+        return {"doubleValue": value}
+    if isinstance(value, dict):
+        return {"mapValue": {"fields": {k: _to_firestore(v) for k, v in value.items()}}}
     if isinstance(value, datetime):
         return {"timestampValue": value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")}
     if isinstance(value, (list, tuple)):
@@ -153,6 +157,10 @@ def _from_firestore(field: dict):
     (kind, value), = field.items()
     if kind == "integerValue":
         return int(value)
+    if kind == "doubleValue":
+        return float(value)
+    if kind == "mapValue":
+        return {k: _from_firestore(v) for k, v in value.get("fields", {}).items()}
     if kind == "nullValue":
         return None
     if kind == "arrayValue":
@@ -200,12 +208,15 @@ def delete_firebase_user(session: AuthorizedSession, project_id: str, uid: str) 
 class Auth:
     verifier: FirebaseVerifier | DevVerifier
     store: UserStore
+    # The places a user saved from the map: document saved/{uid} with a list `areas`.
+    saved: UserStore
     session: AuthorizedSession | None = None
     project_id: str = ""
     mode: str = "firebase"  # firebase | dev
 
     def delete_account(self, uid: str) -> None:
         self.store.delete(uid)
+        self.saved.delete(uid)
         if self.session is not None:
             delete_firebase_user(self.session, self.project_id, uid)
 
@@ -230,7 +241,8 @@ def make_auth(s: Settings) -> Auth | None:
         project = project or adc_project
     if creds is not None and project:
         session = AuthorizedSession(creds)
-        return Auth(FirebaseVerifier(project), FirestoreStore(project, session), session, project, "firebase")
+        return Auth(FirebaseVerifier(project), FirestoreStore(project, session), FirestoreStore(project, session, "saved"),
+                    session, project, "firebase")
     if s.provider == "mock":
-        return Auth(DevVerifier(), MemoryStore(), mode="dev")
+        return Auth(DevVerifier(), MemoryStore(), MemoryStore(), mode="dev")
     return None

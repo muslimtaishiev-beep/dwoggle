@@ -20,6 +20,8 @@ export interface AuthContextValue {
   readonly saveProfile: (answers: ProfileAnswers) => Promise<() => void>
   /** Deletes the profile and the sign-in account, then signs out. */
   readonly deleteAccount: () => Promise<void>
+  /** The signed-in user's ID token, for the backend's account calls. */
+  readonly idToken: () => Promise<string>
   readonly signOut: () => Promise<void>
 }
 
