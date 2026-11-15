@@ -9,8 +9,12 @@ const turnsAbout = ([x, y]: readonly [number, number]) => ({ transformOrigin: `$
 /** Clods of earth thrown back by each paw: three per stroke. */
 const CLODS = [0, 1, 2, 3, 4, 5] as const
 
-/** How many times faster he digs on his way down a layer than while he waits for an answer. */
-const HARD_RATE = 2.6
+/**
+ * How many times faster he digs on his way down a layer than while he waits for an answer. The camera goes down a
+ * whole screen in 900 ms (--duration-descend); at 4x a stroke takes 375 ms, so his paws scrape about five times on
+ * the way and keep up with the earth moving past instead of trailing it.
+ */
+const HARD_RATE = 4
 
 interface DiggingDwoggleProps {
   className?: string
