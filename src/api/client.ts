@@ -3,7 +3,7 @@ import type { Lang } from '../i18n/i18n.ts'
 import { parseReport } from './parseReport.ts'
 import type { LatLon, Report } from './types.ts'
 
-export type ReportErrorKind = 'network' | 'server' | 'format'
+export type ReportErrorKind = 'network' | 'server' | 'format' | 'busy'
 
 export class ReportRequestError extends Error {
   readonly kind: ReportErrorKind
@@ -31,6 +31,8 @@ export async function fetchReport(point: LatLon, lang: Lang, signal: AbortSignal
     if (signal.aborted) throw error
     throw new ReportRequestError('network', String(error))
   }
+  // Too many checks in a row from this visitor: the backend asks to wait a minute.
+  if (response.status === 429) throw new ReportRequestError('busy', 'HTTP 429')
   if (!response.ok) throw new ReportRequestError('server', `HTTP ${response.status}`)
 
   let body: unknown

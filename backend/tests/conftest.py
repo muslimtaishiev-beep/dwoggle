@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 os.environ["BEKEM_PROVIDER"] = "mock"
 os.environ["BEKEM_CACHE_PATH"] = str(Path(tempfile.mkdtemp()) / "cache.sqlite3")
 os.environ["BEKEM_RATE_LIMIT_PER_MIN"] = "0"
+os.environ["BEKEM_REPORT_RATE_LIMIT_PER_MIN"] = "0"
 os.environ["BEKEM_CHAT_RATE_LIMIT_PER_MIN"] = "0"
 os.environ["BEKEM_CHAT_DAILY_PER_IP"] = "0"
 os.environ["BEKEM_CHAT_DAILY_TOTAL"] = "0"

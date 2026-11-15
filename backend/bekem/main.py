@@ -246,6 +246,7 @@ def report(
         raise HTTPException(503, "Satellite data is not available right now." if on_cloud_run()
                             else f"Satellite provider is not available: {state.provider_error}")
     _rate_limit(request)
+    _rate_limit(request, settings.report_rate_limit_per_min, "report:")
     # refresh=true bypasses the cache (costly Earth Engine + NASA calls): developer machines only.
     refresh = refresh and not on_cloud_run()
     try:

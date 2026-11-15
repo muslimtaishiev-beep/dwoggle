@@ -64,3 +64,15 @@ def test_deleting_the_account_keeps_the_report_checkable(client):
     client.delete("/api/me", headers=gil)
     assert client.get(f"/api/reports/{made['id']}").status_code == 200
     assert client.get("/api/me/reports", headers=gil).json() == {"reports": []}
+
+
+def test_reports_have_their_own_rate_limit(client, monkeypatch):
+    """Tapping round the map cannot pile up satellite work: a few reports a minute per visitor, then 429."""
+    from bekem import main
+
+    monkeypatch.setattr(main.settings, "report_rate_limit_per_min", 2)
+    ip = {"x-forwarded-for": "203.0.113.150"}
+    codes = [client.get("/api/report", params={"lat": 42.87, "lon": 74.6}, headers=ip).status_code for _ in range(3)]
+    assert codes == [200, 200, 429]
+    other = {"x-forwarded-for": "203.0.113.151"}
+    assert client.get("/api/report", params={"lat": 42.87, "lon": 74.6}, headers=other).status_code == 200

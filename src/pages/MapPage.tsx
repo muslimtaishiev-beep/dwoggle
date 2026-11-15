@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { LatLon, Report } from '../api/types.ts'
 import { useReport } from '../api/useReport.ts'
 import { AskDwoggle } from '../components/AskDwoggle.tsx'
@@ -73,8 +73,19 @@ export default function MapPage() {
   // If the account's saved list cannot be loaded or changed, Dwoggle says so for a moment.
   const saved = useSavedAreas(() => setNotice(t('saved.sync_failed')))
 
+  // While Dwoggle checks a place, another tap does not start another check: each one costs satellite work on
+  // the server, and tapping round the map would only pile them up. Closing the panel stops the check.
+  const checking = useRef(false)
+  useEffect(() => {
+    checking.current = state.status === 'loading'
+  }, [state.status])
+
   const select = useCallback(
     (next: LatLon) => {
+      if (checking.current) {
+        setNotice(t('map.busy'))
+        return
+      }
       // Dwoggle has data for Kyrgyzstan only; anywhere else he says so instead of digging.
       if (!isInKyrgyzstan(next)) {
         setNotice(t('map.outside'))

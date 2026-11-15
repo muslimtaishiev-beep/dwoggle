@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     ee_timeout_s: int = 60
     # Report requests per client IP per minute. 0 disables the limit.
     rate_limit_per_min: int = 30
+    # Reports per client IP per minute, apart from the rest: each new place costs Earth Engine and NASA work. A person
+    # checks a few places a minute at most. 0 disables it.
+    report_rate_limit_per_min: int = 10
     # Compute the demo plots in the background at startup, so they answer instantly
     # even on a fresh Cloud Run instance (its disk, and so the cache, starts empty).
     warm_demo_on_start: bool = True
