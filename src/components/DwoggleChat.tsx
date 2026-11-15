@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { askOnServer, serverChatOff, type ChatMessage } from '../api/chatApi.ts'
 import type { Report } from '../api/types.ts'
 import { BrandMark } from '../brand/BrandMark.tsx'
 import { LineIcon } from '../brand/LineIcon.tsx'
@@ -8,6 +9,7 @@ import { useSpeech } from '../hooks/useSpeech.ts'
 import { useVoiceInput } from '../hooks/useVoiceInput.ts'
 import { useI18n } from '../i18n/context.ts'
 import { answerTo, topicOf, type Topic } from '../report/answers.ts'
+import { chatReport } from '../report/chatReport.ts'
 import { worstCheck } from '../report/facts.ts'
 import './DwoggleChat.css'
 
@@ -17,6 +19,8 @@ const THINK_MS = 280
 const WORD_MS = 70
 /** An answer longer than this many characters is set a size smaller (and on a low screen he makes room), so it fits above him. */
 const LONG_ANSWER = 170
+/** Questions and answers of this conversation sent along with a new question, so he can follow up on them. */
+const HISTORY = 12
 
 interface Turn {
   /** What was asked, as typed, spoken or chosen; null for his greeting. */
@@ -36,6 +40,8 @@ interface DwoggleChatProps {
  * Talking to Dwoggle: a white screen between two bands of earth, Dwoggle in the middle. The visitor types a
  * question, says it, or taps a ready one; he thinks for a moment, then answers in a speech bubble, his mouth
  * moving while the words appear (or while he reads them aloud). One question and one answer at a time.
+ * A typed or spoken question is answered live by Claude through the backend, from the open report; the ready
+ * questions, and every question when the backend cannot answer, get the app's prepared answers.
  */
 export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
   const i18n = useI18n()
@@ -60,12 +66,21 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
       : { question: questionFor(ask), answer: answerTo(ask, report, i18n) },
   )
   const [thinking, setThinking] = useState(ask !== null)
+  /** Counts the questions, so every new one pops up a new bubble. */
+  const [turnId, setTurnId] = useState(0)
   /** How many words of the answer are shown so far. */
   const [shown, setShown] = useState(0)
   const [draft, setDraft] = useState('')
   const input = useRef<HTMLInputElement>(null)
   const thinkTimer = useRef<number | undefined>(undefined)
+  /** The live answer being waited for, if any. */
+  const pending = useRef<AbortController | null>(null)
+  /** What was asked and answered so far in this chat, oldest first. */
+  const history = useRef<ChatMessage[]>(
+    turn.question === null ? [] : [{ role: 'user', content: turn.question }, { role: 'assistant', content: turn.answer }],
+  )
   const worst = report ? worstCheck(report) : null
+  const facts = useMemo(() => (report ? chatReport(report, i18n) : null), [report, i18n])
 
   const words = turn.answer.split(' ')
   // With reduced motion his words are all there at once.
@@ -73,24 +88,68 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
   const revealing = !thinking && visible < words.length
   const talking = revealing || speech.speaking
 
-  /** Ask about a topic: he thinks, then answers; aloud too if the question was spoken. */
-  const respond = useCallback(
-    (question: string, topic: Topic, aloud: boolean) => {
-      const answer = answerTo(topic, report, i18n)
+  /** A new question: whatever he was saying or waiting for stops, and he starts thinking. */
+  const begin = useCallback(
+    (question: string) => {
+      pending.current?.abort()
+      pending.current = null
       speech.stop()
       window.clearTimeout(thinkTimer.current)
-      setTurn({ question, answer })
+      setTurn({ question, answer: '' })
+      setTurnId((id) => id + 1)
       setShown(0)
       setThinking(true)
-      thinkTimer.current = window.setTimeout(() => {
-        setThinking(false)
-        if (aloud) speech.speak(answer)
-      }, THINK_MS)
     },
-    [i18n, report, speech],
+    [speech],
   )
 
-  const voice = useVoiceInput(lang, (text) => respond(text, topicOf(text), true))
+  /** His answer, after `wait` more milliseconds of thinking; aloud too if the question was spoken. */
+  const finish = useCallback(
+    (question: string, answer: string, aloud: boolean, wait: number) => {
+      history.current = [...history.current, { role: 'user' as const, content: question }, { role: 'assistant' as const, content: answer }].slice(-HISTORY)
+      thinkTimer.current = window.setTimeout(() => {
+        setTurn({ question, answer })
+        setThinking(false)
+        if (aloud) speech.speak(answer)
+      }, wait)
+    },
+    [speech],
+  )
+
+  /** Ask about a topic: he thinks, then gives the app's prepared answer. */
+  const respond = useCallback(
+    (question: string, topic: Topic, aloud: boolean) => {
+      begin(question)
+      finish(question, answerTo(topic, report, i18n), aloud, THINK_MS)
+    },
+    [begin, finish, i18n, report],
+  )
+
+  /** A question in his own words: answered live from the report, or with the prepared answer if that fails. */
+  const askLive = useCallback(
+    (question: string, aloud: boolean) => {
+      const topic = topicOf(question)
+      if (serverChatOff()) {
+        respond(question, topic, aloud)
+        return
+      }
+      begin(question)
+      const controller = new AbortController()
+      pending.current = controller
+      const started = performance.now()
+      askOnServer([...history.current, { role: 'user', content: question }], lang, facts, controller.signal)
+        .catch(() => answerTo(topic, report, i18n))
+        .then((answer) => {
+          // A newer question, or closing the chat, cancels this one.
+          if (controller.signal.aborted) return
+          pending.current = null
+          finish(question, answer, aloud, Math.max(0, THINK_MS - (performance.now() - started)))
+        })
+    },
+    [begin, facts, finish, i18n, lang, report, respond],
+  )
+
+  const voice = useVoiceInput(lang, (text) => askLive(text, true))
 
   // His words appear one after another while he speaks: by the clock, so a busy screen does not slow his speech.
   useEffect(() => {
@@ -111,7 +170,10 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
   useEffect(() => {
     thinkTimer.current = window.setTimeout(() => setThinking(false), THINK_MS)
     if (window.matchMedia('(pointer: fine)').matches) input.current?.focus()
-    return () => window.clearTimeout(thinkTimer.current)
+    return () => {
+      window.clearTimeout(thinkTimer.current)
+      pending.current?.abort()
+    }
   }, [])
 
   useEffect(() => {
@@ -127,7 +189,7 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
     const text = draft.trim()
     if (text === '') return
     setDraft('')
-    respond(text, topicOf(text), false)
+    askLive(text, false)
   }
 
   const ready: Topic[] = [...(worst ? [worst.id, 'build' as const] : []), 'grades', 'data']
@@ -155,8 +217,8 @@ export function DwoggleChat({ report, ask, onClose }: DwoggleChatProps) {
               {turn.question}
             </p>
           )}
-          {/* A new answer is a new bubble, so it pops in again. */}
-          <div className="chat__bubble" key={`${turn.question}|${turn.answer}`}>
+          {/* A new question is a new bubble, so it pops in again. */}
+          <div className="chat__bubble" key={turnId}>
             {/* He thinks while the question is worked out, and again while he works out his answer. */}
             {thinking || voice.hearing ? (
               <p className="chat__dots" aria-hidden="true">

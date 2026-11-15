@@ -40,6 +40,7 @@ https://github.com/muslimtaishiev-beep/dwoggle/settings/secrets/actions → **Ne
 | `EARTHDATA_USERNAME` | your NASA Earthdata username (same as in `backend/.env`) |
 | `EARTHDATA_PASSWORD` | your NASA Earthdata password |
 | `ELEVENLABS_API_KEY` | ElevenLabs API key, for Dwoggle's voice (optional: without it the app uses the browser's voice) |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) API key, for Dwoggle's live answers in the chat (optional: without it he gives the app's prepared answers) |
 
 ## 4. Deploy
 

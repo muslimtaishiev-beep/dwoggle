@@ -65,6 +65,7 @@ result goes to `data/appeears_demo.json`, which the server loads at startup.
 | `GET /api/me/saved`, `PUT /api/me/saved` `{lat, lon, name}`, `DELETE /api/me/saved?lat=..&lon=..` | Places the signed-in user saved from the map, newest first (Firestore `saved/{uid}`, at most 50). Deleted with the account. |
 | `POST /api/voice/speak` `{text, lang}` | Dwoggle's answer read aloud by ElevenLabs, as MP3 (cached in memory). No sign-in needed; 12 per minute per visitor. |
 | `POST /api/voice/listen?lang=ky` (body: the recording, e.g. `audio/webm`) | What was said, by ElevenLabs speech-to-text: `{text}`. At most 1 MB. |
+| `POST /api/chat` `{messages: [{role, content}], lang, report?}` | Dwoggle's live answer by Claude to the last question (`role: user`), from the report the app sends along, in `ky`/`ru`/`en`: `{text}`. No sign-in needed; 10 per minute per visitor. At most 40 messages of 4000 characters (the newest 20 are sent, cut to 1000), report at most 40 000 characters (`413 {code: report_too_large}`). |
 | `POST /api/reports` `{lat, lon, lang}` | Signed in only. Builds the full report for a point and keeps a copy under a number like `DW-2026-AB12CD` (Firestore `reports/{id}`), with a SHA-256 fingerprint of its data: `{id, created_at, lat, lon, place, grades, fingerprint, report}`. 10 a day per user (`BEKEM_REPORTS_PER_DAY`), then `429 {code: reports_daily_limit, limit}`. |
 | `GET /api/reports/{id}` | Anyone: when, where and the grades of a numbered report, to check a printed copy. Its owner also gets `report`. Unknown number: 404. |
 | `GET /api/me/reports` | The signed-in user's reports, newest first. |
@@ -72,6 +73,13 @@ result goes to `data/appeears_demo.json`, which the server loads at startup.
 Dwoggle's voice needs `BEKEM_ELEVENLABS_API_KEY` in `backend/.env` (and the `ELEVENLABS_API_KEY` secret for the live
 site); `BEKEM_ELEVENLABS_VOICE_ID` picks the voice. Without a key both voice endpoints answer `503 {code: voice_disabled}`
 and the app falls back to the browser's own voice.
+
+Dwoggle's live chat needs `BEKEM_ANTHROPIC_API_KEY` in `backend/.env` (and the `ANTHROPIC_API_KEY` secret for the live
+site). `BEKEM_ANTHROPIC_MODEL` picks the Claude model (default `claude-sonnet-5-5`; `claude-haiku-5-5` is cheaper),
+`BEKEM_ANTHROPIC_EFFORT` its effort (`low` by default) and `BEKEM_CHAT_RATE_LIMIT_PER_MIN` the limit. Without a key
+`/api/chat` answers `503 {code: chat_disabled}` and the app gives its prepared answers. Other failures answer
+`429 {code: chat_busy}` or `502 {code: chat_failed | chat_unreachable | chat_off_script}` (the last one: the answer
+broke the wording rules, so it is not shown); the app then also gives its prepared answer.
 
 Errors: `422` = point outside Kyrgyzstan or bad params, `429` = rate limit, `502` = Earth Engine failed
 (show "Bekem couldn't dig, try again"), `503` = provider not configured.

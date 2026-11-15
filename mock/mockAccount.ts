@@ -257,7 +257,8 @@ function createReportsHandler(root: string) {
 
 /**
  * Only for `npm run dev:mock`; otherwise /api/me goes to the backend. Dwoggle's voice is off here (503), as on a
- * backend without an ElevenLabs key, so the app's fallback to the browser's voice is what runs.
+ * backend without an ElevenLabs key, so the app's fallback to the browser's voice is what runs. His live chat is
+ * off too (503, as without an Anthropic key), so he gives the app's prepared answers.
  */
 export function mockAccount(): Plugin {
   return {
@@ -266,6 +267,7 @@ export function mockAccount(): Plugin {
       server.middlewares.use('/api/me', createHandler())
       server.middlewares.use('/api/reports', createReportsHandler(server.config.root))
       server.middlewares.use('/api/voice', (_req, res) => sendJson(res, 503, { detail: { code: 'voice_disabled' } }))
+      server.middlewares.use('/api/chat', (_req, res) => sendJson(res, 503, { detail: { code: 'chat_disabled' } }))
     },
   }
 }

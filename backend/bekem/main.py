@@ -15,7 +15,7 @@ import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Annotated
+from typing import Annotated, Any, Literal
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Path, Query, Request, Response
@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field
 from . import __version__
 from .auth import Auth, AuthError, AuthUser, make_auth
 from .cache import Cache
+from .chat import Chat, ChatError, make_chat
 from .config import get_settings, on_cloud_run
 from .faults import faults_in_bbox
 from .geocode import Geocoder, PlaceNamer
@@ -55,6 +56,7 @@ class State:
     appeears: AppEEARSManager | None = None
     auth: Auth | None = None
     voice: Voice | None = None
+    chat: Chat | None = None
 
 
 state = State()
@@ -72,6 +74,8 @@ async def lifespan(app: FastAPI):
         log.exception("sign-in setup failed; auth endpoints will answer 503")
     state.voice = make_voice(s)
     log.info("voice: %s", "elevenlabs" if state.voice else "not configured")
+    state.chat = make_chat(s)
+    log.info("chat: %s", f"claude ({s.anthropic_model})" if state.chat else "not configured")
     real = s.provider == "earthengine"
     has_earthdata = bool(s.earthdata_username and s.earthdata_password)
     if real and has_earthdata:
@@ -186,6 +190,7 @@ def health():
         "landslide_map": bool(settings.landslide_asset),
         "auth": state.auth.mode if state.auth else "not_configured",
         "voice": "elevenlabs" if state.voice else "not_configured",
+        "chat": "claude" if state.chat else "not_configured",
         "sources": {
             "earthengine": "ok" if state.service and settings.provider == "earthengine" else settings.provider,
             "giovanni": giovanni,
@@ -507,6 +512,37 @@ async def voice_listen(request: Request, lang: AppLang = "en"):
     try:
         text = voice.listen(audio, request.headers.get("content-type", ""), lang)
     except VoiceError as e:
+        raise HTTPException(e.status, {"code": e.code}) from e
+    return {"text": text}
+
+
+# --- The chat with Dwoggle (Claude) ------------------------------------------------------------
+# Open without signing in, like the voice; its own rate limit guards the key's budget. 503 means "no live answers
+# here": the app then answers from its prepared texts.
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=4000)
+
+
+class ChatIn(BaseModel):
+    messages: list[ChatMessage] = Field(min_length=1, max_length=40, description="The conversation, oldest first; the last one is the question")
+    lang: Literal["ky", "ru", "en"] = "en"
+    report: dict[str, Any] | None = Field(None, description="The report open in the app, as the app sends it (40 000 characters max)")
+
+
+@app.post("/api/chat")
+def chat(body: ChatIn, request: Request):
+    """Dwoggle's answer to the last question, from the report sent along, in the visitor's language: {text}."""
+    if state.chat is None:
+        raise HTTPException(503, {"code": "chat_disabled"})
+    _rate_limit(request, settings.chat_rate_limit_per_min, "chat:")
+    try:
+        text = state.chat.answer([m.model_dump() for m in body.messages], body.lang, body.report)
+    except ChatError as e:
+        if e.status >= 500:
+            log.warning("chat: %s", e.code)
         raise HTTPException(e.status, {"code": e.code}) from e
     return {"text": text}
 

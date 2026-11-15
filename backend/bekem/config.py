@@ -76,6 +76,14 @@ class Settings(BaseSettings):
     # Requests to /api/voice per client IP per minute (they cost ElevenLabs characters). 0 disables the limit.
     voice_rate_limit_per_min: int = 12
 
+    # Dwoggle's live answers in the chat (Claude, Anthropic). Without a key /api/chat answers 503 and the app gives
+    # its prepared answers. Any current Claude model id works; effort is low | medium | high.
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-sonnet-5-5"
+    anthropic_effort: Literal["low", "medium", "high"] = "low"
+    # Questions to /api/chat per client IP per minute (each one costs Claude tokens). 0 disables the limit.
+    chat_rate_limit_per_min: int = 10
+
 
 def on_cloud_run() -> bool:
     """Cloud Run sets K_SERVICE. There the code runs as the service's own account: no key file needed."""

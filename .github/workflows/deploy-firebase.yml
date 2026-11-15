@@ -64,6 +64,7 @@ jobs:
           EARTHDATA_USERNAME: ${{ secrets.EARTHDATA_USERNAME }}
           EARTHDATA_PASSWORD: ${{ secrets.EARTHDATA_PASSWORD }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           python3 -c '
           import json, os
@@ -74,6 +75,7 @@ jobs:
               "BEKEM_EARTHDATA_USERNAME": os.environ.get("EARTHDATA_USERNAME", ""),
               "BEKEM_EARTHDATA_PASSWORD": os.environ.get("EARTHDATA_PASSWORD", ""),
               "BEKEM_ELEVENLABS_API_KEY": os.environ.get("ELEVENLABS_API_KEY", ""),
+              "BEKEM_ANTHROPIC_API_KEY": os.environ.get("ANTHROPIC_API_KEY", ""),
           }, open("cloudrun-env.yaml", "w"))
           '
 
