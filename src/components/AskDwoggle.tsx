@@ -16,11 +16,10 @@ interface AskDwoggleProps {
   onChat: (topic: Topic | null) => void
 }
 
-const CLODS = [0, 1, 2, 3, 4] as const
-
 /**
- * Dwoggle in his hole at the bottom of the map, with a speech bubble. When a place is tapped he dives into his
- * hole and digs (earth jumps out of it) until the report is ready, then pops back out. Before a tap he says what
+ * Dwoggle in his hole at the bottom of the map, with a speech bubble. When a place is tapped he ducks into his
+ * hole and tunnels off to the spot on the map (where he comes up and drills) until the report is ready, then pops
+ * back out here. Before a tap he says what
  * to do; with a
  * report open he offers questions. Pressing him, or a question, opens the chat, where he answers.
  */
@@ -45,10 +44,6 @@ export function AskDwoggle({ report, checking, notice, onChat }: AskDwoggleProps
         <span className="ask__peek">
           <StandingDwoggle className="ask__dwoggle" />
         </span>
-        {/* While he digs under the ground, earth jumps out of his hole. */}
-        {CLODS.map((clod) => (
-          <span key={clod} className={`ask__clod ask__clod--${clod}`} aria-hidden="true" />
-        ))}
         <span className="ask__lip" />
       </button>
       <section className="ask__bubble" aria-live="polite" aria-label={t('ask.title')}>

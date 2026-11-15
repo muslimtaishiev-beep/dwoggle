@@ -17,14 +17,14 @@ export interface BaseMapProps {
 /** The marker is a zero-size anchor on the point; the visible art is positioned and sized in MapView.css. */
 export const MARKER = {
   pin: { className: 'map-pin', html: '<span class="map-pin__dot"></span>' },
-  // Dwoggle (the logo's head) pops up on the point, wriggles down into a hole, and earth keeps flying out of it
-  // until the report arrives.
+  // Pixel Dwoggle tunnels to the point under a mound of earth, bursts out with a jump, lands, then drills down
+  // into a hole with his jackhammer until the report arrives.
   digger: {
     className: 'map-digger',
     html:
+      '<span class="map-digger__mound"></span><span class="map-digger__run"></span>' +
       '<span class="map-digger__dig"><span class="map-digger__hole"></span>' +
-      '<span class="map-digger__shaft"><img class="map-digger__body" src="/brand/dwoggle-head.png" alt="" draggable="false"></span>' +
-      '<span class="map-digger__clod"></span><span class="map-digger__clod"></span><span class="map-digger__clod"></span></span>',
+      '<span class="map-digger__shaft"><span class="map-digger__body"></span></span></span>',
   },
 } as const
 
