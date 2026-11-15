@@ -78,6 +78,11 @@ TEXTS: dict[str, dict[str, str]] = {
         "ru": "Над этой местностью крутые склоны: возможный путь селя.",
         "ky": "Бул аймактын үстүндө тик капталдар бар: сел өтүшү мүмкүн.",
     },
+    "flood.water_body": {
+        "en": "About {pct}% of the {radius} m circle is open water (a lake, reservoir or river). Flood grades are for land, so none is given here.",
+        "ru": "Около {pct}% круга радиусом {radius} м занимает открытая вода (озеро, водохранилище или река). Оценка паводка даётся для суши, поэтому здесь её нет.",
+        "ky": "{radius} м радиустагы тегеректин болжол менен {pct}% ачык суу (көл, суу сактагыч же дарыя). Суу ташкынынын баасы кургак жер үчүн берилет, ошондуктан бул жерде ал жок.",
+    },
     "flood.rain_up": {
         "en": "Spring-summer rainfall here is rising (+{change} mm since {start}, significant ✓).",
         "ru": "Весенне-летние осадки здесь растут (+{change} мм с {start} года, значимо ✓).",
@@ -310,6 +315,16 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Pick from flood, landslide, earthquake and heat.",
         "ru": "Выберите из: паводок, оползень, землетрясение, жара.",
         "ky": "Тандаңыз: суу ташкыны, жер көчкү, жер титирөө, ысык.",
+    },
+    "err.outside_coverage": {
+        "en": "There is data only for Kyrgyzstan for now. Tap a place inside the country.",
+        "ru": "Пока есть данные только по Кыргызстану. Выберите место внутри страны.",
+        "ky": "Азырынча маалымат Кыргызстан боюнча гана бар. Өлкөнүн ичиндеги жерди тандаңыз.",
+    },
+    "err.account_gone": {
+        "en": "This account no longer exists. Please sign in again.",
+        "ru": "Этого аккаунта больше нет. Войдите снова.",
+        "ky": "Бул аккаунт жок болуп калды. Кайра кириңиз.",
     },
     "err.token_missing": {"en": "Please sign in.", "ru": "Пожалуйста, войдите.", "ky": "Сураныч, кириңиз."},
     "err.token_invalid": {"en": "Invalid sign-in. Please sign in again.", "ru": "Ошибка входа. Войдите снова.", "ky": "Кирүүдө ката. Кайра кириңиз."},

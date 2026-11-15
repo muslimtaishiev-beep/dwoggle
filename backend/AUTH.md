@@ -104,7 +104,12 @@ Country picker: store the ISO code (`KG`), show names with
 | `PUT /api/me/profile` | token | Save `{country, phone, purpose, purpose_note?, concerns?, lang}`. Phone comes back as `+996…`. An empty phone keeps the saved one (or none yet): the app saves the first answers before asking for the phone, so a visitor who leaves there is asked only for the phone next time. `profile_complete` stays false until a phone is saved. |
 | `DELETE /api/me` | token | Delete the profile and the Firebase account |
 
-Errors: `401 {code: token_missing | token_invalid | token_expired}` (sign in again), `422 {field, code, message}`
+Phone numbers are checked with libphonenumber (Google's rules): `0555 12 34 56`, `+996 0555 123 456` (the local 0
+typed after the code) and `00996…` all become `+996555123456`; numbers that cannot exist (`+1 0555…`) are refused.
+The chosen country is only the default for numbers written without a code.
+
+Errors: `401 {code: token_missing | token_invalid | token_expired | account_gone}` (sign in again; `account_gone`:
+the account was deleted or disabled while its token was still valid), `422 {field, code, message}`
 (show `message` under `field`, already in the user's language), `503 {code: auth_disabled}` (Firebase not set up yet).
 
 Why they're here: `buy_land`, `build`, `own_home`, `realtor`, `government`, `research`, `curious`, `other`

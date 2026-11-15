@@ -7,7 +7,7 @@ GET /api/methodology ("How we grade"), so what the app says and what the code do
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from statistics import mean
+from statistics import mean, median
 
 from .faults import FaultHit
 from .providers.base import JRC_LAST_YEAR, RawMetrics, Series
@@ -20,6 +20,7 @@ WATER_YEAR_MIN_PCT = 1.0  # a year counts as "water seen" if >=1% of the circle 
 FLOOD_YEAR_BREAKS = (0, 2, 5)  # 0 -> A, 1-2 -> B, 3-5 -> C, 6+ -> D
 LOW_LYING_M = 5.0  # plot this much below the 1 km median -> one grade worse
 MUDFLOW_UPSLOPE_DEG = 25.0  # low-lying + this steep within 1.5 km -> at least C
+WATER_BODY_PCT = 50.0  # circle mostly open water in a typical year -> a lake/reservoir/river, no flood grade
 # Landslide
 SLOPE_BREAKS_DEG = (8.0, 15.0, 25.0)  # p90 slope: <8 A, 8-15 B, 15-25 C, 25+ D
 RUNOUT_DEG = 30.0  # land this steep within 1.5 km -> at least B
@@ -120,6 +121,17 @@ def grade_flood(m: RawMetrics, radius_m: int) -> CheckResult:
     ]
     if len(years) < 10:
         return CheckResult("flood", None, [("nodata", {})], series=series)
+
+    # Tapped on a lake, reservoir or wide river: a flood grade for open water means nothing.
+    water_share = median(years.values())
+    if water_share >= WATER_BODY_PCT:
+        return CheckResult(
+            "flood",
+            None,
+            [("flood.water_body", {"pct": round(water_share), "radius": radius_m})],
+            metrics={"water_body": True, "water_share_pct": round(water_share, 1), "years_observed": len(years)},
+            series=series,
+        )
 
     wet = sum(1 for v in years.values() if v >= WATER_YEAR_MIN_PCT)
     grade = _bucket(wet, FLOOD_YEAR_BREAKS)
@@ -327,6 +339,7 @@ METHODOLOGY = {
             f"If the area is at least {LOW_LYING_M:g} m lower than the median ground within 1 km and water was seen, one grade worse.",
             f"If the area sits below its surroundings and the land within 1.5 km reaches {MUDFLOW_UPSLOPE_DEG:g}° (95th percentile), at least C (mudflow path).",
             "Rainfall trend is shown for context and does not change the grade.",
+            f"If more than {WATER_BODY_PCT:g}% of the circle is open water in a typical year (a lake, reservoir or wide river), no flood grade is given.",
         ],
     },
     "landslide": {

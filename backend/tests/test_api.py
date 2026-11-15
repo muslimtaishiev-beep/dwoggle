@@ -119,3 +119,25 @@ def test_app_languages_fall_back_to_en_ru_ky(client):
     langs = client.get("/api/languages").json()
     assert len(langs["languages"]) == 11 and langs["fallback"]["uz"] == "ru" and langs["fallback"]["ky"] == "ky"
     assert client.get("/api/report", params={"lat": 42.5, "lon": 75.5, "lang": "de"}).status_code == 422
+
+
+def test_faults_bbox_must_be_sane(client):
+    for bad in ("nan,nan,nan,nan", "75,43,74,42", "1,2,3", "inf,0,1,1", "a,b,c,d"):
+        assert client.get("/api/faults", params={"bbox": bad}).status_code == 422, bad
+
+
+def test_every_profile_refusal_names_its_field(client):
+    h = {"Authorization": "Bearer dev:val:val@example.com"}
+    cases = [
+        ({"country": "KG", "phone": "1" * 500, "purpose": "build"}, "phone", "phone_invalid"),
+        ({"country": "KG", "phone": "0555123456", "purpose": "other", "purpose_note": "x" * 1500}, "purpose_note", "note_too_long"),
+        ({"country": "KG", "phone": "0555123456", "purpose": "build", "concerns": "flood"}, "concerns", "concerns_invalid"),
+        ({"country": 12, "phone": "0555123456", "purpose": "build"}, "country", "country_invalid"),
+    ]
+    for body, field, code in cases:
+        r = client.put("/api/me/profile", params={"lang": "ky"}, headers=h, json=body)
+        assert r.status_code == 422 and r.json()["detail"]["field"] == field and r.json()["detail"]["code"] == code, (body, r.json())
+    dupes = client.put("/api/me/profile", headers=h, json={"country": "KG", "phone": "0555123456", "purpose": "build",
+                                                           "concerns": ["flood", "flood", "heat", "heat", "flood"]})
+    assert dupes.status_code == 200 and dupes.json()["profile"]["concerns"] == ["flood", "heat"]
+    client.delete("/api/me", headers=h)

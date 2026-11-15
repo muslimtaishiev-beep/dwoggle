@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
 import secrets
 import threading
 import time
@@ -19,8 +20,11 @@ from typing import Annotated, Any, Literal
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Path, Query, Request, Response
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from . import __version__
@@ -28,6 +32,7 @@ from .auth import Auth, AuthError, AuthUser, make_auth
 from .cache import Cache
 from .chat import Chat, ChatError, make_chat
 from .config import get_settings, on_cloud_run
+from .coverage import covers
 from .faults import faults_in_bbox
 from .geocode import Geocoder, PlaceNamer
 from .grading import METHODOLOGY
@@ -138,6 +143,28 @@ app.add_middleware(
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+# Pydantic refusals (wrong type, too long) on the profile come back like our own: {field, code, message},
+# so the app can show the reason under the right question instead of a general error.
+_PROFILE_FIELD_CODES = {
+    "country": "country_invalid",
+    "phone": "phone_invalid",
+    "purpose": "purpose_invalid",
+    "purpose_note": "note_too_long",
+    "concerns": "concerns_invalid",
+}
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_error(request: Request, exc: RequestValidationError):
+    if request.url.path == "/api/me/profile":
+        for error in exc.errors():
+            loc = error.get("loc", ())
+            if len(loc) >= 2 and loc[0] == "body" and loc[1] in _PROFILE_FIELD_CODES:
+                code = _PROFILE_FIELD_CODES[loc[1]]
+                lang = request.query_params.get("lang", "en")
+                return JSONResponse(status_code=422, content={"detail": {"field": loc[1], "code": code, "message": t(f"err.{code}", lang)}})
+    return await request_validation_exception_handler(request, exc)
+
 
 # --- Rate limit (per IP, in memory; enough for one instance) ----------------------------------
 
@@ -181,10 +208,12 @@ def _daily_limit(request: Request, bucket: str, per_ip: int, total: int) -> None
         _daily[everyone] = _daily.get(everyone, 0) + 1
 
 
-def _check_bounds(lat: float, lon: float) -> None:
+def _check_bounds(lat: float, lon: float, lang: str = "en") -> None:
+    """Kyrgyzstan only: a quick box first, then the real border (with a small tolerance, see coverage.py)."""
     min_lon, min_lat, max_lon, max_lat = settings.bbox
-    if not (min_lat <= lat <= max_lat and min_lon <= lon <= max_lon):
-        raise HTTPException(422, "Bekem only knows Kyrgyzstan for now. Pick a point inside the country.")
+    in_box = min_lat <= lat <= max_lat and min_lon <= lon <= max_lon
+    if not in_box or not covers(settings.border_path, lat, lon):
+        raise HTTPException(422, {"code": "outside_coverage", "message": t("err.outside_coverage", lang)})
 
 
 # --- Routes -----------------------------------------------------------------------------------
@@ -241,7 +270,7 @@ def report(
     refresh: bool = False,
 ):
     """The report card for a point: five grades, Bekem's mood, and 25-year series for the charts."""
-    _check_bounds(lat, lon)
+    _check_bounds(lat, lon, lang)
     if state.service is None:
         raise HTTPException(503, "Satellite data is not available right now." if on_cloud_run()
                             else f"Satellite provider is not available: {state.provider_error}")
@@ -291,9 +320,10 @@ def faults(bbox: Annotated[str | None, Query(description="min_lon,min_lat,max_lo
     if bbox:
         try:
             box = tuple(float(x) for x in bbox.split(","))
-            assert len(box) == 4
-        except (ValueError, AssertionError):
-            raise HTTPException(422, "bbox must be min_lon,min_lat,max_lon,max_lat")
+        except ValueError:
+            box = ()
+        if len(box) != 4 or not all(math.isfinite(v) for v in box) or box[0] >= box[2] or box[1] >= box[3]:
+            raise HTTPException(422, "bbox must be four numbers min_lon,min_lat,max_lon,max_lat with min < max")
     else:
         box = settings.bbox
     return faults_in_bbox(settings.faults_path, box)
@@ -364,6 +394,12 @@ def current_user(
 User = Annotated[AuthUser, Depends(current_user)]
 
 
+def _require_active(user: AuthUser, lang: str = "en") -> None:
+    """Writes need a live account: a deleted or disabled account's token stays valid for up to an hour."""
+    if not state.auth.account_active(user.uid):
+        raise _auth_error(401, "account_gone", lang)
+
+
 class ProfileIn(BaseModel):
     country: str = Field(max_length=8, description="ISO 3166-1 alpha-2, e.g. KG")
     phone: str = Field(
@@ -375,7 +411,7 @@ class ProfileIn(BaseModel):
     purpose: str = Field(max_length=32, description="Why they're here: one of the ids from /api/auth/options")
     purpose_note: str | None = Field(None, max_length=1000, description="Free text (300 chars max), required for 'other'")
     concerns: list[str] | None = Field(
-        None, max_length=len(CONCERNS),
+        None, max_length=16,  # duplicates are dropped and unknown ids refused by validate_concerns
         description="Any of flood, landslide, earthquake, heat (may be empty). Omit to keep the saved value.",
     )
     lang: AppLang = "en"
@@ -418,6 +454,7 @@ def me(user: User):
 def save_profile(user: User, body: ProfileIn, request: Request):
     """Create or update country, phone and purpose. Email and sign-in method come from Firebase."""
     _rate_limit(request)
+    _require_active(user, body.lang)
     existing = state.auth.store.get(user.uid) or {}
     try:
         fields = validate_profile(body.country, body.phone, body.purpose, body.purpose_note)
@@ -486,6 +523,7 @@ def saved_add(user: User, body: SavedIn, request: Request):
     """Save a place (or move it to the top if it is saved already). Only places in Kyrgyzstan."""
     _rate_limit(request)
     _check_bounds(body.lat, body.lon)
+    _require_active(user)
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     area = {"lat": round(body.lat, 5), "lon": round(body.lon, 5), "name": (body.name or "").strip() or None, "saved_at": now}
     areas = [area] + [a for a in _saved(user.uid) if not _same(a, body.lat, body.lon)]
@@ -634,7 +672,8 @@ def optional_user(authorization: Annotated[str | None, Header()] = None) -> Auth
 @app.post("/api/reports")
 def create_report(user: User, body: ReportIn, request: Request):
     """Gather everything about a place into a numbered report. Takes up to about a minute."""
-    _check_bounds(body.lat, body.lon)
+    _check_bounds(body.lat, body.lon, body.lang)
+    _require_active(user, body.lang)
     if state.service is None:
         raise HTTPException(503, {"code": "provider_unavailable"})
     _rate_limit(request)

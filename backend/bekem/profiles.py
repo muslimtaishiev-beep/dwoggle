@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import re
+import phonenumbers
 
 # "Why are you here?" The answer tells us who Bekem is really for (families, builders, MChS, realtors).
 PURPOSES = ("buy_land", "build", "own_home", "realtor", "government", "research", "curious", "other")
@@ -22,11 +22,6 @@ COUNTRIES = frozenset(
     "YT ZA ZM ZW".split()
 )
 
-# Calling codes where we can turn a local number ("0555 123 456") into international form.
-LOCAL_PREFIX = {"KG": "996", "KZ": "7", "RU": "7", "UZ": "998", "TJ": "992", "TR": "90"}
-
-E164 = re.compile(r"^\+[1-9]\d{7,14}$")
-KG_MOBILE = re.compile(r"^\+996\d{9}$")
 NOTE_MAX = 300
 
 
@@ -38,23 +33,25 @@ class ProfileError(ValueError):
 
 
 def normalize_phone(raw: str, country: str) -> str:
-    """'+996 (555) 12-34-56', '00996555123456', '0555123456' (KG) -> '+996555123456'."""
-    digits = re.sub(r"[\s\-().]", "", raw or "")
-    if digits.startswith("00"):
-        digits = "+" + digits[2:]
-    elif not digits.startswith("+") and country in LOCAL_PREFIX:
-        code = LOCAL_PREFIX[country]
-        if digits.startswith(code):
-            digits = "+" + digits
-        elif digits.startswith(("0", "8")):  # national trunk prefix
-            digits = "+" + code + digits[1:]
-        else:
-            digits = "+" + code + digits
-    if not E164.match(digits):
+    """Any way people write a number -> E.164, checked against that country's real numbering plan.
+
+    Uses libphonenumber (Google's rules, as on Android): '+996 (555) 12-34-56', '00996555123456',
+    '0555 123 456' and '+996 0555 123 456' (the local 0 typed after the code) all give '+996555123456'.
+    The chosen country is only the default for numbers written without a code; a number with its own code
+    (someone living abroad) is checked against that code's country.
+    """
+    text = (raw or "").strip()
+    if text.startswith("00"):  # international prefix used in most of the world
+        text = "+" + text[2:]
+    if not text or len(text) > 40:
         raise ProfileError("phone", "phone_invalid")
-    if country == "KG" and digits.startswith("+996") and not KG_MOBILE.match(digits):
+    try:
+        number = phonenumbers.parse(text, country if country in COUNTRIES else None)
+    except phonenumbers.NumberParseException as e:
+        raise ProfileError("phone", "phone_invalid") from e
+    if not phonenumbers.is_valid_number(number):
         raise ProfileError("phone", "phone_invalid")
-    return digits
+    return phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
 
 
 def validate_concerns(concerns: list[str]) -> list[str]:

@@ -3,7 +3,8 @@ import type { Lang } from '../i18n/i18n.ts'
 import { parseReport } from './parseReport.ts'
 import type { LatLon, Report } from './types.ts'
 
-export type ReportErrorKind = 'network' | 'server' | 'format' | 'busy'
+/** outside: the backend has no data for that place (outside Kyrgyzstan's border); trying again cannot help. */
+export type ReportErrorKind = 'network' | 'server' | 'format' | 'busy' | 'outside'
 
 export class ReportRequestError extends Error {
   readonly kind: ReportErrorKind
@@ -13,6 +14,13 @@ export class ReportRequestError extends Error {
     this.name = 'ReportRequestError'
     this.kind = kind
   }
+}
+
+/** The backend's 422 for a point outside the area it covers: { detail: { code: "outside_coverage", … } }. */
+export function isOutsideCoverage(body: unknown): boolean {
+  if (typeof body !== 'object' || body === null) return false
+  const detail = (body as { detail?: unknown }).detail
+  return typeof detail === 'object' && detail !== null && (detail as { code?: unknown }).code === 'outside_coverage'
 }
 
 /** GET /api/report. In development, vite.config.ts sends /api to the backend or to the mock. */
@@ -33,7 +41,12 @@ export async function fetchReport(point: LatLon, lang: Lang, signal: AbortSignal
   }
   // Too many checks in a row from this visitor: the backend asks to wait a minute.
   if (response.status === 429) throw new ReportRequestError('busy', 'HTTP 429')
-  if (!response.ok) throw new ReportRequestError('server', `HTTP ${response.status}`)
+  if (!response.ok) {
+    // The map only sends taps inside Kyrgyzstan's box; the backend then checks the real border.
+    const refusal: unknown = response.status === 422 ? await response.json().catch(() => null) : null
+    if (isOutsideCoverage(refusal)) throw new ReportRequestError('outside', 'No data for this place')
+    throw new ReportRequestError('server', `HTTP ${response.status}`)
+  }
 
   let body: unknown
   try {
