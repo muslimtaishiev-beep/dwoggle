@@ -30,7 +30,12 @@
   width: 100%;
   max-width: 410px;
   margin-inline-start: 10px;
-  zoom: var(--frame-scale);
+  /*
+   * The frame's scale, and smaller still when the window is too short for the form between the logo (about
+   * 100 px) and the earth (100 units): a short laptop screen, or zoomed in a little. Never below 80 %.
+   */
+  --sign-in-fit: clamp(0.8, tan(atan2(100dvh - 140px - 100 * var(--u), 500px)), 1);
+  zoom: min(var(--frame-scale), var(--sign-in-fit));
 }
 
 /* Sign up or log in: two halves of one cream pill, the chosen one white and raised. */
@@ -38,20 +43,20 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   padding: 4px;
   border-radius: 999px;
   background: var(--brand-cream);
 }
 
 .sign-in__tab {
-  min-height: 42px;
+  min-height: 38px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--brand-text);
   font: inherit;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   cursor: pointer;
   transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
@@ -71,14 +76,14 @@
 }
 
 .sign-in__title {
-  font-size: 48px;
+  font-size: 42px;
   text-wrap: balance;
 }
 
 .sign-in__lead {
-  margin: 2px 0 22px;
+  margin: 2px 0 16px;
   color: var(--brand-text);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
   line-height: 1.4;
 }
@@ -89,7 +94,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 50px;
+  min-height: 46px;
   padding: 0 var(--space-6);
   border: 1px solid var(--google-border);
   border-radius: 999px;
@@ -115,7 +120,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-5);
-  margin: 12px 0 8px;
+  margin: 8px 0 4px;
   color: var(--brand-muted);
   font-size: 14px;
 }
@@ -130,11 +135,11 @@
 .sign-in__form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .sign-in__form .brand-field {
-  gap: 6px;
+  gap: 4px;
 }
 
 .sign-in__form .brand-field__note:empty {
@@ -142,11 +147,11 @@
 }
 
 .sign-in__form .brand-field__label {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .sign-in__form .brand-input {
-  height: 50px;
+  height: 46px;
   font-size: 17px;
 }
 
@@ -155,8 +160,8 @@
 }
 
 .sign-in__form .brand-button {
-  min-height: 56px;
-  font-size: 27px;
+  min-height: 50px;
+  font-size: 24px;
 }
 
 .sign-in__submit {
@@ -264,6 +269,11 @@
 @media (max-width: 1023px), (max-height: 619px) {
   .brand-page {
     --frame-scale: 1;
+  }
+
+  /* Stacked, the page scrolls: the form keeps its full size. */
+  .sign-in__panel {
+    --sign-in-fit: 1;
   }
 
   /* Stacked, the page simply starts at the top. */
