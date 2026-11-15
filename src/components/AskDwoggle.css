@@ -24,6 +24,8 @@
 /* Pressed, he ducks a little into his hole. */
 .ask__burrow:active .ask__dwoggle {
   transform: translateX(-50%) translateY(6px);
+  transition-duration: var(--duration-press);
+  transition-timing-function: ease-out;
 }
 
 /* The back of the hole, then Dwoggle cut off at its middle, then the hole's front lip over him. */
@@ -61,7 +63,78 @@
   top: 0;
   height: 226px;
   transform: translateX(-50%);
-  transition: transform var(--duration-press) ease-out;
+  transform-origin: 50% 100%;
+  /* Back up out of the hole: fast, a little past where he stands, and settling (a spring). */
+  transition: transform 560ms cubic-bezier(0.3, 1.45, 0.55, 1);
+}
+
+/*
+ * A place was tapped: he dives into his hole to dig. The curve first lifts him a touch (a little hop, getting
+ * ready), then takes him down head first, all the way under.
+ */
+.ask--under .ask__dwoggle {
+  transform: translateX(-50%) translateY(205px) scaleY(0.94);
+  transition: transform 460ms cubic-bezier(0.55, -0.35, 0.75, 0.5);
+}
+
+/* Earth thrown up out of the hole while he digs below: a hop up and a fall back in, one clod after another. */
+.ask__clod {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  width: 14px;
+  height: 11px;
+  border-radius: 45% 55% 40% 60%;
+  /* Fresh earth from below, lighter than the trodden ground round the hole, so it shows against it. */
+  background: color-mix(in srgb, var(--earth-clod) 55%, #e2c3a0);
+  box-shadow: inset -2px -2px 0 rgb(0 0 0 / 0.18);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ask--under .ask__clod {
+  animation: ask-clod 640ms var(--ease-out) infinite;
+  /* Only once he is down there. */
+  animation-delay: calc(380ms + var(--clod-at, 0ms));
+}
+
+.ask__clod--0 { --clod-x: -34px; --clod-y: -54px; --clod-spin: -200deg; }
+.ask__clod--1 { --clod-x: 26px; --clod-y: -66px; --clod-spin: 240deg; --clod-at: 130ms; width: 10px; height: 8px; }
+.ask__clod--2 { --clod-x: -10px; --clod-y: -78px; --clod-spin: 160deg; --clod-at: 260ms; background: color-mix(in srgb, var(--earth-clod) 75%, #e2c3a0); }
+.ask__clod--3 { --clod-x: 44px; --clod-y: -44px; --clod-spin: -260deg; --clod-at: 390ms; width: 11px; height: 9px; }
+.ask__clod--4 { --clod-x: -50px; --clod-y: -38px; --clod-spin: 300deg; --clod-at: 510ms; background: color-mix(in srgb, var(--earth-clod) 40%, #ecd5b8); }
+
+@keyframes ask-clod {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) rotate(0deg);
+    animation-timing-function: var(--ease-rise);
+  }
+
+  45% {
+    transform: translate(calc(-50% + var(--clod-x) * 0.6), var(--clod-y)) rotate(calc(var(--clod-spin) * 0.5));
+    animation-timing-function: var(--ease-fall);
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--clod-x)), 4px) rotate(var(--clod-spin));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask__dwoggle,
+  .ask--under .ask__dwoggle {
+    transition: none;
+  }
+
+  .ask--under .ask__clod {
+    animation: none;
+  }
 }
 
 .ask__bubble {

@@ -16,8 +16,12 @@ interface AskDwoggleProps {
   onChat: (topic: Topic | null) => void
 }
 
+const CLODS = [0, 1, 2, 3, 4] as const
+
 /**
- * Dwoggle in his hole at the bottom of the map, with a speech bubble. Before a tap he says what to do; with a
+ * Dwoggle in his hole at the bottom of the map, with a speech bubble. When a place is tapped he dives into his
+ * hole and digs (earth jumps out of it) until the report is ready, then pops back out. Before a tap he says what
+ * to do; with a
  * report open he offers questions. Pressing him, or a question, opens the chat, where he answers.
  */
 export function AskDwoggle({ report, checking, notice, onChat }: AskDwoggleProps) {
@@ -30,20 +34,26 @@ export function AskDwoggle({ report, checking, notice, onChat }: AskDwoggleProps
     return text.charAt(0).toLocaleUpperCase(lang) + text.slice(1)
   }
 
-  const title = notice ?? (report ? t('ask.title') : t(checking ? 'bekem.loading' : 'map.hint'))
+  // While he is under the ground the questions wait: they come with him when he is back up.
+  const offer = report !== null && !checking
+  const title = notice ?? (checking ? t('bekem.loading') : offer ? t('ask.title') : t('map.hint'))
 
   return (
-    <div className="ask">
+    <div className={`ask${checking ? ' ask--under' : ''}`}>
       <button type="button" className="ask__burrow" aria-label={t('chat.open')} onClick={() => onChat(null)}>
         <span className="ask__hole" />
         <span className="ask__peek">
           <StandingDwoggle className="ask__dwoggle" />
         </span>
+        {/* While he digs under the ground, earth jumps out of his hole. */}
+        {CLODS.map((clod) => (
+          <span key={clod} className={`ask__clod ask__clod--${clod}`} aria-hidden="true" />
+        ))}
         <span className="ask__lip" />
       </button>
       <section className="ask__bubble" aria-live="polite" aria-label={t('ask.title')}>
         <p className="ask__title brand-display">{title}</p>
-        {notice === null && report !== null && (
+        {notice === null && offer && (
           <div className="ask__chips">
             {worst?.grade && (
               <button type="button" className="ask__chip" onClick={() => onChat(worst.id)}>
