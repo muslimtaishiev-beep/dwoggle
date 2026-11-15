@@ -4,12 +4,13 @@ Tap a place on the map and Dwoggle reads 25 years of NASA satellite data for thi
 
 - The frontend is this folder (Vite, React, TypeScript): everything below.
 - [backend/](backend/): the API (FastAPI and Google Earth Engine), see [backend/README.md](backend/README.md).
+- [RESOURCES.md](RESOURCES.md): the NASA data and resources (and the space agency partner resources) Dwoggle uses, and how.
 - [deploy/firebase/](deploy/firebase/DEPLOY_FIREBASE.md): one address for both. Firebase Hosting serves the frontend's build (`dist/`) and forwards `/api/*` to the backend on Cloud Run; GitHub Actions → "Deploy to Firebase" builds and publishes both.
 
 | Page | What it is |
 | --- | --- |
 | `/` | The main page: create an account or log in (Google, or email and password). A signed-in visitor goes straight on to the map, or to the dig while the backend still needs their profile. |
-| `/welcome` | The dig: four questions after the first sign-in (language, why you came, what worries you, phone number), asked while Dwoggle digs one screen deeper per answer. |
+| `/welcome` | Four questions after the first sign-in (language, why you came, what worries you, phone number), one at a time, from Dwoggle standing with his map. |
 | `/map` | The map. Tap any place on the 3D satellite map and Dwoggle digs into the ground there; the report opens beside the map: a short fact and a grade for each of the five checks (earthquake, flood, landslide, heat, greenery). "Layers" opens the round core with one layer per check and its 25-year chart. Pressing Dwoggle (or one of his ready questions) opens the chat with him. |
 
 The map and the report work without an account, at `/map`; signing in only adds a profile. Dwoggle covers Kyrgyzstan only (`KYRGYZSTAN` in [src/config.ts](src/config.ts), the box the backend checks): the map cannot leave the country, the search finds places only in it, and a tap or a shared link outside it gets a short notice instead of a report. The app is a single page with its own small router ([src/router.ts](src/router.ts)), so the host must serve `index.html` for every path; any other address leads to the main page.
