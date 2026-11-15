@@ -1,6 +1,11 @@
 .map-view {
   position: absolute;
   inset: 0;
+  /*
+   * The map's own layers (Leaflet's panes go up to z-index 400) stay inside the map: without this they rose above
+   * the ground below it and cut off the top of Dwoggle's helmet where it pokes up over the map's edge.
+   */
+  isolation: isolate;
 }
 
 .map-view__map {
