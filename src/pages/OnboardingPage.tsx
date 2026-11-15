@@ -354,7 +354,7 @@ export function OnboardingPage({ user }: { user: User }) {
       </main>
 
       <div className="dig__mascot" aria-hidden="true" data-reveal-origin="">
-        <DiggingDwoggle hard={digging} />
+        <DiggingDwoggle pace={digging ? 'hard' : 'still'} />
       </div>
     </div>
   )

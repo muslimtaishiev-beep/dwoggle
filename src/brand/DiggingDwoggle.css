@@ -345,6 +345,12 @@
   }
 }
 
+/* Standing still (the visitor is reading): no earth flies, no dust. */
+.digging-dwoggle--still .digging-dwoggle__bit,
+.digging-dwoggle--still .digging-dwoggle__puff {
+  visibility: hidden;
+}
+
 /* Reduced motion: he keeps still, and only blinks. */
 @media (prefers-reduced-motion: reduce) {
   .digging-dwoggle__rock,

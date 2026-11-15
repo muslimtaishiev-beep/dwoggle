@@ -82,11 +82,19 @@ function Bits({ bits, kind }: { bits: readonly Bit[]; kind: 'behind' | 'paws' })
  * way and keep up with the earth moving past instead of trailing it.
  */
 const HARD_RATE = 3
+/** One cycle (two strokes) at his calm pace: --dig-cycle in DiggingDwoggle.css. */
+const CYCLE_MS = 900
+
+/**
+ * still: he stands in his pose and only blinks (while the visitor reads a question: digging then looks busy for
+ * nothing). calm: he paws at the earth at an easy pace (while he waits for something). hard: he digs fast, going
+ * down a layer.
+ */
+export type DigPace = 'still' | 'calm' | 'hard'
 
 interface DiggingDwoggleProps {
   className?: string
-  /** Digging hard: going down a layer. Otherwise he paws at the earth while the visitor reads. */
-  hard: boolean
+  pace: DigPace
 }
 
 /**
@@ -96,17 +104,38 @@ interface DiggingDwoggleProps {
  * now and then he blinks. The same motion runs faster when he digs hard: the
  * running animations change speed where they are, so nothing jumps.
  */
-export function DiggingDwoggle({ className = '', hard }: DiggingDwoggleProps) {
+export function DiggingDwoggle({ className = '', pace }: DiggingDwoggleProps) {
   const root = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
-    const animations = root.current?.getAnimations?.({ subtree: true }) ?? []
-    for (const animation of animations) {
-      // His blinking keeps its own pace.
-      if (animation instanceof CSSAnimation && animation.animationName === 'dwoggle-dig-blink') continue
-      animation.updatePlaybackRate(hard ? HARD_RATE : 1)
+    const element = root.current
+    if (element === null) return
+    // His blinking keeps its own pace, and goes on while he stands still.
+    const moving = (element.getAnimations?.({ subtree: true }) ?? []).filter(
+      (animation) => !(animation instanceof CSSAnimation && animation.animationName === 'dwoggle-dig-blink'),
+    )
+    if (pace !== 'still') {
+      element.classList.remove('digging-dwoggle--still')
+      for (const animation of moving) {
+        animation.updatePlaybackRate(pace === 'hard' ? HARD_RATE : 1)
+        if (animation.playState === 'paused') animation.play()
+      }
+      return
     }
-  }, [hard])
+    // To stand still he finishes the stroke he is in, so his paws never jump, then holds his pose.
+    const stroke = moving.find((animation) => animation instanceof CSSAnimation && animation.animationName === 'dwoggle-dig-rock')
+    const time = typeof stroke?.currentTime === 'number' ? stroke.currentTime : null
+    const rate = stroke?.playbackRate || 1
+    const wait = stroke && time !== null && stroke.playState === 'running' ? ((CYCLE_MS - (time % CYCLE_MS)) % CYCLE_MS) / rate : 0
+    const timer = window.setTimeout(() => {
+      for (const animation of moving) {
+        animation.pause()
+        animation.currentTime = 0
+      }
+      element.classList.add('digging-dwoggle--still')
+    }, wait)
+    return () => window.clearTimeout(timer)
+  }, [pace])
 
   return (
     <span ref={root} className={`digging-dwoggle ${className}`}>
