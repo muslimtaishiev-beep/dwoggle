@@ -221,6 +221,7 @@ export default function MapPage() {
                     onSave={save}
                     onShare={share}
                     onFullReport={() => setFullReport(point)}
+                    onGrading={() => setGradingOpen(true)}
                     onRetry={retry}
                     onClose={close}
                   />

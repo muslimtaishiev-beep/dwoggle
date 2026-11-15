@@ -152,6 +152,22 @@
 .panel-grade--d { background: var(--grade-ui-d); box-shadow: 0 3px 0 0 var(--grade-ui-d-edge); }
 .panel-grade--none { background: var(--grade-ui-none); box-shadow: 0 3px 0 0 var(--grade-ui-none-edge); }
 
+/* A plain link under the grades: what A, B, C and D mean. */
+.report-panel__grades-help {
+  align-self: flex-start;
+  margin-top: -2px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand-brown);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
 .report-panel__actions {
   display: flex;
   gap: 12px;

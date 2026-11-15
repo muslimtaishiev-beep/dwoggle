@@ -52,11 +52,12 @@
   left: 0;
   right: 0;
   bottom: 21px;
-  height: 172px;
+  /* He stands a little higher in his hole: more of him shows above its rim. */
+  height: 192px;
   overflow: hidden;
 }
 
-/* His full height is 1.3 times what shows: the map's lower edge sits just above the hole. */
+/* His full height is about 1.2 times what shows: the bottom of his belly sits just above the hole. */
 .ask__dwoggle {
   position: absolute;
   left: 50%;

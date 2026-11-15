@@ -18,6 +18,8 @@ interface ReportPanelProps {
   onShare: (report: Report) => void
   /** "Full report (PDF)": everything about the place, gathered and written as a numbered PDF. */
   onFullReport: () => void
+  /** "What do the grades mean?": the explanation of the grades A to D. */
+  onGrading: () => void
   onRetry: () => void
   onClose: () => void
 }
@@ -37,7 +39,7 @@ function PanelGrade({ grade }: { grade: Grade | null }) {
  * The tapped area at a glance, beside the map: where it is, what the checks found, one short fact and the grade
  * for each, and saving or sharing it. The layered figure behind "Layers" tells the longer story.
  */
-export function ReportPanel({ state, saved, note, onAsk, onSave, onShare, onFullReport, onRetry, onClose }: ReportPanelProps) {
+export function ReportPanel({ state, saved, note, onAsk, onSave, onShare, onFullReport, onGrading, onRetry, onClose }: ReportPanelProps) {
   const i18n = useI18n()
   const { t, formatNumber } = i18n
   const report = state.status === 'ready' ? state.report : null
@@ -107,6 +109,10 @@ export function ReportPanel({ state, saved, note, onAsk, onSave, onShare, onFull
               )
             })}
           </ul>
+          {/* Right under the grades, where the question comes up: what A, B, C and D mean. */}
+          <button type="button" className="report-panel__grades-help" onClick={onGrading}>
+            {t('panel.grades_help')}
+          </button>
           <div className="report-panel__actions">
             <button type="button" className="brand-button report-panel__save" aria-pressed={saved} onClick={onSave}>
               {t(saved ? 'panel.saved' : 'panel.save')}

@@ -144,8 +144,7 @@
 .dig__mascot {
   position: fixed;
   z-index: 2;
-  /* His feet on the earth's top edge, as on the sign-up page. */
-  bottom: calc(83 * var(--u));
+  bottom: calc(51 * var(--u));
   inset-inline-start: calc(50% + 100 * var(--u));
   height: calc(474 * var(--u));
   pointer-events: none;

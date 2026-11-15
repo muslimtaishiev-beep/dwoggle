@@ -225,8 +225,7 @@
 
 .sign-in__dwoggle {
   position: absolute;
-  /* His feet on the earth's top edge, not on the brown below it (which made him look sunk in to his knees). */
-  bottom: calc(83 * var(--u));
+  bottom: calc(51 * var(--u));
   inset-inline-start: calc(50% + 174 * var(--u));
   height: calc(474 * var(--u));
   transform-origin: 50% 100%;
@@ -237,7 +236,7 @@
 .sign-in__bubble {
   position: absolute;
   inset-inline-end: calc(50% - 215 * var(--u));
-  bottom: calc(499 * var(--u));
+  bottom: calc(467 * var(--u));
   padding: calc(10 * var(--u)) calc(22 * var(--u));
   border: calc(2.5 * var(--u)) solid var(--brand-brown);
   border-radius: calc(14 * var(--u));
