@@ -1,99 +1,18 @@
 /*
- * The dig, as drawn on a 1280 x 711 frame. A tall world (sky, surface, then four layers of earth) sits behind
- * the page, and the camera moves down it one layer per answer while Dwoggle stays put on screen and digs.
- * --depth is the number of layers dug. The scene is placed in design units (--u) from the centre of the page;
- * the question keeps real pixels.
+ * The questions after the first sign-in, on the sign-up page's scene (sky, mountains, the earth below) with
+ * Dwoggle standing with his map where he stands there. The question keeps real pixels; the scene and Dwoggle are
+ * placed in design units (--u) from the centre of the page.
  */
 .dig {
-  /* One answer takes the camera down a whole screen, so after the first one nothing of the sky is left, as drawn. */
-  --level: 100dvh;
-  /* Dwoggle digging, frame 668..1163 x 311..660. */
-  --mascot-left: calc(50% + 28 * var(--u));
-  --mascot-w: calc(495 * var(--u));
-  --mascot-h: calc(349 * var(--u));
-  --mascot-bottom: calc(51 * var(--u));
-  /* The tunnel under his body, and the line where the surface earth begins. */
-  --tunnel-left: calc(50% + 50 * var(--u));
-  --tunnel-w: calc(330 * var(--u));
-  --surface-line: calc(100dvh - 70 * var(--u));
   /*
-   * Dwoggle digs on the ground at the bottom of the window. When the window is taller than the drawn frame
-   * (zoomed out with Ctrl −, or a tall screen), the logo and the question come down by the difference, so the
-   * question stays beside him, its tail at his helmet, instead of floating far above him.
+   * When the window is taller than the drawn frame (zoomed out with Ctrl −, or a tall screen), the logo and the
+   * question come down by the difference, so the question stays beside Dwoggle instead of far above him.
    */
   --frame-top: max(0px, 100dvh - 728 * var(--u));
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: var(--earth-4);
-}
-
-/* ---------- The world ---------- */
-
-.dig__world {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: calc(100dvh + var(--level) * 5);
-  transform: translateY(calc(var(--depth) * var(--level) * -1));
-  transition: transform var(--duration-descend) var(--ease-in-out);
-}
-
-.dig__surface {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 100dvh;
   background: var(--brand-paper);
-}
-
-/* One layer of earth: a wavy top edge and solid ground below it, darker the deeper it lies. */
-.dig__stratum {
-  position: absolute;
-  right: 0;
-  left: 0;
-  top: calc(100dvh - 40px + (var(--layer) - 1) * var(--level));
-  height: calc(var(--level) + 120px);
-  color: var(--stratum);
-  background: linear-gradient(to bottom, transparent 40px, var(--stratum) 40px);
-}
-
-.dig__stratum--1 { --stratum: var(--earth-1); }
-.dig__stratum--2 { --stratum: var(--earth-2); }
-.dig__stratum--3 { --stratum: var(--earth-3); }
-.dig__stratum--4 { --stratum: var(--earth-4); }
-
-.dig__stratum-edge {
-  display: block;
-  width: 100%;
-  height: 60px;
-  fill: currentColor;
-}
-
-/*
- * The tunnel Dwoggle leaves behind. The shaft is cut from the surface down; the tunnel slides down inside it
- * with the camera, so its rounded end is always under his paws.
- */
-.dig__shaft {
-  position: absolute;
-  z-index: 1;
-  top: var(--surface-line);
-  inset-inline-start: var(--tunnel-left);
-  width: var(--tunnel-w);
-  height: calc(var(--level) * 5);
-  overflow: hidden;
-}
-
-.dig__tunnel {
-  position: absolute;
-  right: 0;
-  bottom: 100%;
-  left: 0;
-  height: calc(var(--level) * 5);
-  border-radius: 0 0 46% 46% / 0 0 60px 60px;
-  background: var(--earth-tunnel);
-  transform: translateY(calc(var(--depth) * var(--level)));
-  transition: transform var(--duration-descend) var(--ease-in-out);
 }
 
 /* ---------- Header, progress and the question ---------- */
@@ -102,19 +21,6 @@
   position: relative;
   top: var(--frame-top);
   z-index: 3;
-}
-
-/*
- * The logo's name turns pale as the earth comes up behind it: late in the first descent, when the earth's edge
- * reaches the header, and early on the way back up, before the sky is behind it again.
- */
-.dig .brand-mark__name {
-  transition: color 180ms ease 80ms;
-}
-
-.dig--underground .brand-mark__name {
-  color: var(--brand-cream);
-  transition-delay: calc(var(--duration-descend) * 0.72);
 }
 
 /* Tube at frame x 70..118 from y 132; the question at x 170..655 from y 148. */
@@ -136,17 +42,9 @@
   margin-top: calc(16 * var(--u));
 }
 
-.dig--underground .progress-tube__label {
-  color: var(--brand-cream);
-}
-
-/* The new question appears as Dwoggle arrives at the next layer. */
+/* The new question comes in gently in place of the last. */
 .dig__bubble-slot {
   animation: dig-bubble-in 300ms var(--ease-out) both;
-}
-
-.dig--digging .dig__bubble-slot {
-  animation-delay: calc(var(--duration-descend) * 0.6);
 }
 
 @keyframes dig-bubble-in {
@@ -171,8 +69,9 @@
 /* Traced from the design: base 555..612 on the bottom edge, tip at 718, 428 by Dwoggle's helmet. */
 .dig-bubble__tail {
   top: calc(100% - 4px + 2.5px);
-  inset-inline-end: -67px;
-  width: 172px;
+  /* Long enough to reach Dwoggle, who stands to the right of the question. */
+  inset-inline-end: -150px;
+  width: 255px;
   height: 46px;
 }
 
@@ -240,29 +139,20 @@
   margin-bottom: 0;
 }
 
-.dig-bubble--status {
-  font-size: 30px;
-}
-
-/* ---------- Dwoggle, digging ---------- */
+/* ---------- Dwoggle, standing with his map, close by the question ---------- */
 
 .dig__mascot {
   position: fixed;
   z-index: 2;
-  bottom: var(--mascot-bottom);
-  inset-inline-start: var(--mascot-left);
-  width: var(--mascot-w);
-  height: var(--mascot-h);
+  bottom: calc(51 * var(--u));
+  inset-inline-start: calc(50% + 100 * var(--u));
+  height: calc(474 * var(--u));
   pointer-events: none;
 }
 
-/* Underground the earth he throws is paler than the dark around him. */
-.dig {
-  --dig-clod: var(--earth-clod);
-}
-
-.dig--underground {
-  --dig-clod: var(--earth-1);
+.dig__dwoggle {
+  height: 100%;
+  width: auto;
 }
 
 /* ---------- Narrower than the drawing, or too short for it: the question on top, Dwoggle below, full size ---------- */
@@ -271,11 +161,14 @@
   .dig {
     --frame-scale: 1;
     --frame-top: 0px;
-    --mascot-h: 150px;
-    --mascot-w: calc(150px * 1.418);
-    --mascot-left: calc(100% - 4vw - var(--mascot-w));
-    --tunnel-left: calc(var(--mascot-left) + var(--mascot-w) * 0.06);
-    --tunnel-w: calc(var(--mascot-w) * 0.66);
+  }
+
+  /* Smaller, in the bottom corner, clear of the question. */
+  .dig__mascot {
+    bottom: calc(40 * var(--u));
+    inset-inline-start: auto;
+    inset-inline-end: 4vw;
+    height: 170px;
   }
 
   .dig__stage {
@@ -359,12 +252,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dig__world,
-  .dig__tunnel,
-  .dig .brand-mark__name {
-    transition: none;
-  }
-
   .dig__bubble-slot {
     animation: none;
   }

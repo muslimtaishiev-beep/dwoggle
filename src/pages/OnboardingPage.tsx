@@ -1,15 +1,14 @@
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useAuth } from '../auth/context.ts'
 import { ProfileFieldError, type ProfileField } from '../auth/accountApi.ts'
 import { CONCERNS, type Concern, type ProfileAnswers, type Purpose, type User } from '../auth/types.ts'
 import { BrandHeader } from '../brand/BrandHeader.tsx'
 import { BubbleTail } from '../brand/BubbleTail.tsx'
-import { DiggingDwoggle } from '../brand/DiggingDwoggle.tsx'
 import { ConcernIcon } from '../brand/ConcernIcon.tsx'
 import { ProgressTube } from '../brand/ProgressTube.tsx'
+import { StandingDwoggle } from '../brand/StandingDwoggle.tsx'
 import { SurfaceScene } from '../brand/SurfaceScene.tsx'
 import { Link } from '../components/Link.tsx'
-import { useReducedMotion } from '../hooks/useReducedMotion.ts'
 import { useI18n } from '../i18n/context.ts'
 import { withTransition } from '../motion/pageTransition.ts'
 import { LANGS, type Lang, type MessageKey } from '../i18n/i18n.ts'
@@ -28,8 +27,6 @@ const PURPOSE_CHOICES = ['buy_land', 'build', 'own_home', 'curious'] as const sa
 /** The questions, in the order they are asked. The country is not one of them: Dwoggle covers Kyrgyzstan only. */
 const STEP = { language: 0, purpose: 1, concerns: 2, phone: 3 } as const
 const QUESTIONS = 4
-/** How long one layer of digging takes; matches --duration-descend in tokens.css. */
-const DESCEND_MS = 900
 
 /** The question to climb back to when the backend refuses an answer. */
 const STEP_OF_FIELD: Readonly<Record<ProfileField, number>> = {
@@ -82,7 +79,7 @@ function Bubble({ title, lead, children, onBack }: BubbleProps) {
           {t('onboarding.back')}
         </button>
       )}
-      <BubbleTail className="dig-bubble__tail" width={172} height={46} base={[5, 62]} tip={[168, 44]} />
+      <BubbleTail className="dig-bubble__tail" width={255} height={46} base={[5, 62]} tip={[251, 40]} />
     </section>
   )
 }
@@ -103,50 +100,31 @@ function Field({ id, label, error, children }: { id: string; label: string; erro
 }
 
 /**
- * The questions after the first sign-in, asked while Dwoggle digs: language, purpose, concerns, phone.
- * The language comes first and takes effect at once, so the rest of the dig is already in that language. Every
- * answer takes him one layer deeper: the camera follows him down, the tunnel grows behind him and the earth gets
- * darker. The first answers are saved before the phone question, so a visitor who leaves there is asked only
- * for the phone next time (the dig starts at the first question without an answer). The phone comes last: all
- * the answers are sent again with it, so if the backend refuses one (a phone number it cannot read, say),
- * Dwoggle stays at that question, or climbs back to it, and says why. Once they are saved
- * he digs one more layer and the app opens the map.
+ * The questions after the first sign-in, from Dwoggle standing with his map: language, purpose, concerns, phone.
+ * One at a time, each taking the place of the last. The language comes first and takes effect at once, so the
+ * rest is already in that language. The first answers are saved before the phone question, so a visitor who
+ * leaves there is asked only for the phone next time (the page starts at the first question without an answer).
+ * The phone comes last: all the answers are sent again with it, so if the backend refuses one (a phone number it
+ * cannot read, say), Dwoggle stays at that question, or goes back to it, and says why. Once they are saved the
+ * map opens.
  */
 export function OnboardingPage({ user }: { user: User }) {
   const { lang, setLang, t } = useI18n()
   const auth = useAuth()
-  const reducedMotion = useReducedMotion()
   const [step, setStep] = useState(() => firstOpenStep(user))
   const [language, setLanguage] = useState<Lang>(user.language ?? lang)
   const [purpose, setPurpose] = useState<Purpose | null>(user.purpose)
   const [concerns, setConcerns] = useState<Concern[]>(() => [...(user.concerns ?? [])])
   const [phone, setPhone] = useState(user.phone ?? '')
-  const [digging, setDigging] = useState(false)
   const [saving, setSaving] = useState(false)
   const [failed, setFailed] = useState(false)
   const [refusal, setRefusal] = useState<Refusal | null>(null)
-  const timer = useRef<number | undefined>(undefined)
 
-  useEffect(() => () => window.clearTimeout(timer.current), [])
-
-  // The dig ends on the map: have its code ready, so that last change of screen can be animated.
+  // The questions end on the map: have its code ready, so that last change of screen can be animated.
   useEffect(preloadMapPage, [])
 
-  /** Dig one layer down (or up), then run `after` once Dwoggle has arrived. The old question gives way to the new. */
-  const digTo = (next: number, after?: () => void) => {
-    window.clearTimeout(timer.current)
-    withTransition('question', () => {
-      setStep(next)
-      setDigging(true)
-    })
-    timer.current = window.setTimeout(
-      () => {
-        setDigging(false)
-        after?.()
-      },
-      reducedMotion ? 0 : DESCEND_MS,
-    )
-  }
+  /** The next (or an earlier) question takes the place of this one. */
+  const goTo = (next: number) => withTransition('question', () => setStep(next))
 
   /** The reason the backend gave for refusing this field, in the visitor's language. */
   const refusalFor = (...fields: ProfileField[]): string | null => {
@@ -161,12 +139,12 @@ export function OnboardingPage({ user }: { user: User }) {
   const choosePurpose = (option: Purpose) => {
     setPurpose(option)
     setRefusal(null)
-    digTo(STEP.concerns)
+    goTo(STEP.concerns)
   }
 
   const finishConcerns = () => {
     // The answers so far are saved now, before the phone: whoever leaves here is asked only for the phone next
-    // time, not the whole dig again. The backend keeps them without calling the profile complete. If this fails,
+    // time, not every question again. The backend keeps them without calling the profile complete. If this fails,
     // the answers are simply sent again with the phone.
     if (purpose !== null) {
       auth
@@ -175,7 +153,7 @@ export function OnboardingPage({ user }: { user: User }) {
     }
     // The number starts with Kyrgyzstan's dialling code; the visitor types the rest.
     setPhone((current) => (current.trim() === '' ? `${KYRGYZSTAN.dial} ` : current))
-    digTo(STEP.phone)
+    goTo(STEP.phone)
   }
 
   const submitPhone = (event: FormEvent) => {
@@ -197,14 +175,14 @@ export function OnboardingPage({ user }: { user: User }) {
       concerns,
     }
     auth.saveProfile(answers).then(
-      // Saved: one more layer, then the map opens out of the hole he has dug.
-      (showProfile) => digTo(QUESTIONS, () => withTransition('surface', showProfile)),
+      // Saved: the map opens.
+      (showProfile) => withTransition('surface', showProfile),
       (error: unknown) => {
         setSaving(false)
         if (error instanceof ProfileFieldError) {
           setRefusal({ field: error.field, code: error.code })
           const target = STEP_OF_FIELD[error.field]
-          if (target !== STEP.phone) digTo(target)
+          if (target !== STEP.phone) goTo(target)
         } else {
           setFailed(true)
         }
@@ -227,7 +205,7 @@ export function OnboardingPage({ user }: { user: User }) {
               onClick={() => {
                 setLanguage(option)
                 setLang(option)
-                digTo(STEP.purpose)
+                goTo(STEP.purpose)
               }}
             >
               <span className="brand-tile__label">{t(`lang.${option}`)}</span>
@@ -239,7 +217,7 @@ export function OnboardingPage({ user }: { user: User }) {
   } else if (step === STEP.purpose) {
     const error = refusalFor('purpose')
     bubble = (
-      <Bubble title={t('onboarding.purpose.title')} lead={t('onboarding.purpose.lead')} onBack={() => digTo(STEP.language)}>
+      <Bubble title={t('onboarding.purpose.title')} lead={t('onboarding.purpose.lead')} onBack={() => goTo(STEP.language)}>
         <div className="dig-bubble__grid dig-bubble__grid--purposes" role="group" aria-labelledby="dig-question">
           {PURPOSE_CHOICES.map((option) => (
             <button
@@ -262,7 +240,7 @@ export function OnboardingPage({ user }: { user: User }) {
     )
   } else if (step === STEP.concerns) {
     bubble = (
-      <Bubble title={t('onboarding.concerns.title')} lead={t('onboarding.concerns.lead')} onBack={() => digTo(STEP.purpose)}>
+      <Bubble title={t('onboarding.concerns.title')} lead={t('onboarding.concerns.lead')} onBack={() => goTo(STEP.purpose)}>
         <div className="dig-bubble__grid dig-bubble__grid--icons" role="group" aria-labelledby="dig-question">
           {CONCERNS.map((concern) => (
             <button
@@ -287,7 +265,7 @@ export function OnboardingPage({ user }: { user: User }) {
   } else if (step === STEP.phone) {
     const error = refusalFor('phone') ?? (failed ? t('onboarding.error') : null)
     bubble = (
-      <Bubble title={t('onboarding.phone.title')} lead={t('onboarding.phone.lead')} onBack={saving ? undefined : () => digTo(STEP.concerns)}>
+      <Bubble title={t('onboarding.phone.title')} lead={t('onboarding.phone.lead')} onBack={saving ? undefined : () => goTo(STEP.concerns)}>
         <form className="dig-bubble__form" onSubmit={submitPhone}>
           <Field id="dig-phone" label={t('onboarding.phone.label')} error={error}>
             <input
@@ -315,34 +293,11 @@ export function OnboardingPage({ user }: { user: User }) {
         </form>
       </Bubble>
     )
-  } else {
-    bubble = (
-      <p className="dig-bubble dig-bubble--status brand-display" role="status">
-        {t('onboarding.digging')}
-      </p>
-    )
   }
 
-  const classes = ['brand-page', 'dig', step > 0 && 'dig--underground', digging && 'dig--digging'].filter(Boolean).join(' ')
-
   return (
-    <div className={classes} style={{ '--depth': step } as CSSProperties} aria-label={t('onboarding.label')}>
-      {/* The world: the surface on top, then one layer of earth per question. The camera moves down through it. */}
-      <div className="dig__world" aria-hidden="true">
-        <div className="dig__surface">
-          <SurfaceScene />
-        </div>
-        {[1, 2, 3, 4].map((layer) => (
-          <div key={layer} className={`dig__stratum dig__stratum--${layer}`} style={{ '--layer': layer } as CSSProperties}>
-            <svg className="dig__stratum-edge" viewBox="0 0 1440 60" preserveAspectRatio="none">
-              <path d="M0 40 C260 8 520 6 760 30 C1000 54 1220 20 1440 32 L1440 60 L0 60 Z" />
-            </svg>
-          </div>
-        ))}
-        <div className="dig__shaft">
-          <div className="dig__tunnel" />
-        </div>
-      </div>
+    <div className="brand-page dig" aria-label={t('onboarding.label')}>
+      <SurfaceScene />
 
       <BrandHeader />
 
@@ -353,8 +308,9 @@ export function OnboardingPage({ user }: { user: User }) {
         </div>
       </main>
 
-      <div className="dig__mascot" aria-hidden="true" data-reveal-origin="">
-        <DiggingDwoggle pace={digging ? 'hard' : 'still'} />
+      {/* Dwoggle stands with his map beside the question, as on the sign-up page. */}
+      <div className="dig__mascot" aria-hidden="true">
+        <StandingDwoggle className="dig__dwoggle" />
       </div>
     </div>
   )
