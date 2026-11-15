@@ -16,8 +16,22 @@ def client():
         yield c
 
 
-def test_needs_sign_in(client):
-    assert client.post("/api/reports", json=POINT).status_code == 401
+def test_a_few_reports_without_an_account_then_sign_in(client, monkeypatch):
+    """Without an account: 3 reports a day per visitor, kept under their numbers; the 4th asks to sign in."""
+    from bekem import main
+
+    monkeypatch.setattr(main, "_daily", {})
+    ip = {"x-forwarded-for": "203.0.113.200"}
+    made = [client.post("/api/reports", json=POINT, headers=ip) for _ in range(3)]
+    assert [r.status_code for r in made] == [200, 200, 200]
+    assert "report" in made[0].json()
+    # Anyone can check it by its number; with no owner, nobody gets the data back from it.
+    check = client.get(f"/api/reports/{made[0].json()['id']}").json()
+    assert "report" not in check and check["id"] == made[0].json()["id"]
+    refused = client.post("/api/reports", json=POINT, headers=ip)
+    assert refused.status_code == 429 and refused.json()["detail"] == {"code": "reports_sign_in", "limit": 3}
+    # Another visitor still has theirs, and a signed-in user is not counted against it.
+    assert client.post("/api/reports", json=POINT, headers={"x-forwarded-for": "203.0.113.201"}).status_code == 200
 
 
 def test_only_in_kyrgyzstan(client):

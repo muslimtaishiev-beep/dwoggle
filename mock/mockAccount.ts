@@ -191,7 +191,7 @@ function handleSaved(req: IncomingMessage, res: ServerResponse, uid: string, sav
 
 interface StoredReport {
   id: string
-  owner: string
+  owner: string | null
   created_at: string
   lat: number
   lon: number
@@ -204,6 +204,7 @@ interface StoredReport {
 const REPORT_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 /** How long a mock report takes, so the steps of the full report's window can be seen. */
 const REPORT_DELAY_MS = 4000
+const FREE_REPORTS = 3
 
 /**
  * POST /api/reports and GET /api/reports/{id}, as the backend answers them, from mock/report.json: a numbered
@@ -211,6 +212,7 @@ const REPORT_DELAY_MS = 4000
  */
 function createReportsHandler(root: string) {
   const reports = new Map<string, StoredReport>()
+  let anonymous = 0
   return (req: IncomingMessage, res: ServerResponse): void => {
     const id = decodeURIComponent(new URL(req.url ?? '/', 'http://mock.local').pathname.replace(/^\//, ''))
     const uid = userIdOf(req)
@@ -220,7 +222,7 @@ function createReportsHandler(root: string) {
     }
     if (req.method === 'GET' && id !== '') {
       const stored = reports.get(id)
-      if (stored) sendJson(res, 200, summary(stored, stored.owner === uid))
+      if (stored) sendJson(res, 200, summary(stored, stored.owner !== null && stored.owner === uid))
       else sendJson(res, 404, { detail: { code: 'report_not_found' } })
       return
     }
@@ -228,9 +230,13 @@ function createReportsHandler(root: string) {
       sendJson(res, 405, { detail: 'Method not allowed' })
       return
     }
+    // Without an account: a few free reports (the backend counts them per visitor a day), then sign in.
     if (uid === null) {
-      sendJson(res, 401, { detail: { code: 'token_missing', message: 'Please sign in.' } })
-      return
+      if (anonymous >= FREE_REPORTS) {
+        sendJson(res, 429, { detail: { code: 'reports_sign_in', limit: FREE_REPORTS } })
+        return
+      }
+      anonymous += 1
     }
     readBody(req)
       .then(async (body) => {

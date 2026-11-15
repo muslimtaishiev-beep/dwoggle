@@ -18,6 +18,7 @@ export interface ReportCheck {
   readonly record: ReportRecord | null
 }
 
+/** sign_in: no account (401), or the free reports without one are used up (429 reports_sign_in). */
 export type ReportErrorCode = 'daily_limit' | 'not_found' | 'sign_in' | 'failed'
 
 export class ReportError extends Error {
@@ -74,15 +75,23 @@ async function call(path: string, init: RequestInit, token: string | null): Prom
   if (response.status === 401) throw new ReportError('sign_in')
   if (response.status === 404) throw new ReportError('not_found')
   const detail = isRecord(body) && isRecord(body.detail) ? body.detail : {}
+  if (response.status === 429 && detail.code === 'reports_sign_in') {
+    throw new ReportError('sign_in', typeof detail.limit === 'number' ? detail.limit : null)
+  }
   if (response.status === 429 && detail.code === 'reports_daily_limit') {
     throw new ReportError('daily_limit', typeof detail.limit === 'number' ? detail.limit : null)
   }
   throw new ReportError('failed')
 }
 
-/** Gather everything about a place into a numbered report (takes up to about a minute). */
-export function createReport(token: string, point: { lat: number; lon: number }, lang: Lang): Promise<ReportCheck> {
-  return call('/reports', { method: 'POST', body: JSON.stringify({ lat: point.lat, lon: point.lon, lang }) }, token)
+/** Gather everything about a place into a numbered report (takes up to about a minute). Without a token: a free one. */
+export function createReport(
+  token: string | null,
+  point: { lat: number; lon: number },
+  lang: Lang,
+  signal?: AbortSignal,
+): Promise<ReportCheck> {
+  return call('/reports', { method: 'POST', body: JSON.stringify({ lat: point.lat, lon: point.lon, lang }), signal }, token)
 }
 
 /** Check a report by its number; with the owner's token, its data comes too. */

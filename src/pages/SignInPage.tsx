@@ -8,6 +8,8 @@ import { BubbleTail } from '../brand/BubbleTail.tsx'
 import { StandingDwoggle } from '../brand/StandingDwoggle.tsx'
 import { SurfaceScene } from '../brand/SurfaceScene.tsx'
 import { useI18n } from '../i18n/context.ts'
+import { Link } from '../components/Link.tsx'
+import { ROUTES } from '../router.ts'
 import type { MessageKey } from '../i18n/i18n.ts'
 import { preloadMapPage } from './mapPageLoader.ts'
 import './SignInPage.css'
@@ -218,6 +220,12 @@ export function SignInPage() {
             </p>
           )}
 
+          {/* The map works without an account: signing in only keeps saved places and gives more full reports. */}
+          <p className="sign-in__switch">
+            <Link to={ROUTES.map} className="sign-in__link">
+              {t('auth.skip')}
+            </Link>
+          </p>
           {!creating && (
             <p className="sign-in__switch">
               <button type="button" className="sign-in__link" disabled={busy} onClick={resetPassword}>

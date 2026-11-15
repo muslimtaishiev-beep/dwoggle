@@ -76,6 +76,8 @@ class Settings(BaseSettings):
     elevenlabs_stt_model: str = "scribe_v1"
     # Advanced reports one user may make per day (each one asks Earth Engine and NASA for everything).
     reports_per_day: int = 10
+    # Full reports without an account, per client IP per day; then the app asks to sign in. 0 = sign-in only.
+    anon_reports_per_day: int = 3
 
     # Requests to /api/voice per client IP per minute (they cost ElevenLabs characters). 0 disables the limit.
     voice_rate_limit_per_min: int = 12

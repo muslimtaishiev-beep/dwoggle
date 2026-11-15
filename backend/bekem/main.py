@@ -670,18 +670,32 @@ def optional_user(authorization: Annotated[str | None, Header()] = None) -> Auth
 
 
 @app.post("/api/reports")
-def create_report(user: User, body: ReportIn, request: Request):
-    """Gather everything about a place into a numbered report. Takes up to about a minute."""
+def create_report(body: ReportIn, request: Request, user: Annotated[AuthUser | None, Depends(optional_user)]):
+    """Gather everything about a place into a numbered report. Takes up to about a minute.
+
+    Signed in: up to `reports_per_day` a day, kept in the account. Without an account: up to
+    `anon_reports_per_day` a day per visitor, then `429 {code: reports_sign_in, limit}` (the app asks to sign in).
+    """
     _check_bounds(body.lat, body.lon, body.lang)
-    _require_active(user, body.lang)
+    if state.auth is None:
+        raise HTTPException(503, {"code": "auth_disabled"})
+    if user is not None:
+        _require_active(user, body.lang)
     if state.service is None:
         raise HTTPException(503, {"code": "provider_unavailable"})
     _rate_limit(request)
     now = datetime.now(timezone.utc)
-    index = (state.auth.report_index.get(user.uid) or {}).get("reports") or []
+    index = (state.auth.report_index.get(user.uid) or {}).get("reports") or [] if user is not None else []
     today = now.date().isoformat()
-    if sum(1 for r in index if str(r.get("created_at", "")).startswith(today)) >= settings.reports_per_day:
+    if user is not None and sum(1 for r in index if str(r.get("created_at", "")).startswith(today)) >= settings.reports_per_day:
         raise HTTPException(429, {"code": "reports_daily_limit", "limit": settings.reports_per_day})
+    if user is None:
+        try:
+            _daily_limit(request, "anon-reports:", settings.anon_reports_per_day, 0)
+        except HTTPException as e:
+            raise HTTPException(429, {"code": "reports_sign_in", "limit": settings.anon_reports_per_day}) from e
+        if not settings.anon_reports_per_day:
+            raise HTTPException(429, {"code": "reports_sign_in", "limit": 0})
     try:
         data = _for_keeping(state.service.build(body.lat, body.lon, body.lang))
     except Exception as e:
@@ -691,7 +705,7 @@ def create_report(user: User, body: ReportIn, request: Request):
     created = now.isoformat(timespec="seconds")
     doc = {
         "id": report_id,
-        "uid": user.uid,
+        "uid": user.uid if user is not None else None,
         "created_at": created,
         "lat": data["location"]["lat"],
         "lon": data["location"]["lon"],
@@ -702,7 +716,8 @@ def create_report(user: User, body: ReportIn, request: Request):
     state.auth.reports.save(report_id, doc)
     place = (data["location"].get("place") or {}).get("display")
     entry = {"id": report_id, "created_at": created, "lat": doc["lat"], "lon": doc["lon"], "place": place}
-    state.auth.report_index.save(user.uid, {"reports": ([entry] + index)[:REPORT_INDEX_MAX]})
+    if user is not None:
+        state.auth.report_index.save(user.uid, {"reports": ([entry] + index)[:REPORT_INDEX_MAX]})
     return {**_report_summary(doc), "report": data}
 
 
