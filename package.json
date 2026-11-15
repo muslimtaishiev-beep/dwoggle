@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "oxlint",
-    "art": "node scripts/placeholder-art.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

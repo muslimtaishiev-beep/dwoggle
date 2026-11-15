@@ -4,12 +4,13 @@ import './Mascot.css'
 
 export type MascotPose = 'idle' | Mood
 
-// Placeholder art lives in public/bekem/; replace the files to swap in the final mascot.
+// Every pose is Dwoggle as in the logo, so he looks the same everywhere; his mood is told in words beside him.
+const LOGO_HEAD = '/brand/dwoggle-head.png'
 const POSE_IMAGES: Record<MascotPose, string> = {
-  idle: '/bekem/idle.svg',
-  relaxed: '/bekem/relaxed.svg',
-  alert: '/bekem/alert.svg',
-  whistling: '/bekem/whistling.svg',
+  idle: LOGO_HEAD,
+  relaxed: LOGO_HEAD,
+  alert: LOGO_HEAD,
+  whistling: LOGO_HEAD,
 }
 
 // Fetch every pose up front, so a mood portrait never pops in late.

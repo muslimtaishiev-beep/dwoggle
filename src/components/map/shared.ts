@@ -6,7 +6,7 @@ export type TileStatus = 'loading' | 'ready' | 'error'
 export interface BaseMapProps {
   point: LatLon | null
   radiusM: number
-  /** Dwoggle runs to the point and digs there while this is true; otherwise a pin marks the point. */
+  /** Dwoggle pops up at the point and digs there while this is true; otherwise a pin marks the point. */
   digging: boolean
   /** A place to show, from the address search. The camera moves there; nothing is selected. */
   target: LatLon | null
@@ -17,13 +17,14 @@ export interface BaseMapProps {
 /** The marker is a zero-size anchor on the point; the visible art is positioned and sized in MapView.css. */
 export const MARKER = {
   pin: { className: 'map-pin', html: '<span class="map-pin__dot"></span>' },
-  // He runs in, then sinks into a hole; soil keeps flying out of it until the report arrives.
+  // Dwoggle (the logo's head) pops up on the point, wriggles down into a hole, and earth keeps flying out of it
+  // until the report arrives.
   digger: {
     className: 'map-digger',
     html:
-      '<span class="map-digger__run"></span>' +
       '<span class="map-digger__dig"><span class="map-digger__hole"></span>' +
-      '<span class="map-digger__shaft"><span class="map-digger__body"></span></span></span>',
+      '<span class="map-digger__shaft"><img class="map-digger__body" src="/brand/dwoggle-head.png" alt="" draggable="false"></span>' +
+      '<span class="map-digger__clod"></span><span class="map-digger__clod"></span><span class="map-digger__clod"></span></span>',
   },
 } as const
 

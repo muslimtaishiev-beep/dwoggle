@@ -133,141 +133,126 @@
 }
 
 /*
- * Dwoggle on the map. He runs in to the tapped point, sinks into the ground there,
- * and soil keeps flying out of the hole until the report arrives.
- * run.svg holds two frames side by side (see scripts/placeholder-art.mjs).
+ * Dwoggle on the map: the logo's head pops up on the tapped point, wriggles down into a hole there, and earth
+ * keeps flying out of it until the report arrives (then a pin takes his place).
  */
-.map-digger__run,
 .map-digger__dig {
   position: absolute;
-  top: calc(var(--sprite-md) * -0.9);
-  left: calc(var(--sprite-md) * -0.5);
-  width: var(--sprite-md);
-  height: var(--sprite-md);
+  top: calc(var(--map-digger-size) * -0.98);
+  left: calc(var(--map-digger-size) * -0.5);
+  width: var(--map-digger-size);
+  height: var(--map-digger-size);
+  --map-digger-size: 58px;
 }
 
-.map-digger__run {
-  background: url("/bekem/run.svg") no-repeat 0 0 / 200% 100%;
-  animation:
-    digger-approach var(--duration-run) linear both,
-    sprite-frames var(--duration-frame-pair) steps(2, jump-none) infinite,
-    digger-hide 0s linear var(--duration-run) forwards;
-}
-
-.map-digger__dig {
-  visibility: hidden;
-  animation: digger-show 0s linear var(--duration-run) forwards;
-}
-
-/* The hole he digs: a dark opening with a rim of loose soil. */
+/* The hole: dark earth with a rim of fresh soil. */
 .map-digger__hole {
   position: absolute;
   bottom: 0;
-  left: 10%;
-  width: 80%;
-  height: 22%;
+  left: 6%;
+  width: 88%;
+  height: 26%;
   border-radius: 50%;
-  background: var(--color-night);
-  box-shadow: 0 0 0 calc(var(--px) * 3) var(--color-soil);
+  background: #2a170c;
+  box-shadow: 0 0 0 3px var(--color-soil), 0 2px 6px rgb(0 0 0 / 0.35);
+  animation: digger-hole-open 260ms var(--ease-out) both;
 }
 
 /* Everything below the middle of the hole is underground and cannot be seen. */
 .map-digger__shaft {
   position: absolute;
-  inset: 0 0 11%;
+  inset: -30% -10% 13%;
   overflow: hidden;
 }
 
 .map-digger__body {
   position: absolute;
-  inset: 0;
-  background: url("/bekem/run.svg") no-repeat 0 0 / 200% 100%;
+  left: 10%;
+  bottom: 0;
+  width: 80%;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.3));
   animation:
-    digger-sink var(--duration-burrow) steps(10, jump-none) var(--duration-run) both,
-    sprite-frames calc(var(--duration-frame-pair) / 2) steps(2, jump-none) infinite;
+    digger-pop 360ms cubic-bezier(0.3, 1.5, 0.55, 1) both,
+    digger-wriggle 180ms var(--ease-in-out) 360ms 4 alternate,
+    digger-sink 700ms cubic-bezier(0.55, 0, 0.8, 0.5) 520ms both;
 }
 
-/* Clods of soil fly out to both sides for as long as he digs. */
-.map-digger__dig::before,
-.map-digger__dig::after {
-  content: "";
+/* Clods of earth thrown up out of the hole, one after another, for as long as he digs. */
+.map-digger__clod {
   position: absolute;
-  bottom: 12%;
-  width: calc(var(--px) * 4);
-  height: calc(var(--px) * 4);
-  background: var(--color-soil-dark);
-  box-shadow: calc(var(--px) * 6) calc(var(--px) * -4) 0 0 var(--color-soil);
-  animation: digger-dirt-left calc(var(--duration-frame-pair) * 2) steps(6, jump-none) var(--duration-run) infinite;
+  bottom: 14%;
+  left: 50%;
+  width: 10px;
+  height: 8px;
+  border-radius: 45% 55% 40% 60%;
+  background: color-mix(in srgb, var(--color-soil) 70%, #e2c3a0);
+  box-shadow: inset -1px -1px 0 rgb(0 0 0 / 0.2);
+  opacity: 0;
+  animation: digger-clod 620ms var(--ease-out) 700ms infinite;
+  --clod-x: -22px;
+  --clod-y: -30px;
 }
 
-.map-digger__dig::before {
-  left: 24%;
+.map-digger__clod:nth-child(4) {
+  animation-delay: 900ms;
+  background: var(--color-soil);
+  --clod-x: 20px;
+  --clod-y: -36px;
 }
 
-.map-digger__dig::after {
-  right: 24%;
-  animation-name: digger-dirt-right;
-  animation-delay: calc(var(--duration-run) + var(--duration-frame-pair));
+.map-digger__clod:nth-child(5) {
+  animation-delay: 1100ms;
+  width: 8px;
+  height: 7px;
+  --clod-x: -6px;
+  --clod-y: -44px;
+}
+
+@keyframes digger-hole-open {
+  from {
+    transform: scale(0.2);
+  }
+}
+
+/* Separate transform properties, so the pop, the wriggle and the sink add up instead of replacing each other. */
+@keyframes digger-pop {
+  from {
+    translate: 0 60%;
+    scale: 0.6;
+  }
+}
+
+@keyframes digger-wriggle {
+  from {
+    rotate: -9deg;
+  }
+
+  to {
+    rotate: 9deg;
+  }
 }
 
 @keyframes digger-sink {
   to {
-    transform: translateY(100%);
+    transform: translateY(110%);
   }
 }
 
-@keyframes digger-dirt-left {
-  from {
-    transform: translate(0, 0);
+@keyframes digger-clod {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) rotate(0deg);
+    animation-timing-function: var(--ease-rise);
   }
 
-  50% {
-    transform: translate(calc(var(--sprite-md) * -0.4), calc(var(--sprite-md) * -0.7));
+  45% {
+    transform: translate(calc(-50% + var(--clod-x) * 0.6), var(--clod-y)) rotate(160deg);
+    animation-timing-function: var(--ease-fall);
   }
 
-  to {
-    transform: translate(calc(var(--sprite-md) * -0.8), 0);
-  }
-}
-
-@keyframes digger-dirt-right {
-  from {
-    transform: translate(0, 0);
-  }
-
-  50% {
-    transform: translate(calc(var(--sprite-md) * 0.4), calc(var(--sprite-md) * -0.7));
-  }
-
-  to {
-    transform: translate(calc(var(--sprite-md) * 0.8), 0);
-  }
-}
-
-@keyframes digger-approach {
-  from {
-    transform: translate(calc(var(--sprite-md) * -2.2), calc(var(--sprite-md) * 1.4));
-  }
-}
-
-@keyframes sprite-frames {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: 100% 0;
-  }
-}
-
-@keyframes digger-hide {
-  to {
-    visibility: hidden;
-  }
-}
-
-@keyframes digger-show {
-  to {
-    visibility: visible;
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--clod-x)), 6px) rotate(320deg);
   }
 }
