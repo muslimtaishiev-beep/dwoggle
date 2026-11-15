@@ -24,18 +24,18 @@ export const DIG_RIG = {
   },
   "eyes": [
     {
-      "cx": 210.0,
-      "cy": 361.5,
-      "rx": 23.0,
-      "ry": 25.5,
-      "cheekLine": 0.74
+      "cx": 183.6,
+      "cy": 363.7,
+      "rx": 30.7,
+      "ry": 30.2,
+      "cheekLine": 0.67
     },
     {
-      "cx": 384.0,
-      "cy": 349.0,
-      "rx": 26.0,
-      "ry": 27.0,
-      "cheekLine": 0.83
+      "cx": 409.8,
+      "cy": 346.8,
+      "rx": 31.0,
+      "ry": 30.4,
+      "cheekLine": 0.7
     }
   ]
 } as const

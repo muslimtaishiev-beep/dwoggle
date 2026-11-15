@@ -14,6 +14,7 @@ Layers, bottom to top, all the size of the artwork so they stack exactly:
   paw-right  - the far front leg, cut at the shoulder
   paw-left   - the near front leg, cut along its own outline
   front      - his head and chest again, so the tops of the legs slide under his chin
+  head       - the logo's clean head (scripts/art/dwoggle-logo-clean.jpg) over his own, so he is the same Dwoggle
   dirt       - the mound his paws dig into, which stays where it is
 """
 import json
@@ -177,6 +178,93 @@ layers = {
     'front': layer(FRONT),
     'dirt': dirt,
 }
+# ---- His head: the logo's clean drawing (scripts/art/dwoggle-logo-clean.jpg), so he is the same Dwoggle ----
+# It sits over his old head, eyes on its eyes, a little larger so it covers it (the logo's head is bigger in
+# proportion, as a mascot's is), tilted as his head is. It rocks with his body and his paws turn under its chin.
+# What still showed of the old helmet behind it (its back, turned away) is taken out of the body layers.
+import importlib.util
+import math
+
+_spec = importlib.util.spec_from_file_location('logo_clean', Path(__file__).with_name('logo-clean.py'))
+logo_clean = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(logo_clean)
+LOGO = Path(__file__).with_name('art') / 'dwoggle-logo-clean.jpg'
+LOGO_EYES = [(345.5, 652.5), (780.0, 661.0)]      # in the logo drawing's pixels
+OLD_EYES = [at(210.0, 361.5), at(384.0, 349.0)]   # his own eyes in the artwork
+HEAD_SIZE = 1.3                                   # times the size that puts the eyes exactly on his
+
+logo = logo_clean.cut(str(LOGO))
+(ax0, ay0), (ax1, ay1) = LOGO_EYES
+(bx0, by0), (bx1, by1) = OLD_EYES
+scale = math.hypot(bx1 - bx0, by1 - by0) / math.hypot(ax1 - ax0, ay1 - ay0) * HEAD_SIZE
+turn = math.atan2(by1 - by0, bx1 - bx0) - math.atan2(ay1 - ay0, ax1 - ax0)
+mid_a = ((ax0 + ax1) / 2, (ay0 + ay1) / 2)
+mid_b = ((bx0 + bx1) / 2, (by0 + by1) / 2)
+
+
+def to_art(x, y):
+    """A point of the logo drawing, where it lands on him."""
+    dx, dy = (x - mid_a[0]) * scale, (y - mid_a[1]) * scale
+    return (mid_b[0] + dx * math.cos(turn) - dy * math.sin(turn), mid_b[1] + dx * math.sin(turn) + dy * math.cos(turn))
+
+
+# PIL maps each pixel of the result back to the drawing: the inverse of to_art.
+c, s_ = math.cos(-turn) / scale, math.sin(-turn) / scale
+inverse = (c, -s_, mid_a[0] - (c * mid_b[0] - s_ * mid_b[1]), s_, c, mid_a[1] - (s_ * mid_b[0] + c * mid_b[1]))
+head_img = logo.transform((W, H), Image.AFFINE, inverse, resample=Image.BICUBIC)
+head = np.asarray(head_img).astype(float)
+covered = head[..., 3] > 200
+
+# The old helmet, where the new head does not cover it: its yellow, its goggles and strap (greys and whites next
+# to the yellow), and its own outline (dark lines next to those, but not lines that also border his fur: that is
+# the outline of his back, which stays). Soft-edged pixels count too, so no faint arcs are left in the sky.
+yellow = (a > 0) & (r > 170) & (g > 120) & (b < 110) & (r - b > 90)
+fur = (a > 128) & (r > 95) & (r < 190) & (g > 55) & (g < 130) & (b < 110) & (r - g > 25)
+neutral = (a > 0) & (np.abs(r - g) < 22) & (np.abs(g - b) < 22) & (r > 60)
+# The helmet's soft outline blends yellow into black through browns that look like fur: real fur is further off.
+true_fur = fur & ~grow(yellow, 6)
+# Everything in the old helmet's outline, its soft edge and halo included, that the new head does not cover; but
+# not the line along his back, which runs right beside his fur.
+helmet_area = grow(ndimage.binary_fill_holes(grow(yellow | (grow(yellow, 22) & neutral), 2)), 14)
+old_helmet = helmet_area & ~covered & ~grow(true_fur, 5)
+for name in ('body', 'front'):
+    layers[name][..., 3] = np.where(old_helmet, 0, layers[name][..., 3])
+# Where his back now meets the sky instead of the helmet, it gets his outline back, as heavy as the artwork's.
+new_edge = grow(old_helmet, 6) & ~old_helmet & ~covered & (layers['body'][..., 3] > 0)
+layers['body'][..., :3] = np.where(new_edge[..., None], 22, layers['body'][..., :3])
+# Where the old brim lay over his back, a pocket of nothing can be left between the new brim and his back: his
+# fur, in its own shade, fills it.
+whole = (layers['body'][..., 3] > 0) | (layers['front'][..., 3] > 0) | (head[..., 3] > 0)
+pocket = ndimage.binary_fill_holes(whole) & ~whole
+layers['body'][..., :3] = np.where(pocket[..., None], np.median(img[true_fur][:, :3], axis=0) * 0.9, layers['body'][..., :3])
+layers['body'][..., 3] = np.where(pocket, 255, layers['body'][..., 3])
+layers['head'] = head
+
+
+def logo_eye(cx, cy):
+    """One eye of the new head, as the lids need it: centre and radii on him, and where fur turns to cheek."""
+    src = np.asarray(logo)
+    dark_eye = src[..., :3].max(axis=2) < 60
+    blob = ndimage.label(dark_eye)[0]
+    spot = blob == blob[int(cy), int(cx)]
+    ys, xs = np.nonzero(spot)
+    top, bottom, left, right = ys.min(), ys.max(), xs.min(), xs.max()
+    turns = []
+    for column in (left - 20, right + 20):
+        pale = np.nonzero(src[top - 30:bottom + 30, column, 0] > 205)[0]
+        if len(pale):
+            turns.append(top - 30 + pale[0])
+    split = (np.mean(turns) - top) / (bottom - top) if turns else 1.0
+    x, y = to_art((left + right) / 2, (top + bottom) / 2)
+    return {
+        'cx': round(x / K, 1),
+        'cy': round(y / K, 1),
+        'rx': round((right - left) / 2 * scale / K + 2, 1),
+        'ry': round((bottom - top) / 2 * scale / K + 2, 1),
+        'cheekLine': round(float(min(max(split, 0.2), 0.95)), 2),
+    }
+
+
 for name, data in layers.items():
     out = Image.fromarray(data.clip(0, 255).astype('uint8'), 'RGBA')
     out.save(OUT / f'dwoggle-dig-{name}.webp', quality=88, method=6)
@@ -219,7 +307,7 @@ rig = {
         'pawRight': share(512, 500),    # the far shoulder
         'tail': share(848, 336),        # where the tail leaves his back
     },
-    'eyes': [eye(212, 360), eye(385, 350)],
+    'eyes': [logo_eye(*LOGO_EYES[0]), logo_eye(*LOGO_EYES[1])],
 }
 (ROOT / 'src' / 'brand' / 'diggingDwoggleRig.ts').write_text(
     '// Generated by scripts/mascot-dig.py: where the digging Dwoggle\'s parts turn, and his eyes. Do not edit.\n'

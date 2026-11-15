@@ -208,8 +208,9 @@
   --mascot-cheek: #ffebcd;
   --mascot-ink: #1a1412;
   /* The digging drawing's own fur and cheek, round his eyes: for the lids he blinks with there. */
-  --mascot-dig-fur: #865a40;
-  --mascot-dig-cheek: #eeddbc;
+  /* The digging Dwoggle's lids: the colours of the logo's head he wears. */
+  --mascot-dig-fur: #966142;
+  --mascot-dig-cheek: #feefda;
   /* The inside of his mouth when he speaks: the red-brown of his helmet's strap, the one such colour in the drawing. */
   --mascot-tongue: #b5573d;
   /* The map page, as drawn: summary cream, row lines, icon tiles, grade blocks with a darker bottom edge. */

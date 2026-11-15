@@ -130,6 +130,8 @@ export function DiggingDwoggle({ className = '', hard }: DiggingDwoggleProps) {
           {...ART}
         />
         <img src="/brand/dwoggle-dig-front.webp" {...ART} />
+        {/* The logo's own clean head, so the digging Dwoggle is the same as the one in the logo. */}
+        <img src="/brand/dwoggle-dig-head.webp" {...ART} />
         <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-hidden="true">
           {DIG_RIG.eyes.map((eye) => {
             const top = eye.cy - eye.ry
