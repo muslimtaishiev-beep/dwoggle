@@ -82,7 +82,6 @@ def outline_of(part, reach=10):
 leg = ndimage.binary_fill_holes(region(200, 560) | region(215, 607))   # with the pebble drawn on its edge
 PAW_LEFT = leg | outline_of(leg)
 PAW_LEFT &= yy > at(0, 498)[1]                                   # the chin's line above it stays with the head
-PAW_LEFT &= ~((xx < at(132, 0)[0]) & (yy > at(0, 585)[1]))       # the mound in front of it stays where it is
 
 # ---- The far front leg: the body's fur below its upper outline, cut off the body across the shoulder ----
 SHOULDER = [(424, 502), (520, 468), (590, 556), (608, 612)]
@@ -103,9 +102,11 @@ tail_under = near(tail_fill, 12) & ~TAIL & (a == 255)
 # ---- The earth that stays where it is while he rocks: the mound in front of his paws, the crumbs behind him ----
 DIRT = (a > 0) & (((xx < at(132, 0)[0]) & (yy > at(0, 545)[1])) | ((xx > at(868, 0)[0]) & (yy > at(0, 505)[1])))
 
-# The mound lies in front of the paws: where they meet, the pixels are the mound's.
-PAW_LEFT &= ~DIRT
+# Each paw is whole, toes and all, so no piece of it stays behind in the mound when it moves; the mound keeps
+# the rest, and its cut edge fades out (MOUND_FADE) instead of showing as a straight line.
+DIRT &= ~PAW_LEFT
 PAW_RIGHT &= ~DIRT
+MOUND_FADE = DIRT & (xx > at(112, 0)[0]) & (xx < at(868, 0)[0])
 
 # ---- His head and chest, drawn again over the legs ----
 # Only solid pixels: a soft edge drawn in two layers would come out darker than in the artwork.
@@ -130,10 +131,19 @@ moving = PAW_LEFT | PAW_RIGHT
 under = grow(moving, 2) & opaque & ~DIRT & ~shoulder_cut
 brown_fur = ndimage.binary_erosion(fill & (r > 80) & (g < 125) & ~grow(moving, 3), iterations=max(1, round(2 * K)))
 body = img.astype(float).copy()
-# A little darker than the fur beside it: it is in his own shade.
-body[..., :3] = np.where(under[..., None], carry_on(img[..., :3], under, brown_fur) * 0.86, body[..., :3])
+# What a lifted paw shows is the shade under his chest: one even, dark colour (patches of fur carried on from
+# beside it read as smears), blended softly into the fur round it.
+shade = np.median(img[brown_fur][:, :3], axis=0) * 0.62
+blend = ndimage.gaussian_filter(under.astype(float), 3 * K)[..., None]
+body[..., :3] = np.where(under[..., None], body[..., :3] * (1 - blend) + shade * blend, body[..., :3])
+# Under his chest, in front of his hind legs, there is no body, only the paws and the hole he digs (the scene
+# draws its own earth): below the chest's line the body layer fades away, so a moving paw never uncovers the
+# drawn slab of earth behind it.
+BELLY, HIND = 584, 640
+fade = np.clip((at(0, BELLY + 26)[1] - yy) / (26 * K), 0, 1)
+fade = np.where(xx < at(HIND, 0)[0], fade, 1)
 # Every soft-edged pixel of the artwork belongs to one layer only: the tail's, a paw's, the earth's, or the body's.
-body[..., 3] = np.where(TAIL | DIRT | (moving & (a < 255)), 0, a)
+body[..., 3] = np.where(TAIL | DIRT | (moving & (a < 255)), 0, a) * fade
 
 
 def layer(mask, soft_edge=None, rgb=None):
@@ -154,13 +164,18 @@ tail_rgb[tail_under] = tail_colour
 tail = layer(TAIL | tail_under, rgb=tail_rgb)
 tail[..., 3] = np.where(tail_under, 255, tail[..., 3])
 
+dirt = layer(DIRT)
+# The mound's edge where the near paw was cut from it: fade out over a few pixels.
+mound_core = DIRT & ~MOUND_FADE
+dirt[..., 3] = np.where(MOUND_FADE, dirt[..., 3] * np.clip(1 - ndimage.distance_transform_edt(~mound_core) / (20 * K), 0, 1), dirt[..., 3])
+
 layers = {
     'tail': tail,
     'body': body,
     'paw-right': layer(PAW_RIGHT, soft_edge=shoulder_cut),
     'paw-left': layer(PAW_LEFT),
     'front': layer(FRONT),
-    'dirt': layer(DIRT),
+    'dirt': dirt,
 }
 for name, data in layers.items():
     out = Image.fromarray(data.clip(0, 255).astype('uint8'), 'RGBA')

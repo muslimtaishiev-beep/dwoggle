@@ -108,7 +108,7 @@ export function FullReport({ point, onClose }: FullReportProps) {
           </div>
         ) : stage.kind === 'working' ? (
           <div className="full-report__body" role="status" aria-live="polite">
-            <DiggingDwoggle className="full-report__dwoggle" hard />
+            <DiggingDwoggle className="full-report__dwoggle" hard={false} />
             <ol className="full-report__steps">
               {STEPS.map((id, i) => (
                 <li key={id} className={i < step ? 'is-done' : i === step ? 'is-now' : undefined} aria-current={i === step ? 'step' : undefined}>
