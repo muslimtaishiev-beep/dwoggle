@@ -106,8 +106,10 @@ function Field({ id, label, error, children }: { id: string; label: string; erro
  * The questions after the first sign-in, asked while Dwoggle digs: language, purpose, concerns, phone.
  * The language comes first and takes effect at once, so the rest of the dig is already in that language. Every
  * answer takes him one layer deeper: the camera follows him down, the tunnel grows behind him and the earth gets
- * darker. The phone comes last: the answers are sent to the backend then, so if it refuses one (a phone number
- * it cannot read, say), Dwoggle stays at that question, or climbs back to it, and says why. Once they are saved
+ * darker. The first answers are saved before the phone question, so a visitor who leaves there is asked only
+ * for the phone next time (the dig starts at the first question without an answer). The phone comes last: all
+ * the answers are sent again with it, so if the backend refuses one (a phone number it cannot read, say),
+ * Dwoggle stays at that question, or climbs back to it, and says why. Once they are saved
  * he digs one more layer and the app opens the map.
  */
 export function OnboardingPage({ user }: { user: User }) {
@@ -163,6 +165,14 @@ export function OnboardingPage({ user }: { user: User }) {
   }
 
   const finishConcerns = () => {
+    // The answers so far are saved now, before the phone: whoever leaves here is asked only for the phone next
+    // time, not the whole dig again. The backend keeps them without calling the profile complete. If this fails,
+    // the answers are simply sent again with the phone.
+    if (purpose !== null) {
+      auth
+        .saveProfile({ language, country: KYRGYZSTAN.code, phone: '', purpose, purposeNote: null, concerns })
+        .catch(() => undefined)
+    }
     // The number starts with Kyrgyzstan's dialling code; the visitor types the rest.
     setPhone((current) => (current.trim() === '' ? `${KYRGYZSTAN.dial} ` : current))
     digTo(STEP.phone)

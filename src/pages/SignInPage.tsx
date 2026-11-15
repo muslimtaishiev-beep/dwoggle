@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/context.ts'
 import { toAuthError, type AuthErrorKind } from '../auth/errors.ts'
+import { isReturningDevice } from '../auth/returning.ts'
 import { MIN_PASSWORD_LENGTH, normalizeEmail } from '../auth/validate.ts'
 import { BrandHeader } from '../brand/BrandHeader.tsx'
 import { BubbleTail } from '../brand/BubbleTail.tsx'
@@ -48,7 +49,8 @@ function EyeIcon({ open }: { open: boolean }) {
 export function SignInPage() {
   const { t } = useI18n()
   const auth = useAuth()
-  const [mode, setMode] = useState<Mode>('create')
+  // Someone who has signed in on this device before is most likely back to log in.
+  const [mode, setMode] = useState<Mode>(() => (isReturningDevice() ? 'signIn' : 'create'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [reveal, setReveal] = useState(false)
@@ -65,7 +67,10 @@ export function SignInPage() {
     try {
       await task()
     } catch (error) {
-      setProblem(PROBLEMS[toAuthError(error).kind] ?? { key: 'auth.error.server' })
+      const kind = toAuthError(error).kind
+      // Creating an account that already exists: the page turns to logging in, the email and password stay.
+      if (kind === 'email_in_use') setMode('signIn')
+      setProblem(PROBLEMS[kind] ?? { key: 'auth.error.server' })
     } finally {
       setBusy(false)
     }
@@ -110,6 +115,22 @@ export function SignInPage() {
 
       <main className="sign-in__layout">
         <section className="sign-in__panel" aria-labelledby="sign-in-title">
+          {/* New here, or back: one press between the two, at the top where it is seen first. */}
+          <div className="sign-in__tabs" role="group" aria-label={t('auth.tabs')}>
+            {(['create', 'signIn'] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                className="sign-in__tab"
+                aria-pressed={mode === option}
+                disabled={busy}
+                onClick={() => mode !== option && switchMode()}
+              >
+                {t(option === 'create' ? 'auth.tab.create' : 'auth.tab.sign_in')}
+              </button>
+            ))}
+          </div>
+
           <h1 id="sign-in-title" className="sign-in__title brand-display">
             {t(creating ? 'auth.title' : 'auth.login.title')}
           </h1>
@@ -197,12 +218,6 @@ export function SignInPage() {
             </p>
           )}
 
-          <p className="sign-in__switch">
-            {t(creating ? 'auth.email.have_account' : 'auth.email.no_account')}{' '}
-            <button type="button" className="sign-in__link" onClick={switchMode}>
-              {t(creating ? 'auth.email.go_sign_in' : 'auth.email.go_create')}
-            </button>
-          </p>
           {!creating && (
             <p className="sign-in__switch">
               <button type="button" className="sign-in__link" disabled={busy} onClick={resetPassword}>

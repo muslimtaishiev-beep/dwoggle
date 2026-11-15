@@ -101,7 +101,7 @@ Country picker: store the ISO code (`KG`), show names with
 |---|---|---|
 | `GET /api/auth/options?lang=ru` | – | The "why are you here" and `concerns` choices with labels, the 11 `languages`, the sign-up prompt, `enabled` |
 | `GET /api/me` | token | `{user, profile, profile_complete}` |
-| `PUT /api/me/profile` | token | Save `{country, phone, purpose, purpose_note?, concerns?, lang}`. Phone comes back as `+996…` |
+| `PUT /api/me/profile` | token | Save `{country, phone, purpose, purpose_note?, concerns?, lang}`. Phone comes back as `+996…`. An empty phone keeps the saved one (or none yet): the app saves the first answers before asking for the phone, so a visitor who leaves there is asked only for the phone next time. `profile_complete` stays false until a phone is saved. |
 | `DELETE /api/me` | token | Delete the profile and the Firebase account |
 
 Errors: `401 {code: token_missing | token_invalid | token_expired}` (sign in again), `422 {field, code, message}`

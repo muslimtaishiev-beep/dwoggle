@@ -16,7 +16,7 @@ import { LANGS } from '../src/i18n/i18n.ts'
 
 interface StoredProfile {
   country: string
-  phone: string
+  phone: string | null
   purpose: string
   purpose_note: string | null
   concerns: string[]
@@ -71,7 +71,9 @@ function validate(body: Record<string, unknown>, saved: StoredProfile | undefine
   const note = String(body.purpose_note ?? '').trim()
   if (note.length > PURPOSE_NOTE_MAX) throw new Refused('purpose_note', 'note_too_long')
   if (purpose === 'other' && note === '') throw new Refused('purpose_note', 'note_required')
-  const phone = normalizePhone(String(body.phone ?? ''), country)
+  // No phone yet (the dig saves the first answers before asking for it): the saved one is kept.
+  const rawPhone = String(body.phone ?? '').trim()
+  const phone = rawPhone === '' ? (saved?.phone ?? null) : normalizePhone(rawPhone, country)
   const concerns = validateConcerns(body.concerns, saved?.concerns ?? [])
   const lang = (LANGS as readonly string[]).includes(String(body.lang)) ? String(body.lang) : 'en'
   return { country, phone, purpose, purpose_note: note || null, concerns, lang }
@@ -109,7 +111,7 @@ function createHandler() {
   const saved = new Map<string, SavedArea[]>()
   const answer = (uid: string) => {
     const profile = profiles.get(uid) ?? null
-    return { user: { uid }, profile, profile_complete: profile !== null }
+    return { user: { uid }, profile, profile_complete: profile !== null && profile.phone !== null }
   }
 
   return (req: IncomingMessage, res: ServerResponse, next: () => void): void => {

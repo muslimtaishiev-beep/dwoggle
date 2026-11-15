@@ -6,6 +6,7 @@ import { deleteAccount, fetchAccount, saveAccount } from './accountApi.ts'
 import { AuthContext, type AuthContextValue, type AuthState } from './context.ts'
 import { AuthError, toAuthError } from './errors.ts'
 import { cacheProfile, forgetProfile, profileFromAccount, readCachedProfile, resolveProfile } from './profile.ts'
+import { rememberReturningDevice } from './returning.ts'
 import type { FirebaseUser } from './firebase.ts'
 import type { Profile, ProfileStatus, User } from './types.ts'
 
@@ -67,6 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setState({ status: 'signedOut' })
             return
           }
+          // Next time, the sign-up page opens on logging in.
+          rememberReturningDevice()
           void loadProfile(firebase, next, langRef.current).then(({ profile, status }) => {
             // Ignore the answer if someone else signed in, or the user signed out, while it was on its way.
             if (cancelled || account.current?.uid !== next.uid) return

@@ -214,3 +214,23 @@ def test_concerns_and_eleven_languages_in_profile(client):
     assert bad.status_code == 422 and bad.json()["detail"]["field"] == "concerns"
     assert bad.json()["detail"]["message"].startswith("Выберите")  # kk -> Russian text
     client.delete("/api/me", headers=h)
+
+
+def test_first_answers_are_kept_before_the_phone(client):
+    """The dig saves language, purpose and concerns before it asks for the phone: a returning user is then asked
+    only for what is missing. Without a phone the profile is not complete; an empty phone never erases a saved one."""
+    h = {"Authorization": "Bearer dev:dana:dana@example.com"}
+    early = client.put("/api/me/profile", headers=h, json={"country": "KG", "phone": "", "purpose": "build",
+                                                           "concerns": ["flood"], "lang": "ky"})
+    assert early.status_code == 200
+    body = early.json()
+    assert body["profile_complete"] is False and body["profile"]["phone"] is None
+    assert body["profile"]["purpose"] == "build" and body["profile"]["concerns"] == ["flood"]
+    assert client.get("/api/me", headers=h).json()["profile"]["lang"] == "ky"
+
+    done = client.put("/api/me/profile", headers=h, json={"country": "KG", "phone": "0555123456", "purpose": "build"}).json()
+    assert done["profile_complete"] is True and done["profile"]["phone"] == "+996555123456"
+
+    again = client.put("/api/me/profile", headers=h, json={"country": "KG", "purpose": "own_home"}).json()
+    assert again["profile_complete"] is True and again["profile"]["phone"] == "+996555123456"
+    assert again["profile"]["purpose"] == "own_home"

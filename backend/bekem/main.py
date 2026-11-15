@@ -348,7 +348,12 @@ User = Annotated[AuthUser, Depends(current_user)]
 
 class ProfileIn(BaseModel):
     country: str = Field(max_length=8, description="ISO 3166-1 alpha-2, e.g. KG")
-    phone: str = Field(max_length=40, description="International or local format; stored as +996555123456")
+    phone: str = Field(
+        "", max_length=40,
+        description="International or local format; stored as +996555123456. Empty keeps the saved one (the "
+                    "dig saves the first answers before it asks for the phone); without a phone the profile is "
+                    "not complete.",
+    )
     purpose: str = Field(max_length=32, description="Why they're here: one of the ids from /api/auth/options")
     purpose_note: str | None = Field(None, max_length=1000, description="Free text (300 chars max), required for 'other'")
     concerns: list[str] | None = Field(
@@ -399,6 +404,8 @@ def save_profile(user: User, body: ProfileIn, request: Request):
     try:
         fields = validate_profile(body.country, body.phone, body.purpose, body.purpose_note)
         concerns = validate_concerns(body.concerns) if body.concerns is not None else existing.get("concerns", [])
+        if fields["phone"] is None:
+            fields["phone"] = existing.get("phone")
     except ProfileError as e:
         raise HTTPException(422, {"field": e.field, "code": e.code, "message": t(f"err.{e.code}", body.lang)}) from e
     now = datetime.now(timezone.utc)

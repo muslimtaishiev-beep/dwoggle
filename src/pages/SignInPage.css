@@ -33,6 +33,43 @@
   zoom: var(--frame-scale);
 }
 
+/* Sign up or log in: two halves of one cream pill, the chosen one white and raised. */
+.sign-in__tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--brand-cream);
+}
+
+.sign-in__tab {
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--brand-text);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.sign-in__tab[aria-pressed="true"] {
+  background: var(--brand-paper);
+  box-shadow: 0 2px 0 0 var(--brand-tile-edge);
+  color: var(--brand-ink);
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sign-in__tab[aria-pressed="false"]:hover:not(:disabled) {
+    color: var(--brand-ink);
+  }
+}
+
 .sign-in__title {
   font-size: 48px;
   text-wrap: balance;

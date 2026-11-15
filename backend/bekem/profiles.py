@@ -79,9 +79,10 @@ def validate_profile(country: str, phone: str, purpose: str, purpose_note: str |
         raise ProfileError("purpose_note", "note_too_long")
     if purpose == "other" and not note:
         raise ProfileError("purpose_note", "note_required")
+    # No phone yet (the dig saves the first answers before asking for it): None, and the saved one is kept.
     return {
         "country": country,
-        "phone": normalize_phone(phone, country),
+        "phone": normalize_phone(phone, country) if (phone or "").strip() else None,
         "purpose": purpose,
         "purpose_note": note or None,
     }
