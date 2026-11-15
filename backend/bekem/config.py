@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     earthdata_username: str = ""
     earthdata_password: str = ""
     # Extras from the challenge's NASA/NOAA list: charts and second opinions, never a grade change.
-    giovanni_timeout_s: int = 15  # wait this long for Giovanni, then answer without it (it keeps filling the cache)
+    giovanni_timeout_s: int = 8  # wait at most this long for Giovanni, then answer without it (it keeps filling the cache)
     appeears_enabled: bool = True
     appeears_max_pending: int = 5
     noaa_enabled: bool = True
@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     cache_path: Path = BASE_DIR / "data" / "cache.sqlite3"
     cache_ttl_days: int = 30
     faults_path: Path = BASE_DIR / "data" / "gem_faults_kg.geojson"
+    border_path: Path = BASE_DIR / "data" / "kg_border.geojson"  # Natural Earth 1:10m, scripts/fetch_border.py
     demo_path: Path = BASE_DIR / "data" / "demo_plots.json"
 
     cors_origins: list[str] = ["*"]

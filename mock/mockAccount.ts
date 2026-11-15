@@ -46,6 +46,8 @@ function normalizePhone(raw: string, country: string): string {
     else if (digits.startsWith('0') || digits.startsWith('8')) digits = `+${local}${digits.slice(1)}`
     else digits = `+${local}${digits}`
   }
+  // The backend (libphonenumber) also drops a local 0 typed after the code: +996 0555… is +996 555….
+  digits = digits.replace(/^\+(996|998|992|90|44)0/, '+$1')
   if (!/^\+[1-9]\d{7,14}$/.test(digits)) throw new Refused('phone', 'phone_invalid')
   if (country === 'KG' && digits.startsWith('+996') && !/^\+996\d{9}$/.test(digits)) throw new Refused('phone', 'phone_invalid')
   return digits

@@ -163,3 +163,14 @@ def test_place_name_from_openstreetmap():
     town = {"name": "Кара-Суу", "address": {"town": "Кара-Суу", "state": "Ошская область", "country": "Кыргызстан"}}
     assert parse_place(town)["display"] == "Кара-Суу, Ошская область"
     assert parse_place({"address": {}}) is None
+
+
+def test_open_water_gets_no_flood_grade_and_no_whistle():
+    lake = {y: 97.0 for y in YEARS}
+    r = grade_flood(metrics(water_fraction=lake), 300)
+    assert r.grade is None and r.metrics["water_body"] is True
+    assert r.messages[0] == ("flood.water_body", {"pct": 97, "radius": 300})
+    _, m = grade_all(metrics(water_fraction=lake), None, 300)
+    assert m == "relaxed"  # the lake itself does not make Bekem whistle
+    shore = {y: 9.5 for y in YEARS}  # a shoreline circle: water every year, but mostly land
+    assert grade_flood(metrics(water_fraction=shore), 300).grade == "D"

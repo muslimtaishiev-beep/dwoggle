@@ -28,13 +28,24 @@ from bekem.profiles import ProfileError, normalize_phone, validate_profile
         ("996555123456", "KG", "+996555123456"),
         ("8 701 123 45 67", "KZ", "+77011234567"),
         ("+1 415 555 2671", "US", "+14155552671"),
+        # The bug report: the code typed (or prefilled), then the local number with its 0
+        ("+996 0555 123 456", "KG", "+996555123456"),
+        ("+996 0700 12 34 56", "KG", "+996700123456"),
+        ("+996 312 123 456", "KG", "+996312123456"),   # Bishkek landline
+        ("4155552671", "US", "+14155552671"),          # local US format
+        ("+7 701 123 4567", "KG", "+77011234567"),     # chose Kyrgyzstan, number from Kazakhstan
+        ("+44 020 7946 0958", "GB", "+442079460958"),  # the 0 after +44, as people write it
     ],
 )
 def test_phone_normalization(raw, country, expected):
     assert normalize_phone(raw, country) == expected
 
 
-@pytest.mark.parametrize("raw, country", [("12345", "KG"), ("+996 555 12", "KG"), ("hello", "US"), ("", "KG")])
+@pytest.mark.parametrize(
+    "raw, country",
+    [("12345", "KG"), ("+996 555 12", "KG"), ("hello", "US"), ("", "KG"), ("+1 0555 123 456", "US"),
+     ("+1 ", "KG"), ("+996 12345", "KG"), ("1" * 60, "KG")],
+)
 def test_bad_phones_are_rejected(raw, country):
     with pytest.raises(ProfileError) as e:
         normalize_phone(raw, country)
@@ -234,3 +245,18 @@ def test_first_answers_are_kept_before_the_phone(client):
     again = client.put("/api/me/profile", headers=h, json={"country": "KG", "purpose": "own_home"}).json()
     assert again["profile_complete"] is True and again["profile"]["phone"] == "+996555123456"
     assert again["profile"]["purpose"] == "own_home"
+
+
+def test_deleted_account_cannot_write(client, monkeypatch):
+    """A deleted or disabled account's token stays valid for up to an hour: none of the writes may use it."""
+    from bekem import main
+
+    h = {"Authorization": "Bearer dev:ghost:ghost@example.com"}
+    monkeypatch.setattr(main.state.auth, "account_active", lambda uid: False)  # deleted in Firebase, token still valid
+    r = client.put("/api/me/profile", headers=h, json={"country": "KG", "phone": "0555123456", "purpose": "build"})
+    assert r.status_code == 401 and r.json()["detail"]["code"] == "account_gone"
+    assert main.state.auth.store.get("ghost") is None
+    saved = client.put("/api/me/saved", headers=h, json={"lat": 42.87, "lon": 74.6, "name": "Home"})
+    assert saved.status_code == 401 and main.state.auth.saved.get("ghost") is None
+    report = client.post("/api/reports", headers=h, json={"lat": 42.87, "lon": 74.6})
+    assert report.status_code == 401 and main.state.auth.report_index.get("ghost") is None

@@ -2,12 +2,14 @@
 
 This is the same service behind NASA's "Hydrology Time Series" tool, which replaced Data Rods.
 API: https://api.giovanni.earthdata.nasa.gov/timeseries (Earthdata bearer token, monthly quota).
-Each call returns all years in about 3-5 s, so the three calls run in parallel.
+Each call returns all years in about 3-10 s; the calls run in parallel and are cached per grid cell
+(IMERG 0.1 deg, GLDAS 0.25 deg), so only the first tap in a cell ever waits for them.
 """
 
 from __future__ import annotations
 
 import calendar
+import math
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
 
@@ -21,8 +23,17 @@ RAIN = "GPM_3IMERGDF_07_precipitation"  # daily, mm/day, 0.1 deg (~11 km)
 RUNOFF = "GLDAS_NOAH025_M_2_1_Qs_acc"  # monthly mean of 3-hourly storm runoff, kg m-2 per 3 h, 0.25 deg (~28 km)
 SOIL = "GLDAS_NOAH025_M_2_1_SoilMoi0_10cm_inst"  # monthly topsoil (0-10 cm) moisture, kg m-2 = mm, 0.25 deg
 
+# Native grid cells: every point inside one cell gets the same answer, so results are cached per cell.
+RAIN_CELL_DEG = 0.1
+HYDRO_CELL_DEG = 0.25
+
 SEASON = range(3, 10)  # Mar-Sep: the rain, flood and mudflow season in Kyrgyzstan
 SEASON_DAYS_MIN = 200  # of 214 days, or the year is skipped
+
+
+def cell_center(value: float, size: float) -> float:
+    """Centre of the grid cell (edges on multiples of `size`) that contains `value`."""
+    return round(math.floor(value / size) * size + size / 2, 4)
 
 
 def parse_csv(text: str) -> list[tuple[datetime, float]]:
@@ -103,21 +114,16 @@ class Giovanni:
         r.raise_for_status()
         return r.json().get("quota")
 
-    def fetch(self, lat: float, lon: float) -> dict[str, dict[int, float]]:
-        """All flood-context series for a point, from three parallel Giovanni calls."""
+    def fetch_rain(self, lat: float, lon: float) -> dict[str, dict[int, float]]:
+        """IMERG daily rain at a point (one call): season totals and the wettest day per year."""
         end = f"{date.today():%Y-%m-%d}T00:00:00"
-        jobs = {
-            "rain": (RAIN, "2000-06-01T00:00:00"),
-            "runoff": (RUNOFF, "2000-01-01T00:00:00"),
-            "soil": (SOIL, "2000-01-01T00:00:00"),
-        }
-        with ThreadPoolExecutor(max_workers=3) as pool:
-            futures = {k: pool.submit(self.timeseries, var, lat, lon, start, end) for k, (var, start) in jobs.items()}
-            raw = {k: f.result() for k, f in futures.items()}
-        total, wettest = rain_by_year(raw["rain"])
-        return {
-            "rain_season_mm": total,
-            "rain_max_day_mm": wettest,
-            "runoff_peak_mm": runoff_peak_by_year(raw["runoff"]),
-            "soil_moisture_mm": soil_by_year(raw["soil"]),
-        }
+        total, wettest = rain_by_year(self.timeseries(RAIN, lat, lon, "2000-06-01T00:00:00", end))
+        return {"rain_season_mm": total, "rain_max_day_mm": wettest}
+
+    def fetch_hydrology(self, lat: float, lon: float) -> dict[str, dict[int, float]]:
+        """GLDAS runoff and topsoil moisture at a point (two parallel calls)."""
+        end = f"{date.today():%Y-%m-%d}T00:00:00"
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            runoff = pool.submit(self.timeseries, RUNOFF, lat, lon, "2000-01-01T00:00:00", end)
+            soil = pool.submit(self.timeseries, SOIL, lat, lon, "2000-01-01T00:00:00", end)
+            return {"runoff_peak_mm": runoff_peak_by_year(runoff.result()), "soil_moisture_mm": soil_by_year(soil.result())}

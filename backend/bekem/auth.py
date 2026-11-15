@@ -194,6 +194,15 @@ class FirestoreStore:
             r.raise_for_status()
 
 
+def firebase_account_active(session: AuthorizedSession, project_id: str, uid: str) -> bool:
+    """Does this sign-in account still exist and is it enabled? A token stays valid for up to an hour after
+    the account is deleted or disabled, so writes check the account itself."""
+    r = session.post(f"{IDENTITY.format(project=project_id)}/accounts:lookup", json={"localId": [uid]}, timeout=10)
+    r.raise_for_status()
+    users = r.json().get("users") or []
+    return bool(users) and not users[0].get("disabled", False)
+
+
 def delete_firebase_user(session: AuthorizedSession, project_id: str, uid: str) -> None:
     """Remove the sign-in account itself (email/password or Google link) from Firebase Authentication."""
     r = session.post(f"{IDENTITY.format(project=project_id)}/accounts:delete", json={"localId": uid}, timeout=10)
@@ -217,6 +226,9 @@ class Auth:
     session: AuthorizedSession | None = None
     project_id: str = ""
     mode: str = "firebase"  # firebase | dev
+
+    def account_active(self, uid: str) -> bool:
+        return True if self.session is None else firebase_account_active(self.session, self.project_id, uid)
 
     def delete_account(self, uid: str) -> None:
         self.store.delete(uid)

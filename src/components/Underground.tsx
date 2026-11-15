@@ -85,9 +85,12 @@ export function Underground({
         kind="error"
         message={t(`report.error.${state.kind}`)}
         action={
-          <button type="button" className="button button--primary" onClick={onRetry}>
-            {t('report.retry')}
-          </button>
+          // Outside the area with data, trying again gives the same answer: only closing helps.
+          state.kind === 'outside' ? undefined : (
+            <button type="button" className="button button--primary" onClick={onRetry}>
+              {t('report.retry')}
+            </button>
+          )
         }
       />
     )

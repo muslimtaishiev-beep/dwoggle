@@ -73,9 +73,12 @@ export function ReportPanel({ state, saved, note, onAsk, onSave, onShare, onFull
           kind="error"
           message={t(`report.error.${state.kind}`)}
           action={
-            <button type="button" className="brand-button report-panel__retry" onClick={onRetry}>
-              {t('report.retry')}
-            </button>
+            // Outside the area with data, trying again gives the same answer.
+            state.kind === 'outside' ? undefined : (
+              <button type="button" className="brand-button report-panel__retry" onClick={onRetry}>
+                {t('report.retry')}
+              </button>
+            )
           }
         />
       )}

@@ -88,8 +88,12 @@ wording of a question gets round them: no tools; the new question is cut to 500 
 day, then `429 {code: chat_daily_limit}`. Also set a monthly spend limit for the key in the Anthropic Console: that
 one holds whatever happens.
 
-Errors: `422` = point outside Kyrgyzstan or bad params, `429` = rate limit, `502` = Earth Engine failed
-(show "Bekem couldn't dig, try again"), `503` = provider not configured.
+Errors:
+- `422 {"detail": {"code": "outside_coverage", "message": …}}`: the point is outside Kyrgyzstan. Show the message;
+  retrying gives the same answer. Coverage is Kyrgyzstan's real border (Natural Earth 1:10m, enclaves excluded)
+  plus 3 km, so border towns like Kara-Suu work on the Kyrgyz side ([coverage.py](bekem/coverage.py)).
+- other `422` = bad params, `429` = rate limit, `502` = Earth Engine failed (show "Bekem couldn't dig, try again"),
+  `503` = provider not configured.
 
 ### Report shape (trimmed)
 
@@ -158,7 +162,11 @@ publishes them as-is. Summary:
 - **Water 2022+** is our own Landsat 8/9 MNDWI classification, because JRC's yearly history ends at 2021.
   On the Issyk-Kul shore the two agree (9–10% vs 8–9% of the circle). Mountain shadow is filtered by slope,
   but bright snow/ice edges can still slip through.
-- **Giovanni** has a monthly compute quota (`/api/health` shows the share used). With caching we use almost none of it.
+- **Giovanni** has a monthly compute quota (`/api/health` shows the share used). Results are cached per grid cell
+  (rain ~11 km, runoff/soil ~28 km), so only the first tap in a cell calls it; a report waits for it at most 8 s
+  (`BEKEM_GIOVANNI_TIMEOUT_S`) and otherwise arrives without the rain charts, which the next request then has.
+- **Taps on open water** (more than half the circle is a lake, reservoir or wide river in a typical year) get no
+  flood grade, with the message `flood.water_body`; the other checks are still graded.
 - **A permanent river within 300 m counts as water every year.** That's honest, but a house 250 m from the Chuy may get a harsh flood grade.
 - **Fault lines** come from the HimaTibetMap compilation inside GEM, which is regional-scale. Distances are good to
   roughly ±1 km, so a 1.9 km vs 2.1 km D/C split is within the noise.

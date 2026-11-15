@@ -136,8 +136,10 @@ def test_appeears_manager_states(tmp_path):
 
 
 class BrokenGiovanni:
-    def fetch(self, lat, lon):
+    def fetch_rain(self, lat, lon):
         raise RuntimeError("Giovanni is down")
+
+    fetch_hydrology = fetch_rain
 
 
 def test_report_survives_a_failing_extra(tmp_path):
@@ -146,3 +148,30 @@ def test_report_survives_a_failing_extra(tmp_path):
     r = svc.build(42.8, 74.6)
     assert r["extras"]["giovanni"] == "unavailable"
     assert [c["id"] for c in r["checks"]] == ["flood", "landslide", "earthquake", "heat", "green"]
+
+
+def test_giovanni_cells_share_one_cached_answer(tmp_path):
+    from bekem.nasa.giovanni import cell_center
+
+    assert cell_center(42.875, 0.1) == 42.85 and cell_center(42.81, 0.1) == 42.85
+    assert cell_center(74.62, 0.25) == 74.625 and cell_center(74.51, 0.25) == 74.625
+
+    calls = []
+
+    class CountingGiovanni:
+        def fetch_rain(self, lat, lon):
+            calls.append(("rain", lat, lon))
+            return {"rain_season_mm": {2020: 300.0}, "rain_max_day_mm": {2020: 20.0}}
+
+        def fetch_hydrology(self, lat, lon):
+            calls.append(("hydro", lat, lon))
+            return {"runoff_peak_mm": {2020: 1.0}, "soil_moisture_mm": {2020: 20.0}}
+
+    svc = ReportService(get_settings(), MockProvider(), Cache(tmp_path / "c.sqlite3", 3600), giovanni=CountingGiovanni())
+    a = svc.build(42.871, 74.611)   # two taps ~3 km apart in Bishkek, inside the same IMERG and GLDAS cells
+    b = svc.build(42.879, 74.649)
+    assert a["extras"]["giovanni"] == b["extras"]["giovanni"] == "ok"
+    # only the first tap fetched, and at the cell centres
+    assert sorted(calls) == [("hydro", 42.875, 74.625), ("rain", 42.85, 74.65)]
+    svc.build(42.879, 74.598)       # next IMERG cell west (74.5-74.6), same GLDAS cell: only rain is fetched
+    assert sorted(calls)[-1] == ("rain", 42.85, 74.65) and ("rain", 42.85, 74.55) in calls and len(calls) == 3

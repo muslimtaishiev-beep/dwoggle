@@ -16,7 +16,7 @@ from .grading import FAULT_SEARCH_KM, SERIES_META, CheckResult, SeriesOut, grade
 from .geocode import PlaceNamer
 from .i18n import Lang, t, text_lang
 from .nasa.appeears import AppEEARSManager
-from .nasa.giovanni import Giovanni
+from .nasa.giovanni import HYDRO_CELL_DEG, RAIN_CELL_DEG, Giovanni, cell_center
 from .nasa.noaa import fetch_summer_tmax, nearest_station
 from .providers import Provider, RawMetrics
 from .verification import appeears_same_data_check, mod44w_check, station_check
@@ -97,10 +97,15 @@ class ReportService:
         )
         return RawMetrics.from_dict(value), cached, computed
 
-    def _giovanni(self, lat: float, lon: float, refresh: bool) -> dict:
+    def _giovanni_cell(self, kind: str, lat: float, lon: float, refresh: bool) -> dict:
+        """One Giovanni series group for the grid cell containing the point, cached per cell."""
+        size, fetch = (
+            (RAIN_CELL_DEG, self.giovanni.fetch_rain) if kind == "rain" else (HYDRO_CELL_DEG, self.giovanni.fetch_hydrology)
+        )
+        clat, clon = cell_center(lat, size), cell_center(lon, size)
         value, _, _ = self._cached(
-            f"giovanni:v1:{lat:.3f}:{lon:.3f}",
-            lambda: {k: {str(y): v for y, v in s.items()} for k, s in self.giovanni.fetch(lat, lon).items()},
+            f"giovanni-{kind}:v1:{clat}:{clon}",
+            lambda: {k: {str(y): v for y, v in s.items()} for k, s in fetch(clat, clon).items()},
             refresh,
         )
         return {k: {int(y): v for y, v in s.items()} for k, s in value.items()}
@@ -115,25 +120,29 @@ class ReportService:
         lat, lon = snap(lat, lon)
         extras: dict[str, str] = {}
 
-        gio_future = _pool.submit(self._giovanni, lat, lon, refresh) if self.giovanni else None
+        gio_futures = (
+            [_pool.submit(self._giovanni_cell, kind, lat, lon, refresh) for kind in ("rain", "hydrology")]
+            if self.giovanni else []
+        )
         place_future = _pool.submit(self.places.name, lat, lon, lang) if self.places else None
         m, cached, computed = self.metrics(lat, lon, refresh)
 
-        if gio_future is None:
+        if not gio_futures:
             extras["giovanni"] = "mock" if self.provider.name == "mock" else "disabled"
         else:
-            try:
-                gio = gio_future.result(timeout=self.settings.giovanni_timeout_s)
-                m.rain_season_mm = gio["rain_season_mm"]
-                m.rain_max_day_mm = gio["rain_max_day_mm"]
-                m.runoff_peak_mm = gio["runoff_peak_mm"]
-                m.soil_moisture_mm = gio["soil_moisture_mm"]
-                extras["giovanni"] = "ok"
-            except FutureTimeout:
-                extras["giovanni"] = "pending"  # still running; the next request gets it from the cache
-            except Exception:
-                log.exception("Giovanni failed for %s,%s", lat, lon)
-                extras["giovanni"] = "unavailable"
+            deadline = time.monotonic() + self.settings.giovanni_timeout_s
+            statuses = []
+            for future in gio_futures:
+                try:
+                    for name, series in future.result(timeout=max(0.0, deadline - time.monotonic())).items():
+                        setattr(m, name, series)
+                    statuses.append("ok")
+                except FutureTimeout:
+                    statuses.append("pending")  # still running; it fills the cache for the next request
+                except Exception:
+                    log.exception("Giovanni failed for %s,%s", lat, lon)
+                    statuses.append("unavailable")
+            extras["giovanni"] = next((s for s in ("unavailable", "pending") if s in statuses), "ok")
 
         fault = nearest_fault(self.settings.faults_path, lon, lat, FAULT_SEARCH_KM)
         checks, mood = grade_all(m, fault, self.settings.radius_m)
