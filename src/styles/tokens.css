@@ -204,8 +204,9 @@
   --earth-tunnel: #3e2617;
   --earth-clod: #6b432b;
   /* Dwoggle's own colours, sampled from the artwork: for the lids he blinks with. */
-  --mascot-fur: #9f684d;
-  --mascot-cheek: #ffebcd;
+  /* The standing Dwoggle's lids: the colours of the logo's head he wears. */
+  --mascot-fur: #966142;
+  --mascot-cheek: #feefda;
   --mascot-ink: #1a1412;
   /* The digging drawing's own fur and cheek, round his eyes: for the lids he blinks with there. */
   /* The digging Dwoggle's lids: the colours of the logo's head he wears. */

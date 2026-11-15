@@ -70,7 +70,7 @@
 .standing-dwoggle__mouth {
   transform: scaleY(0);
   transform-box: view-box;
-  transform-origin: 308px 373px;
+  /* transform-origin: from the rig, inline (where the smile's halves meet). */
 }
 
 .standing-dwoggle__mouth-inside {
