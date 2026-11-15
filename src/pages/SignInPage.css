@@ -263,8 +263,9 @@
 }
 
 /*
- * Narrower than the drawing, or too short for it (a small window, or zoomed far in): Dwoggle peeks in above
- * the form, smaller, with his greeting beside him, and everything is back at its full size.
+ * Narrower than the drawing, or too short for it (a small window, or zoomed far in): the form first, then
+ * Dwoggle, smaller, standing on the earth at the bottom of the page with his greeting beside him, and
+ * everything is back at its full size.
  */
 @media (max-width: 1023px), (max-height: 619px) {
   .brand-page {
@@ -276,17 +277,21 @@
     --sign-in-fit: 1;
   }
 
-  /* Stacked, the page simply starts at the top. */
+  /* Stacked, the page starts at the top and the column fills it down to the earth. */
   .sign-in {
+    display: flex;
+    flex-direction: column;
     padding-top: 0;
   }
 
   .sign-in__layout {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: var(--space-4);
     max-width: 420px;
-    padding-bottom: calc(100 * var(--u) + var(--space-4));
+    /* His feet go into the earth's top band, as on the drawing, not above it. */
+    padding-bottom: calc(66 * var(--u));
   }
 
   .sign-in__panel {
@@ -303,8 +308,10 @@
     inset: auto;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-5);
-    order: -1;
+    /* Pushed down to the bottom of the column, onto the earth. */
+    margin-top: auto;
   }
 
   .sign-in__dwoggle {
@@ -312,7 +319,7 @@
     bottom: auto;
     inset-inline-start: auto;
     flex: none;
-    height: 120px;
+    height: 150px;
   }
 
   .sign-in__bubble {
